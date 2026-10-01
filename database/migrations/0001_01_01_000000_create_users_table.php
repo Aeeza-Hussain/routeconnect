@@ -18,6 +18,8 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('phone')->nullable();
+            $table->string('license_no')->nullable();
+            $table->string('profile_photo')->nullable();
             $table->string('role')->default('passenger'); // passenger, driver, admin
             $table->string('driver_status')->nullable(); // pending, approved, rejected
             $table->rememberToken();
