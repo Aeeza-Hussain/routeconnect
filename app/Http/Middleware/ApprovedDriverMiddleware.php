@@ -10,6 +10,8 @@ class ApprovedDriverMiddleware
 {
     /**
      * Handle an incoming request.
+     *
+     * Only allow:  auth + user_type == 2 + driver_status == approved
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -19,11 +21,13 @@ class ApprovedDriverMiddleware
 
         $user = auth()->user();
 
-        if (!$user->isDriver()) {
+        // Must be a driver (user_type = 2)
+        if ($user->user_type != 2) {
             abort(403, 'Unauthorized access. Only drivers can access this area.');
         }
 
-        if (!$user->isApprovedDriver()) {
+        // Must be an approved driver
+        if ($user->driver_status !== 'approved') {
             return redirect()->route('driver.pending');
         }
 

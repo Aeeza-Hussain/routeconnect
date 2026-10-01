@@ -38,7 +38,7 @@
                 <span>Driver Applications</span>
             </div>
             @php
-                $pendingCount = \App\Models\User::where('role', 'driver')->where('driver_status', 'pending')->count();
+                $pendingCount = \App\Models\User::where('user_type', 2)->where('driver_status', 'pending')->count();
             @endphp
             @if ($pendingCount > 0)
                 <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-extrabold border border-amber-500/30">

@@ -29,7 +29,12 @@
                     <div class="flex items-center gap-3 pl-3 border-l border-slate-200">
                         <div class="text-right leading-tight">
                             <div class="text-xs font-extrabold text-slate-800">{{ auth()->user()->name }}</div>
-                            <div class="text-[10px] text-emerald-600 font-bold uppercase">{{ auth()->user()->role }}</div>
+                            <div class="text-[10px] text-emerald-600 font-bold uppercase">
+                                @if(auth()->user()->user_type == 1) Admin
+                                @elseif(auth()->user()->user_type == 2) Driver
+                                @else Passenger
+                                @endif
+                            </div>
                         </div>
                         <form action="{{ route('logout') }}" method="POST" class="inline">
                             @csrf

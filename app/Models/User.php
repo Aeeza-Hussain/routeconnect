@@ -14,6 +14,13 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
+     * user_type values:
+     *   0 = Passenger (normal user)
+     *   1 = Admin
+     *   2 = Driver
+     */
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
@@ -29,36 +36,38 @@ class User extends Authenticatable
         'license_no',
         'profile_photo',
         'password',
-        'role',
+        'user_type',
         'driver_status',
     ];
 
-    /**
-     * Role Helper Methods
-     */
+    // ─────────────────────────────────────────
+    // Simple user_type helper methods
+    // ─────────────────────────────────────────
+
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->user_type == 1;
     }
 
     public function isDriver(): bool
     {
-        return $this->role === 'driver';
+        return $this->user_type == 2;
     }
 
     public function isApprovedDriver(): bool
     {
-        return $this->role === 'driver' && $this->driver_status === 'approved';
+        return $this->user_type == 2 && $this->driver_status === 'approved';
     }
 
     public function isPassenger(): bool
     {
-        return $this->role === 'passenger';
+        return $this->user_type == 0;
     }
 
-    /**
-     * Relationships
-     */
+    // ─────────────────────────────────────────
+    // Relationships
+    // ─────────────────────────────────────────
+
     public function vehicles(): HasMany
     {
         return $this->hasMany(Vehicle::class);
@@ -103,7 +112,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password'          => 'hashed',
+            'user_type'         => 'integer',
         ];
     }
 }

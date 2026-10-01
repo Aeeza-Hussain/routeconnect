@@ -11,15 +11,15 @@ class Step5AdminTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Test 1: Admin can access dashboard and view database statistics
+     * Test 1: Admin (user_type=1) can access dashboard
      */
     public function test_admin_can_access_dashboard()
     {
         $admin = User::create([
-            'name' => 'System Admin',
-            'email' => 'admin@routeconnect.com',
-            'password' => bcrypt('admin123456'),
-            'role' => 'admin',
+            'name'      => 'System Admin',
+            'email'     => 'admin@routeconnect.com',
+            'password'  => bcrypt('admin123456'),
+            'user_type' => 1,
         ]);
 
         $response = $this->actingAs($admin)->get('/admin/dashboard');
@@ -36,17 +36,17 @@ class Step5AdminTest extends TestCase
     public function test_passenger_and_driver_cannot_access_admin_dashboard()
     {
         $passenger = User::create([
-            'name' => 'Passenger',
-            'email' => 'passenger@example.com',
-            'password' => bcrypt('password123'),
-            'role' => 'passenger',
+            'name'      => 'Passenger',
+            'email'     => 'passenger@example.com',
+            'password'  => bcrypt('password123'),
+            'user_type' => 0,
         ]);
 
         $driver = User::create([
-            'name' => 'Approved Driver',
-            'email' => 'driver@example.com',
-            'password' => bcrypt('password123'),
-            'role' => 'driver',
+            'name'          => 'Approved Driver',
+            'email'         => 'driver@example.com',
+            'password'      => bcrypt('password123'),
+            'user_type'     => 2,
             'driver_status' => 'approved',
         ]);
 
@@ -60,18 +60,18 @@ class Step5AdminTest extends TestCase
     public function test_admin_can_view_pending_driver_applications()
     {
         $admin = User::create([
-            'name' => 'System Admin',
-            'email' => 'admin@routeconnect.com',
-            'password' => bcrypt('admin123456'),
-            'role' => 'admin',
+            'name'      => 'System Admin',
+            'email'     => 'admin@routeconnect.com',
+            'password'  => bcrypt('admin123456'),
+            'user_type' => 1,
         ]);
 
         $driverApplicant = User::create([
-            'name' => 'Applicant Driver',
-            'email' => 'applicant@example.com',
-            'phone' => '03001234567',
-            'password' => bcrypt('password123'),
-            'role' => 'driver',
+            'name'          => 'Applicant Driver',
+            'email'         => 'applicant@example.com',
+            'phone'         => '03001234567',
+            'password'      => bcrypt('password123'),
+            'user_type'     => 2,
             'driver_status' => 'pending',
         ]);
 
@@ -88,17 +88,17 @@ class Step5AdminTest extends TestCase
     public function test_admin_approval_grants_driver_dashboard_access()
     {
         $admin = User::create([
-            'name' => 'System Admin',
-            'email' => 'admin@routeconnect.com',
-            'password' => bcrypt('admin123456'),
-            'role' => 'admin',
+            'name'      => 'System Admin',
+            'email'     => 'admin@routeconnect.com',
+            'password'  => bcrypt('admin123456'),
+            'user_type' => 1,
         ]);
 
         $driver = User::create([
-            'name' => 'New Driver',
-            'email' => 'newdriver@example.com',
-            'password' => bcrypt('password123'),
-            'role' => 'driver',
+            'name'          => 'New Driver',
+            'email'         => 'newdriver@example.com',
+            'password'      => bcrypt('password123'),
+            'user_type'     => 2,
             'driver_status' => 'pending',
         ]);
 
@@ -113,6 +113,7 @@ class Step5AdminTest extends TestCase
         // After approval: driver can access driver dashboard
         $driver->refresh();
         $this->assertEquals('approved', $driver->driver_status);
+        $this->assertEquals(2, $driver->user_type); // user_type stays = 2
         $this->actingAs($driver)->get('/driver/dashboard')->assertStatus(200);
     }
 
@@ -122,17 +123,17 @@ class Step5AdminTest extends TestCase
     public function test_admin_rejection_denies_driver_access()
     {
         $admin = User::create([
-            'name' => 'System Admin',
-            'email' => 'admin@routeconnect.com',
-            'password' => bcrypt('admin123456'),
-            'role' => 'admin',
+            'name'      => 'System Admin',
+            'email'     => 'admin@routeconnect.com',
+            'password'  => bcrypt('admin123456'),
+            'user_type' => 1,
         ]);
 
         $driver = User::create([
-            'name' => 'Rejected Candidate',
-            'email' => 'rejectme@example.com',
-            'password' => bcrypt('password123'),
-            'role' => 'driver',
+            'name'          => 'Rejected Candidate',
+            'email'         => 'rejectme@example.com',
+            'password'      => bcrypt('password123'),
+            'user_type'     => 2,
             'driver_status' => 'pending',
         ]);
 
@@ -141,6 +142,7 @@ class Step5AdminTest extends TestCase
 
         $driver->refresh();
         $this->assertEquals('rejected', $driver->driver_status);
+        $this->assertEquals(2, $driver->user_type); // user_type stays = 2
         $this->actingAs($driver)->get('/driver/dashboard')->assertRedirect(route('driver.pending'));
     }
 }

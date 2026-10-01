@@ -16,14 +16,14 @@ class AdminDashboardController extends Controller
      */
     public function index()
     {
-        $totalUsers = User::count();
-        $totalDrivers = User::where('role', 'driver')->count();
-        $pendingDrivers = User::where('role', 'driver')->where('driver_status', 'pending')->count();
+        $totalUsers    = User::count();
+        $totalDrivers  = User::where('user_type', 2)->count();
+        $pendingDrivers = User::where('user_type', 2)->where('driver_status', 'pending')->count();
         $totalVehicles = Vehicle::count();
-        $totalTrips = Trip::count();
+        $totalTrips    = Trip::count();
         $totalBookings = Booking::count();
 
-        $recentApplications = User::where('role', 'driver')
+        $recentApplications = User::where('user_type', 2)
             ->where('driver_status', 'pending')
             ->latest()
             ->take(5)

@@ -16,10 +16,10 @@ class AdminSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'admin@routeconnect.com'],
             [
-                'name' => 'RouteConnect Admin',
-                'phone' => '03001234567',
-                'password' => Hash::make('admin123456'),
-                'role' => 'admin',
+                'name'          => 'RouteConnect Admin',
+                'phone'         => '03001234567',
+                'password'      => Hash::make('admin123456'),
+                'user_type'     => 1,       // 1 = Admin
                 'driver_status' => null,
             ]
         );

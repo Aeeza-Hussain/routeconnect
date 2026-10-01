@@ -17,7 +17,7 @@ class AdminMiddleware
             return redirect()->route('login');
         }
 
-        if (!auth()->user()->isAdmin()) {
+        if (auth()->user()->user_type != 1) {
             abort(403, 'Unauthorized access. Only administrators can access this area.');
         }
 
