@@ -24,9 +24,13 @@
     
     <div class="flex items-center justify-between pb-6 border-b border-slate-100">
         <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-700 font-extrabold flex items-center justify-center text-xl">
-                {{ strtoupper(substr($driver->name, 0, 2)) }}
-            </div>
+            @if ($driver->profile_photo)
+                <img src="{{ asset($driver->profile_photo) }}" alt="{{ $driver->name }}" class="w-16 h-16 rounded-2xl object-cover border-2 border-indigo-200 shadow-xs">
+            @else
+                <div class="w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-700 font-extrabold flex items-center justify-center text-xl shadow-xs">
+                    {{ strtoupper(substr($driver->name, 0, 2)) }}
+                </div>
+            @endif
             <div>
                 <h3 class="text-lg font-extrabold text-slate-900">{{ $driver->name }}</h3>
                 <span class="text-xs text-slate-500">Registered Driver Application</span>
@@ -45,7 +49,7 @@
     </div>
 
     <!-- Info Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs font-semibold">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold">
         <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
             <div class="text-[11px] font-bold text-slate-400 uppercase">Full Name</div>
             <div class="text-sm font-extrabold text-slate-900 mt-1">{{ $driver->name }}</div>
@@ -62,9 +66,31 @@
         </div>
 
         <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+            <div class="text-[11px] font-bold text-slate-400 uppercase">CNIC Number</div>
+            <div class="text-sm font-extrabold text-slate-900 mt-1">{{ $driver->cnic ?? 'N/A' }}</div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+            <div class="text-[11px] font-bold text-slate-400 uppercase">Gender</div>
+            <div class="text-sm font-extrabold text-slate-900 mt-1 capitalize">{{ $driver->gender ?? 'N/A' }}</div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+            <div class="text-[11px] font-bold text-slate-400 uppercase">Date of Birth (DOB)</div>
+            <div class="text-sm font-extrabold text-slate-900 mt-1">{{ $driver->dob ? \Carbon\Carbon::parse($driver->dob)->format('d M Y') : 'N/A' }}</div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 sm:col-span-2">
             <div class="text-[11px] font-bold text-slate-400 uppercase">Registration Date</div>
             <div class="text-sm font-extrabold text-slate-900 mt-1">{{ $driver->created_at->format('d M Y, h:i A') }}</div>
         </div>
+
+        @if ($driver->bio)
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 sm:col-span-2">
+                <div class="text-[11px] font-bold text-slate-400 uppercase">Bio / About</div>
+                <div class="text-xs font-medium text-slate-700 mt-1 leading-relaxed">{{ $driver->bio }}</div>
+            </div>
+        @endif
     </div>
 
     <!-- Actions Area -->

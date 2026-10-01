@@ -32,6 +32,33 @@ class Step3AuthTest extends TestCase
     }
 
     /**
+     * Test 1b: Registration with full profile fields (gender, dob, cnic, bio)
+     */
+    public function test_registration_with_full_profile_fields()
+    {
+        $response = $this->post('/register', [
+            'name' => 'Full Profile User',
+            'email' => 'fullprofile@example.com',
+            'phone' => '03009998877',
+            'gender' => 'male',
+            'dob' => '1995-05-15',
+            'cnic' => '71501-1234567-1',
+            'bio' => 'Experienced commuter traveling daily.',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertRedirect('/');
+        $this->assertDatabaseHas('users', [
+            'email' => 'fullprofile@example.com',
+            'gender' => 'male',
+            'dob' => '1995-05-15',
+            'cnic' => '71501-1234567-1',
+            'bio' => 'Experienced commuter traveling daily.',
+        ]);
+    }
+
+    /**
      * Test 2: Driver Registration Creates Pending Driver
      */
     public function test_driver_registration_creates_pending_driver()

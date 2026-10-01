@@ -72,16 +72,40 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'phone' => ['required', 'string', 'max:20'],
+            'gender' => ['nullable', 'string', 'in:male,female,other'],
+            'dob' => ['nullable', 'date'],
+            'cnic' => ['nullable', 'string', 'max:30'],
+            'bio' => ['nullable', 'string', 'max:1000'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:4096'],
+            'profile_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:4096'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
             'role' => ['required', 'string', 'in:passenger,driver'],
         ]);
 
         $isDriver = $request->role === 'driver';
 
+        // Profile Photo Upload handling
+        $photoPath = null;
+        $imageFile = $request->file('image') ?? $request->file('profile_photo');
+        if ($imageFile) {
+            $filename = time() . '_' . uniqid() . '.' . $imageFile->getClientOriginalExtension();
+            $destinationPath = public_path('uploads/profiles');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0777, true);
+            }
+            $imageFile->move($destinationPath, $filename);
+            $photoPath = 'uploads/profiles/' . $filename;
+        }
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
+            'gender' => $request->gender,
+            'dob' => $request->dob,
+            'cnic' => $request->cnic,
+            'bio' => $request->bio ?? $request->about,
+            'profile_photo' => $photoPath,
             'password' => Hash::make($request->password),
             'role' => $isDriver ? 'driver' : 'passenger',
             'driver_status' => $isDriver ? 'pending' : null,
