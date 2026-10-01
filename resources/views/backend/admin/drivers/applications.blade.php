@@ -31,7 +31,7 @@
             <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-xl mx-auto">
                 <i class="fa-solid fa-inbox"></i>
             </div>
-            <div class="text-sm font-extrabold text-slate-700">No records found.</div>
+            <div class="text-sm font-extrabold text-slate-700">No pending driver applications.</div>
             <p class="text-xs text-slate-500">There are currently no pending driver applications awaiting review.</p>
         </div>
     @else

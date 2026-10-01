@@ -105,29 +105,30 @@
     <div class="p-6 border-b border-slate-100 flex items-center justify-between">
         <div>
             <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
-                <i class="fa-solid fa-clock text-amber-500"></i> Recent Pending Driver Applications
+                <i class="fa-solid fa-clock text-amber-500"></i> Recent Driver Applications
             </h3>
             <p class="text-xs text-slate-500 mt-0.5">Driver registrations waiting for administrator approval.</p>
         </div>
-        <a href="{{ route('admin.drivers.applications') }}" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 underline">
+        <a href="{{ route('admin.drivers.applications') }}" class="px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs border border-emerald-200 transition-colors inline-flex items-center gap-2">
             View All Applications ({{ $pendingDrivers }}) →
         </a>
     </div>
 
     @if ($recentApplications->isEmpty())
-        <div class="p-8 text-center text-slate-500 text-xs">
-            No records found.
+        <div class="p-8 text-center text-slate-500 text-xs font-semibold">
+            No pending driver applications.
         </div>
     @else
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
                 <thead class="bg-slate-50 text-slate-500 font-extrabold uppercase border-b border-slate-100">
                     <tr>
-                        <th class="p-4">Driver Name</th>
+                        <th class="p-4">Name</th>
                         <th class="p-4">Email</th>
-                        <th class="p-4">Phone</th>
-                        <th class="p-4">Registration Date</th>
-                        <th class="p-4 text-right">Actions</th>
+                        <th class="p-4">Contact</th>
+                        <th class="p-4">Status</th>
+                        <th class="p-4">Applied On</th>
+                        <th class="p-4 text-right">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 font-semibold">
@@ -136,10 +137,15 @@
                             <td class="p-4 font-extrabold text-slate-900">{{ $driver->name }}</td>
                             <td class="p-4 text-slate-600">{{ $driver->email }}</td>
                             <td class="p-4 text-slate-600">{{ $driver->phone ?? 'N/A' }}</td>
+                            <td class="p-4">
+                                <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-extrabold border border-amber-200">
+                                    Pending
+                                </span>
+                            </td>
                             <td class="p-4 text-slate-500">{{ $driver->created_at->format('d M Y, h:i A') }}</td>
                             <td class="p-4 text-right space-x-2">
                                 <a href="{{ route('admin.drivers.show', $driver->id) }}" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold transition-colors">
-                                    Details
+                                    View
                                 </a>
                                 <form action="{{ route('admin.drivers.approve', $driver->id) }}" method="POST" class="inline">
                                     @csrf
