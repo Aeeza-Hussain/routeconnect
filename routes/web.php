@@ -46,9 +46,13 @@ Route::middleware(['auth'])->get('/driver/pending', [DriverDashboardController::
 */
 Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    Route::get('/drivers', [AdminDriverController::class, 'index'])->name('admin.drivers.index');
+    
+    // Driver Applications Management
+    Route::get('/drivers/applications', [AdminDriverController::class, 'applications'])->name('admin.drivers.applications');
+    Route::get('/drivers/applications/{id}', [AdminDriverController::class, 'show'])->name('admin.drivers.show');
     Route::post('/drivers/{id}/approve', [AdminDriverController::class, 'approve'])->name('admin.drivers.approve');
     Route::post('/drivers/{id}/reject', [AdminDriverController::class, 'reject'])->name('admin.drivers.reject');
+    Route::get('/drivers', [AdminDriverController::class, 'index'])->name('admin.drivers.index');
 });
 
 /*

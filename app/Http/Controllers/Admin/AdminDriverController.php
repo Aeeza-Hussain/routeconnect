@@ -9,12 +9,38 @@ use App\Models\User;
 class AdminDriverController extends Controller
 {
     /**
-     * Display Driver Applications List
+     * Display Pending Driver Applications List
+     */
+    public function applications()
+    {
+        $applications = User::where('role', 'driver')
+            ->where('driver_status', 'pending')
+            ->latest()
+            ->get();
+
+        return view('backend.admin.drivers.applications', compact('applications'));
+    }
+
+    /**
+     * Display Approved Drivers List
      */
     public function index()
     {
-        $drivers = User::where('role', 'driver')->latest()->get();
-        return view('backend.admin.drivers', compact('drivers'));
+        $drivers = User::where('role', 'driver')
+            ->where('driver_status', 'approved')
+            ->latest()
+            ->get();
+
+        return view('backend.admin.drivers.index', compact('drivers'));
+    }
+
+    /**
+     * Show Driver Application Details Page
+     */
+    public function show($id)
+    {
+        $driver = User::where('role', 'driver')->findOrFail($id);
+        return view('backend.admin.drivers.show', compact('driver'));
     }
 
     /**
@@ -27,7 +53,7 @@ class AdminDriverController extends Controller
             'driver_status' => 'approved',
         ]);
 
-        return back()->with('success', "Driver '{$driver->name}' has been approved!");
+        return redirect()->route('admin.drivers.applications')->with('success', 'Driver application approved successfully.');
     }
 
     /**
@@ -40,6 +66,6 @@ class AdminDriverController extends Controller
             'driver_status' => 'rejected',
         ]);
 
-        return back()->with('success', "Driver '{$driver->name}' application has been rejected.");
+        return redirect()->route('admin.drivers.applications')->with('success', 'Driver application rejected.');
     }
 }
