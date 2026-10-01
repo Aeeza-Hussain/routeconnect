@@ -103,7 +103,7 @@
         </div>
 
         <!-- RIGHT HALF: Registration Form -->
-        <div class="lg:col-span-7 p-8 sm:p-10 lg:p-12 flex flex-col justify-between bg-white">
+        <div class="lg:col-span-7 p-8 sm:p-10 lg:p-12 flex flex-col justify-between bg-white overflow-y-auto max-h-[90vh] lg:max-h-none">
             <div>
                 <!-- Form Top Header Badge & Title -->
                 <div class="mb-6">
@@ -156,10 +156,10 @@
                     <!-- Driver Application Note -->
                     <div id="driverNoticeText" class="{{ ($selectedRole ?? '') === 'driver' ? '' : 'hidden' }} p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5 mb-4">
                         <i class="fa-solid fa-circle-info text-amber-600 text-sm mt-0.5 shrink-0"></i>
-                        <span><strong>Driver Note:</strong> Driver registration requires admin verification before accessing the driver dashboard.</span>
+                        <span><strong>Driver Application:</strong> Please complete all driver verification fields below. Driver accounts require administrator approval before logging into the driver portal.</span>
                     </div>
 
-                    <!-- Input Grid (2 Columns on SM+) -->
+                    <!-- Input Grid: Basic Fields (Used for both Passenger and Driver) -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <!-- Full Name -->
                         <div>
@@ -204,6 +204,60 @@
                                 </div>
                                 <input type="file" name="image" accept="image/*" onchange="previewImage(this)" class="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer">
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- EXTRA DRIVER APPLICATION FIELDS (CNIC, Gender, DOB, Bio/About) -->
+                    <!-- Shown ONLY when Register as a Driver tab is selected -->
+                    <div id="driverExtraFields" class="{{ ($selectedRole ?? '') === 'driver' ? '' : 'hidden' }} space-y-4 pt-2 border-t border-slate-100">
+                        <div class="text-xs font-extrabold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg inline-block border border-indigo-100 mb-1">
+                            <i class="fa-solid fa-id-card"></i> Driver Profile Attributes
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- CNIC Number -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">CNIC Number <span class="text-rose-500">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
+                                        <i class="fa-solid fa-id-card"></i>
+                                    </span>
+                                    <input type="text" name="cnic" value="{{ old('cnic') }}" placeholder="71501-1234567-1" class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
+                                </div>
+                            </div>
+
+                            <!-- Gender Selection -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Gender</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
+                                        <i class="fa-solid fa-venus-mars"></i>
+                                    </span>
+                                    <select name="gender" class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
+                                        <option value="">Select Gender</option>
+                                        <option value="male" {{ old('gender') === 'male' ? 'selected' : '' }}>Male</option>
+                                        <option value="female" {{ old('gender') === 'female' ? 'selected' : '' }}>Female</option>
+                                        <option value="other" {{ old('gender') === 'other' ? 'selected' : '' }}>Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Date of Birth -->
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Date of Birth (DOB)</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
+                                        <i class="fa-solid fa-calendar"></i>
+                                    </span>
+                                    <input type="date" name="dob" value="{{ old('dob') }}" class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bio / About -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Bio / About Experience</label>
+                            <textarea name="bio" rows="2" placeholder="Briefly describe your commercial driving experience & route knowledge..." class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">{{ old('bio') }}</textarea>
                         </div>
                     </div>
 
@@ -270,18 +324,21 @@
             const tabUser = document.getElementById('tabUser');
             const tabDriver = document.getElementById('tabDriver');
             const notice = document.getElementById('driverNoticeText');
+            const extraDriverFields = document.getElementById('driverExtraFields');
             const btn = document.getElementById('btnSubmit');
 
             if (role === 'passenger') {
                 tabUser.className = 'relative flex items-center justify-center gap-2 py-3 px-4 rounded-xl cursor-pointer font-bold text-xs transition-all bg-emerald-700 text-white shadow-md shadow-emerald-700/20';
                 tabDriver.className = 'relative flex items-center justify-center gap-2 py-3 px-4 rounded-xl cursor-pointer font-bold text-xs transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60';
                 notice.classList.add('hidden');
+                extraDriverFields.classList.add('hidden');
                 btn.className = 'w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-emerald-600/25 text-xs tracking-wide transition-all hover:scale-[1.005] flex items-center justify-center gap-2';
                 btn.innerHTML = '<i class="fa-solid fa-user-plus"></i><span>Create Account</span>';
             } else {
                 tabDriver.className = 'relative flex items-center justify-center gap-2 py-3 px-4 rounded-xl cursor-pointer font-bold text-xs transition-all bg-indigo-700 text-white shadow-md shadow-indigo-700/20';
                 tabUser.className = 'relative flex items-center justify-center gap-2 py-3 px-4 rounded-xl cursor-pointer font-bold text-xs transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60';
                 notice.classList.remove('hidden');
+                extraDriverFields.classList.remove('hidden');
                 btn.className = 'w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-indigo-600/25 text-xs tracking-wide transition-all hover:scale-[1.005] flex items-center justify-center gap-2';
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i><span>Submit Driver Application</span>';
             }
