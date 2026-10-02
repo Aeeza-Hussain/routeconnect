@@ -23,6 +23,30 @@ class Trip extends Model
         'status',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'trip_date'       => 'date',
+            'available_seats' => 'integer',
+            'fare'            => 'decimal:2',
+        ];
+    }
+
+    public function isScheduled(): bool
+    {
+        return strtolower($this->status) === 'scheduled';
+    }
+
+    public function isCompleted(): bool
+    {
+        return strtolower($this->status) === 'completed';
+    }
+
+    public function isCancelled(): bool
+    {
+        return strtolower($this->status) === 'cancelled';
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

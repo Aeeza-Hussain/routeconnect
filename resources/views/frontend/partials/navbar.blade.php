@@ -16,11 +16,16 @@
             </div>
 
             <!-- CENTER: Navigation Links -->
+            @php
+                $isHome = request()->routeIs('home') || request()->is('/');
+                $isTrips = request()->routeIs('trips.*') || request()->is('trips*');
+                $isBookings = request()->routeIs('booking.*') || request()->is('booking*');
+            @endphp
             <nav class="hidden md:flex items-center gap-8 text-sm font-bold text-slate-600">
-                <a href="{{ url('/') }}" class="relative py-2 text-emerald-600 transition-colors after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-emerald-600 after:rounded-full">Home</a>
-                <a href="{{ url('/trips') }}" class="hover:text-emerald-600 transition-colors">Search Trips</a>
-                <a href="{{ url('/booking') }}" class="hover:text-emerald-600 transition-colors">My Bookings</a>
-                <a href="{{ url('/#about') }}" class="hover:text-emerald-600 transition-colors">About</a>
+                <a href="{{ url('/') }}" class="{{ $isHome ? 'relative py-2 text-emerald-600 transition-colors after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-emerald-600 after:rounded-full' : 'py-2 hover:text-emerald-600 transition-colors' }}">Home</a>
+                <a href="{{ url('/trips') }}" class="{{ $isTrips ? 'relative py-2 text-emerald-600 transition-colors after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-emerald-600 after:rounded-full' : 'py-2 hover:text-emerald-600 transition-colors' }}">Search Trips</a>
+                <a href="{{ url('/booking') }}" class="{{ $isBookings ? 'relative py-2 text-emerald-600 transition-colors after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-emerald-600 after:rounded-full' : 'py-2 hover:text-emerald-600 transition-colors' }}">My Bookings</a>
+                <a href="{{ url('/#about') }}" class="py-2 hover:text-emerald-600 transition-colors">About</a>
             </nav>
 
             <!-- RIGHT SIDE: Auth Buttons / Logged-in User Info -->
@@ -65,9 +70,9 @@
 
     <!-- Mobile Dropdown Menu -->
     <div id="mobileMenu" class="hidden md:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-6 space-y-3">
-        <a href="{{ url('/') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-emerald-600 bg-emerald-50">Home</a>
-        <a href="{{ url('/trips') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-slate-700 hover:bg-slate-50">Search Trips</a>
-        <a href="{{ url('/booking') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-slate-700 hover:bg-slate-50">My Bookings</a>
+        <a href="{{ url('/') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isHome ? 'text-emerald-600 bg-emerald-50' : 'text-slate-700 hover:bg-slate-50' }}">Home</a>
+        <a href="{{ url('/trips') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isTrips ? 'text-emerald-600 bg-emerald-50' : 'text-slate-700 hover:bg-slate-50' }}">Search Trips</a>
+        <a href="{{ url('/booking') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isBookings ? 'text-emerald-600 bg-emerald-50' : 'text-slate-700 hover:bg-slate-50' }}">My Bookings</a>
         <a href="{{ url('/#about') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-slate-700 hover:bg-slate-50">About</a>
         
         <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">

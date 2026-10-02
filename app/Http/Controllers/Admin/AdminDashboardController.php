@@ -14,7 +14,7 @@ class AdminDashboardController extends Controller
 {
     /**
      * Admin Dashboard Overview
-     * Shows real database counts for all summary cards.
+     * Shows real database counts for all summary cards and recent records.
      *
      * user_type = 0  → Passenger
      * user_type = 1  → Admin
@@ -43,6 +43,12 @@ class AdminDashboardController extends Controller
             ->take(5)
             ->get();
 
+        // ── Recent Bookings (latest 5) ────────────────────────────────
+        $recentBookings = Booking::with(['user', 'trip.route', 'fromStop', 'toStop'])
+            ->latest()
+            ->take(5)
+            ->get();
+
         return view('backend.admin.dashboard', compact(
             'totalUsers',
             'totalPassengers',
@@ -54,7 +60,30 @@ class AdminDashboardController extends Controller
             'totalRoutes',
             'totalTrips',
             'totalBookings',
-            'recentApplications'
+            'recentApplications',
+            'recentBookings'
         ));
+    }
+
+    /**
+     * Placeholder handlers for upcoming modules to ensure zero broken links.
+     */
+
+    public function placeholderBookings()
+    {
+        return view('backend.admin.placeholder', [
+            'title'       => 'Bookings Management',
+            'subtitle'    => 'Review passenger ticket reservations, seat allocations, and payment statuses.',
+            'icon'        => 'fa-ticket',
+            'iconBg'      => 'bg-rose-50 text-rose-600 border-rose-100',
+            'moduleName'  => 'Bookings',
+            'tableCount'  => Booking::count(),
+            'itemLabel'   => 'Total Bookings',
+        ]);
+    }
+
+    public function settings()
+    {
+        return view('backend.admin.settings.index');
     }
 }

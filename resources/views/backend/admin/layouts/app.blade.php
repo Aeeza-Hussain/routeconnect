@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -29,51 +29,41 @@
     </script>
 
     <style>
-        /* Custom scrollbar for sidebar */
-        ::-webkit-scrollbar { width: 4px; }
+        /* Custom scrollbar for modern sleek feel */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(100,116,139,0.3); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(100,116,139,0.5); }
-
-        /* Sidebar mobile overlay transition */
-        #adminSidebar { transition: transform 0.25s ease; }
-        #adminSidebar.sidebar-hidden { transform: translateX(-100%); }
-
-        @media (max-width: 1023px) {
-            #adminSidebar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                height: 100%;
-                z-index: 50;
-            }
-        }
+        ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.4); border-radius: 6px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.7); }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 font-sans antialiased min-h-screen flex">
+<body class="bg-slate-50 text-slate-900 font-sans antialiased h-screen overflow-hidden flex flex-row">
 
     <!-- Mobile sidebar overlay -->
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black/40 z-40 hidden lg:hidden" onclick="closeSidebar()"></div>
+    <div id="sidebarOverlay"
+         class="fixed inset-0 bg-black/60 z-40 hidden lg:hidden transition-opacity"
+         onclick="closeSidebar()"></div>
 
-    <!-- Admin Sidebar -->
+    <!-- Admin Sidebar (Fixed height on desktop, drawer on mobile) -->
     @include('backend.admin.partials.sidebar')
 
-    <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col min-w-0 lg:ml-0">
+    <!-- Main Content Area (independent scrollable view) -->
+    <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
 
-        <!-- Admin Top Header -->
-        @include('backend.admin.partials.navbar')
+        <!-- Admin Top Header (pinned at top) -->
+        <div class="shrink-0">
+            @include('backend.admin.partials.navbar')
+        </div>
 
-        <!-- Page Content -->
+        <!-- Page Content (ONLY this area scrolls vertically) -->
         <main class="flex-1 p-5 sm:p-8 overflow-y-auto">
             @yield('content')
         </main>
 
-        <!-- Admin Footer -->
-        <footer class="py-4 px-8 bg-white border-t border-slate-200 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <!-- Admin Footer (pinned at bottom) -->
+        <footer class="shrink-0 py-3.5 px-6 sm:px-8 bg-white border-t border-slate-200 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
             <div>© {{ date('Y') }} RouteConnect — Admin Operations Panel</div>
-            <div class="flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+            <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
                 System Online · Version 1.0
             </div>
         </footer>
@@ -86,30 +76,30 @@
         const toggle  = document.getElementById('adminSidebarToggle');
 
         function openSidebar() {
-            sidebar.classList.remove('sidebar-hidden');
+            if (!sidebar || !overlay) return;
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0');
             overlay.classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
         }
 
         function closeSidebar() {
-            sidebar.classList.add('sidebar-hidden');
+            if (!sidebar || !overlay) return;
+            sidebar.classList.add('-translate-x-full');
+            sidebar.classList.remove('translate-x-0');
             overlay.classList.add('hidden');
             document.body.classList.remove('overflow-hidden');
         }
 
         if (toggle) {
-            toggle.addEventListener('click', function () {
-                if (sidebar.classList.contains('sidebar-hidden')) {
+            toggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (sidebar.classList.contains('-translate-x-full')) {
                     openSidebar();
                 } else {
                     closeSidebar();
                 }
             });
-        }
-
-        // On small screens, start with sidebar hidden
-        if (window.innerWidth < 1024) {
-            sidebar.classList.add('sidebar-hidden');
         }
     </script>
 </body>

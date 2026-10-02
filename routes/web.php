@@ -5,6 +5,11 @@ use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\AuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminDriverController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminVehicleController;
+use App\Http\Controllers\Admin\AdminRouteController;
+use App\Http\Controllers\Admin\AdminStopController;
+use App\Http\Controllers\Admin\AdminTripController;
 use App\Http\Controllers\Driver\DriverDashboardController;
 
 /*
@@ -53,6 +58,60 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::post('/drivers/{id}/approve', [AdminDriverController::class, 'approve'])->name('admin.drivers.approve');
     Route::post('/drivers/{id}/reject', [AdminDriverController::class, 'reject'])->name('admin.drivers.reject');
     Route::get('/drivers', [AdminDriverController::class, 'index'])->name('admin.drivers.index');
+
+    // Users CRUD Management
+    Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::get('/users/create', [AdminUserController::class, 'create'])->name('admin.users.create');
+    Route::post('/users', [AdminUserController::class, 'store'])->name('admin.users.store');
+    Route::get('/users/{id}', [AdminUserController::class, 'show'])->name('admin.users.show');
+    Route::get('/users/{id}/edit', [AdminUserController::class, 'edit'])->name('admin.users.edit');
+    Route::put('/users/{id}', [AdminUserController::class, 'update'])->name('admin.users.update');
+    Route::delete('/users/{id}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+
+    // Vehicles CRUD Management
+    Route::get('/vehicles', [AdminVehicleController::class, 'index'])->name('admin.vehicles.index');
+    Route::get('/vehicles/create', [AdminVehicleController::class, 'create'])->name('admin.vehicles.create');
+    Route::post('/vehicles', [AdminVehicleController::class, 'store'])->name('admin.vehicles.store');
+    Route::get('/vehicles/{id}', [AdminVehicleController::class, 'show'])->name('admin.vehicles.show');
+    Route::get('/vehicles/{id}/edit', [AdminVehicleController::class, 'edit'])->name('admin.vehicles.edit');
+    Route::put('/vehicles/{id}', [AdminVehicleController::class, 'update'])->name('admin.vehicles.update');
+    Route::delete('/vehicles/{id}', [AdminVehicleController::class, 'destroy'])->name('admin.vehicles.destroy');
+
+    // Routes CRUD Management
+    Route::get('/routes', [AdminRouteController::class, 'index'])->name('admin.routes.index');
+    Route::get('/routes/create', [AdminRouteController::class, 'create'])->name('admin.routes.create');
+    Route::post('/routes', [AdminRouteController::class, 'store'])->name('admin.routes.store');
+    Route::get('/routes/{id}', [AdminRouteController::class, 'show'])->name('admin.routes.show');
+    Route::get('/routes/{id}/edit', [AdminRouteController::class, 'edit'])->name('admin.routes.edit');
+    Route::put('/routes/{id}', [AdminRouteController::class, 'update'])->name('admin.routes.update');
+    Route::delete('/routes/{id}', [AdminRouteController::class, 'destroy'])->name('admin.routes.destroy');
+
+    // Route Stops Management (Assign, Order, Remove)
+    Route::post('/routes/{id}/stops', [AdminRouteController::class, 'addStop'])->name('admin.routes.stops.add');
+    Route::put('/routes/{id}/stops/{stopId}', [AdminRouteController::class, 'updateStopOrder'])->name('admin.routes.stops.update-order');
+    Route::delete('/routes/{id}/stops/{stopId}', [AdminRouteController::class, 'removeStop'])->name('admin.routes.stops.remove');
+
+    // Stops CRUD Management
+    Route::get('/stops', [AdminStopController::class, 'index'])->name('admin.stops.index');
+    Route::get('/stops/create', [AdminStopController::class, 'create'])->name('admin.stops.create');
+    Route::post('/stops', [AdminStopController::class, 'store'])->name('admin.stops.store');
+    Route::get('/stops/{id}', [AdminStopController::class, 'show'])->name('admin.stops.show');
+    Route::get('/stops/{id}/edit', [AdminStopController::class, 'edit'])->name('admin.stops.edit');
+    Route::put('/stops/{id}', [AdminStopController::class, 'update'])->name('admin.stops.update');
+    Route::delete('/stops/{id}', [AdminStopController::class, 'destroy'])->name('admin.stops.destroy');
+
+    // Trips CRUD Management
+    Route::get('/trips', [AdminTripController::class, 'index'])->name('admin.trips.index');
+    Route::get('/trips/create', [AdminTripController::class, 'create'])->name('admin.trips.create');
+    Route::post('/trips', [AdminTripController::class, 'store'])->name('admin.trips.store');
+    Route::get('/trips/{id}', [AdminTripController::class, 'show'])->name('admin.trips.show');
+    Route::get('/trips/{id}/edit', [AdminTripController::class, 'edit'])->name('admin.trips.edit');
+    Route::put('/trips/{id}', [AdminTripController::class, 'update'])->name('admin.trips.update');
+    Route::delete('/trips/{id}', [AdminTripController::class, 'destroy'])->name('admin.trips.destroy');
+
+    // Platform Modules
+    Route::get('/bookings', [AdminDashboardController::class, 'placeholderBookings'])->name('admin.bookings.index');
+    Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('admin.settings.index');
 });
 
 /*
@@ -62,4 +121,10 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
 */
 Route::middleware(['driver.approved'])->prefix('driver')->group(function () {
     Route::get('/dashboard', [DriverDashboardController::class, 'index'])->name('driver.dashboard');
+    Route::get('/profile',   [DriverDashboardController::class, 'profile'])->name('driver.profile');
+    Route::get('/vehicle',   [DriverDashboardController::class, 'vehicle'])->name('driver.vehicle');
+    Route::get('/trips',     [DriverDashboardController::class, 'trips'])->name('driver.trips');
+    Route::get('/bookings',  [DriverDashboardController::class, 'bookings'])->name('driver.bookings');
+    Route::get('/messages',  [DriverDashboardController::class, 'messages'])->name('driver.messages');
+    Route::get('/settings',  [DriverDashboardController::class, 'settings'])->name('driver.settings');
 });

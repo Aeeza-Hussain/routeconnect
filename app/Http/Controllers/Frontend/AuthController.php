@@ -116,6 +116,7 @@ class AuthController extends Controller
             'dob'           => $request->dob,
             'cnic'          => $request->cnic,
             'bio'           => $request->bio ?? $request->about,
+            'license_no'    => $request->license_no,
             'profile_photo' => $photoPath,
             'password'      => Hash::make($request->password),
             'user_type'     => $isDriver ? 2 : 0,   // 0 = passenger, 2 = driver
