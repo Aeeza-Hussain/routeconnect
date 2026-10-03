@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AdminVehicleController;
 use App\Http\Controllers\Admin\AdminRouteController;
 use App\Http\Controllers\Admin\AdminStopController;
 use App\Http\Controllers\Admin\AdminTripController;
+use App\Http\Controllers\Admin\AdminTripStopController;
 use App\Http\Controllers\Driver\DriverDashboardController;
 
 /*
@@ -108,6 +109,12 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::get('/trips/{id}/edit', [AdminTripController::class, 'edit'])->name('admin.trips.edit');
     Route::put('/trips/{id}', [AdminTripController::class, 'update'])->name('admin.trips.update');
     Route::delete('/trips/{id}', [AdminTripController::class, 'destroy'])->name('admin.trips.destroy');
+
+    // Trip Stops Management (expected arrival times per stop)
+    Route::get('/trips/{trip}/stops', [AdminTripStopController::class, 'index'])->name('admin.trips.stops.index');
+    Route::post('/trips/{trip}/stops', [AdminTripStopController::class, 'store'])->name('admin.trips.stops.store');
+    Route::put('/trips/{trip}/stops/{tripStop}', [AdminTripStopController::class, 'update'])->name('admin.trips.stops.update');
+    Route::delete('/trips/{trip}/stops/{tripStop}', [AdminTripStopController::class, 'destroy'])->name('admin.trips.stops.destroy');
 
     // Platform Modules
     Route::get('/bookings', [AdminDashboardController::class, 'placeholderBookings'])->name('admin.bookings.index');

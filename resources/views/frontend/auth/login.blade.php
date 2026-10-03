@@ -161,6 +161,17 @@
 
                     </form>
 
+                    <!-- Quick Admin Login Helper -->
+                    <div class="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs text-slate-600">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+                            <span>Admin: <strong class="text-slate-800">admin@routeconnect.com</strong></span>
+                        </div>
+                        <button type="button" onclick="fillAdminCredentials()" class="text-emerald-600 hover:text-emerald-700 font-bold hover:underline">
+                            Quick Fill
+                        </button>
+                    </div>
+
                     <!-- Footer links -->
                     <div class="mt-6 pt-5 border-t border-slate-100 text-center text-xs text-slate-500 space-y-2">
                         <div>
@@ -177,14 +188,12 @@
                         </div>
                     </div>
 
-
-
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Password Toggle Script -->
+    <!-- Scripts -->
     <script>
         function togglePasswordVisibility() {
             const passwordInput = document.getElementById('password');
@@ -200,6 +209,24 @@
                 eyeIcon.classList.add('fa-eye');
             }
         }
+
+        function fillAdminCredentials() {
+            document.getElementById('email').value = 'admin@routeconnect.com';
+            document.getElementById('password').value = 'admin123456';
+        }
+
+        // If tab was idle or backgrounded for more than 30 minutes, refresh on return to get fresh CSRF token
+        let lastVisibleTime = Date.now();
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                if (Date.now() - lastVisibleTime > 30 * 60 * 1000) {
+                    window.location.reload();
+                }
+                lastVisibleTime = Date.now();
+            } else {
+                lastVisibleTime = Date.now();
+            }
+        });
     </script>
 
 </body>

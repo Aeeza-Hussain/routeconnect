@@ -180,7 +180,12 @@ class AdminTripController extends Controller
      */
     public function show($id)
     {
-        $trip = Trip::with(['driver', 'vehicle', 'route.routeStops.stop'])->findOrFail($id);
+        $trip = Trip::with([
+            'driver',
+            'vehicle',
+            'route.routeStops.stop',
+            'tripStops.stop',
+        ])->findOrFail($id);
 
         return view('backend.admin.trips.show', compact('trip'));
     }

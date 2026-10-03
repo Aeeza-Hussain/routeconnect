@@ -23,6 +23,10 @@
         </div>
     </div>
     <div class="flex flex-wrap items-center gap-2">
+        <a href="{{ route('admin.trips.stops.index', $trip->id) }}"
+           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-sm transition-colors">
+            <i class="fa-solid fa-map-pin"></i> Manage Stops
+        </a>
         <a href="{{ route('admin.trips.edit', $trip->id) }}"
            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold shadow-sm transition-colors">
             <i class="fa-solid fa-pen"></i> Edit Trip
@@ -154,6 +158,72 @@
                 </div>
             </div>
         @endif
+
+        {{-- Trip Stops & Expected Timings --}}
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i>
+                    Scheduled Stop Timings
+                </h3>
+                <a href="{{ route('admin.trips.stops.index', $trip->id) }}"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-200 transition-colors">
+                    <i class="fa-solid fa-pen-to-square text-[10px]"></i> Manage Stops
+                </a>
+            </div>
+
+            @php
+                $tripStops = $trip->tripStops->sortBy('stop_order');
+            @endphp
+
+            @if ($tripStops->isEmpty())
+                <div class="py-8 text-center rounded-xl bg-slate-50 border border-dashed border-slate-200">
+                    <i class="fa-solid fa-map-pin text-slate-300 text-3xl mb-3"></i>
+                    <p class="text-sm font-semibold text-slate-500">No stop timings configured yet.</p>
+                    <a href="{{ route('admin.trips.stops.index', $trip->id) }}"
+                       class="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:underline">
+                        <i class="fa-solid fa-plus"></i> Add Stop Timings
+                    </a>
+                </div>
+            @else
+                <div class="space-y-1">
+                    @foreach ($tripStops as $tStop)
+                        <div class="flex items-center gap-3 py-2.5 @if(!$loop->last) border-b border-slate-100 @endif">
+                            {{-- Order bubble --}}
+                            <span class="w-7 h-7 rounded-full bg-violet-600 text-white text-xs font-extrabold flex items-center justify-center shrink-0">
+                                {{ $tStop->stop_order }}
+                            </span>
+
+                            {{-- Stop connector line (not last) --}}
+                            <div class="flex-1 flex items-center justify-between">
+                                <div>
+                                    <div class="font-extrabold text-slate-900 text-sm">{{ $tStop->stop->name ?? '—' }}</div>
+                                    @if($tStop->stop?->location)
+                                        <div class="text-xs text-slate-400">{{ $tStop->stop->location }}</div>
+                                    @endif
+                                </div>
+                                <div class="text-right">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200">
+                                        <i class="fa-solid fa-clock text-emerald-600 text-[10px]"></i>
+                                        {{ \Carbon\Carbon::parse($tStop->expected_time)->format('h:i A') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
+                    <span class="text-xs text-slate-400">
+                        {{ $tripStops->count() }} of {{ $trip->route?->routeStops->count() ?? '?' }} route stops configured
+                    </span>
+                    <a href="{{ route('admin.trips.stops.index', $trip->id) }}"
+                       class="text-xs font-bold text-violet-600 hover:underline flex items-center gap-1">
+                        Edit Stop Timings <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </a>
+                </div>
+            @endif
+        </div>
 
     </div>
 
