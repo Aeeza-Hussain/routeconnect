@@ -12,6 +12,10 @@ use App\Http\Controllers\Admin\AdminStopController;
 use App\Http\Controllers\Admin\AdminTripController;
 use App\Http\Controllers\Admin\AdminTripStopController;
 use App\Http\Controllers\Driver\DriverDashboardController;
+use App\Http\Controllers\Driver\DriverTripController;
+use App\Http\Controllers\Driver\DriverBookingController;
+use App\Http\Controllers\Driver\DriverMessageController;
+use App\Http\Controllers\Driver\DriverProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -128,10 +132,28 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
 */
 Route::middleware(['driver.approved'])->prefix('driver')->group(function () {
     Route::get('/dashboard', [DriverDashboardController::class, 'index'])->name('driver.dashboard');
-    Route::get('/profile',   [DriverDashboardController::class, 'profile'])->name('driver.profile');
-    Route::get('/vehicle',   [DriverDashboardController::class, 'vehicle'])->name('driver.vehicle');
-    Route::get('/trips',     [DriverDashboardController::class, 'trips'])->name('driver.trips');
-    Route::get('/bookings',  [DriverDashboardController::class, 'bookings'])->name('driver.bookings');
-    Route::get('/messages',  [DriverDashboardController::class, 'messages'])->name('driver.messages');
-    Route::get('/settings',  [DriverDashboardController::class, 'settings'])->name('driver.settings');
+
+    // Profile & Settings
+    Route::get('/profile', [DriverProfileController::class, 'profile'])->name('driver.profile');
+    Route::put('/profile', [DriverProfileController::class, 'updateProfile'])->name('driver.profile.update');
+    Route::get('/settings', [DriverProfileController::class, 'settings'])->name('driver.settings');
+    Route::put('/settings/password', [DriverProfileController::class, 'updatePassword'])->name('driver.settings.password');
+
+    // Assigned Vehicle (read-only for own vehicle)
+    Route::get('/vehicle', [DriverDashboardController::class, 'vehicle'])->name('driver.vehicle');
+
+    // Trips (view, details with stops & timings, edit)
+    Route::get('/trips', [DriverTripController::class, 'index'])->name('driver.trips');
+    Route::get('/trips/{trip}', [DriverTripController::class, 'show'])->name('driver.trips.show');
+    Route::get('/trips/{trip}/edit', [DriverTripController::class, 'edit'])->name('driver.trips.edit');
+    Route::put('/trips/{trip}', [DriverTripController::class, 'update'])->name('driver.trips.update');
+
+    // Bookings (view passenger reservations for own trips)
+    Route::get('/bookings', [DriverBookingController::class, 'index'])->name('driver.bookings');
+    Route::get('/bookings/{booking}', [DriverBookingController::class, 'show'])->name('driver.bookings.show');
+
+    // Trip Messages (post message for driver's own trip)
+    Route::get('/messages', [DriverMessageController::class, 'index'])->name('driver.messages');
+    Route::post('/messages', [DriverMessageController::class, 'store'])->name('driver.messages.store');
+    Route::delete('/messages/{message}', [DriverMessageController::class, 'destroy'])->name('driver.messages.destroy');
 });

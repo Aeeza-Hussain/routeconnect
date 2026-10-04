@@ -38,7 +38,7 @@
         {{-- 2. Profile --}}
         <a href="{{ route('driver.profile') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
-                  {{ request()->routeIs('driver.profile') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+                  {{ request()->routeIs('driver.profile*') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
             <i class="fa-solid fa-user text-sm w-4 text-center"></i>
             <span>Profile</span>
         </a>
@@ -51,7 +51,7 @@
         {{-- 3. Vehicle --}}
         <a href="{{ route('driver.vehicle') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
-                  {{ request()->routeIs('driver.vehicle') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+                  {{ request()->routeIs('driver.vehicle*') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
             <i class="fa-solid fa-van-shuttle text-sm w-4 text-center"></i>
             <span>Vehicle</span>
         </a>
@@ -59,7 +59,7 @@
         {{-- 4. Trips --}}
         <a href="{{ route('driver.trips') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
-                  {{ request()->routeIs('driver.trips') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+                  {{ request()->routeIs('driver.trips*') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
             <i class="fa-solid fa-route text-sm w-4 text-center"></i>
             <span>Trips</span>
         </a>
@@ -67,7 +67,7 @@
         {{-- 5. Bookings --}}
         <a href="{{ route('driver.bookings') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
-                  {{ request()->routeIs('driver.bookings') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+                  {{ request()->routeIs('driver.bookings*') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
             <i class="fa-solid fa-ticket text-sm w-4 text-center"></i>
             <span>Bookings</span>
         </a>
@@ -75,7 +75,7 @@
         {{-- 6. Messages --}}
         <a href="{{ route('driver.messages') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
-                  {{ request()->routeIs('driver.messages') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+                  {{ request()->routeIs('driver.messages*') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
             <i class="fa-solid fa-comments text-sm w-4 text-center"></i>
             <span>Messages</span>
         </a>
@@ -88,7 +88,7 @@
         {{-- 7. Settings --}}
         <a href="{{ route('driver.settings') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
-                  {{ request()->routeIs('driver.settings') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+                  {{ request()->routeIs('driver.settings*') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
             <i class="fa-solid fa-gear text-sm w-4 text-center"></i>
             <span>Settings</span>
         </a>
