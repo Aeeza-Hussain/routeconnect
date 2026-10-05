@@ -20,7 +20,29 @@ class Booking extends Model
         'total_fare',
         'booking_reference',
         'status',
+        'booking_status',
     ];
+
+    public function getBookingStatusAttribute(): ?string
+    {
+        return $this->attributes['booking_status'] ?? $this->attributes['status'] ?? 'confirmed';
+    }
+
+    public function setBookingStatusAttribute($value): void
+    {
+        $this->attributes['booking_status'] = $value;
+        $this->attributes['status'] = $value;
+    }
+
+    public function isConfirmed(): bool
+    {
+        return strtolower($this->booking_status ?? $this->status) === 'confirmed';
+    }
+
+    public function isCancelled(): bool
+    {
+        return strtolower($this->booking_status ?? $this->status) === 'cancelled';
+    }
 
     public function user(): BelongsTo
     {

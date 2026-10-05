@@ -15,13 +15,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // Passenger
             $table->foreignId('trip_id')->constrained('trips')->onDelete('cascade');
-            $table->foreignId('from_stop_id')->constrained('stops')->onDelete('cascade');
-            $table->foreignId('to_stop_id')->constrained('stops')->onDelete('cascade');
+            $table->foreignId('from_stop_id')->nullable()->constrained('stops')->onDelete('cascade');
+            $table->foreignId('to_stop_id')->nullable()->constrained('stops')->onDelete('cascade');
             $table->integer('seats')->default(1);
             $table->string('seat_numbers')->nullable(); // e.g. "4, 5"
             $table->decimal('total_fare', 8, 2)->nullable();
             $table->string('booking_reference')->nullable()->unique();
             $table->string('status')->default('confirmed'); // confirmed, cancelled, completed
+            $table->string('booking_status')->default('confirmed');
             $table->timestamps();
         });
     }

@@ -65,6 +65,17 @@
             <!-- RIGHT SIDE: Auth Buttons / Logged-in User Info -->
             <div class="hidden md:flex items-center gap-3">
                 @auth
+                    @php
+                        $userUnreadCount = auth()->user()->notifications()->where('is_read', false)->count();
+                    @endphp
+                    <a href="{{ route('notifications.index') }}" class="relative p-2 rounded-xl text-slate-600 hover:text-emerald-600 hover:bg-slate-100 transition-colors" title="Notifications">
+                        <i class="fa-solid fa-bell text-base"></i>
+                        @if($userUnreadCount > 0)
+                            <span class="absolute -top-0.5 -right-0.5 px-1.5 py-0.2 rounded-full bg-emerald-600 text-white text-[9px] font-black leading-tight">
+                                {{ $userUnreadCount > 9 ? '9+' : $userUnreadCount }}
+                            </span>
+                        @endif
+                    </a>
                     <div class="flex items-center gap-3 pl-3 border-l border-slate-200">
                         <div class="text-right leading-tight">
                             <div class="text-xs font-extrabold text-slate-800">{{ auth()->user()->name }}</div>

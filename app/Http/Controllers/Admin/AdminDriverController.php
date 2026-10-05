@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Notification;
 
 class AdminDriverController extends Controller
 {
@@ -78,6 +79,12 @@ class AdminDriverController extends Controller
             'driver_status' => 'approved',
         ]);
 
+        Notification::create([
+            'user_id' => $driver->id,
+            'message' => 'Congratulations! Your driver application has been approved. You now have full access to the Driver Dashboard.',
+            'is_read' => false,
+        ]);
+
         return redirect()->route('admin.drivers.applications')
             ->with('success', "Driver '{$driver->name}' has been approved successfully.");
     }
@@ -95,6 +102,12 @@ class AdminDriverController extends Controller
 
         $driver->update([
             'driver_status' => 'rejected',
+        ]);
+
+        Notification::create([
+            'user_id' => $driver->id,
+            'message' => 'Your driver application has been reviewed and rejected. Please review your credentials or contact support.',
+            'is_read' => false,
         ]);
 
         return redirect()->route('admin.drivers.applications')

@@ -17,6 +17,9 @@ use App\Http\Controllers\Driver\DriverBookingController;
 use App\Http\Controllers\Driver\DriverMessageController;
 use App\Http\Controllers\Driver\DriverProfileController;
 
+use App\Http\Controllers\Frontend\BookingController;
+use App\Http\Controllers\NotificationController;
+
 /*
 |--------------------------------------------------------------------------
 | Public Frontend Routes
@@ -24,7 +27,38 @@ use App\Http\Controllers\Driver\DriverProfileController;
 */
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/trips', [HomeController::class, 'trips'])->name('trips.index');
-Route::get('/booking', [HomeController::class, 'booking'])->name('booking.index');
+Route::get('/trips/{trip}', [HomeController::class, 'showTrip'])->name('trips.show')->whereNumber('trip');
+
+/*
+|--------------------------------------------------------------------------
+| Passenger Seat Booking Routes (user_type == 0)
+|--------------------------------------------------------------------------
+*/
+Route::get('/booking', [BookingController::class, 'index'])->name('booking.index');
+
+Route::middleware(['passenger'])->group(function () {
+    Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('passenger.bookings.index');
+    Route::get('/my-bookings/{booking}', [BookingController::class, 'showBooking'])->name('passenger.bookings.show')->whereNumber('booking');
+    Route::post('/my-bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('passenger.bookings.cancel')->whereNumber('booking');
+    Route::delete('/my-bookings/{booking}/cancel', [BookingController::class, 'cancel'])->whereNumber('booking');
+    Route::delete('/my-bookings/{booking}', [BookingController::class, 'cancel'])->whereNumber('booking');
+
+    Route::get('/booking/{trip}', [BookingController::class, 'create'])->name('booking.create')->whereNumber('trip');
+    Route::post('/booking/{trip}', [BookingController::class, 'store'])->name('booking.store')->whereNumber('trip');
+    Route::get('/booking/confirmation/{booking}', [BookingController::class, 'confirmation'])->name('booking.confirmation')->whereNumber('booking');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Authenticated User Notification Routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read')->whereNumber('notification');
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->whereNumber('notification');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllRead');
+});
 
 /*
 |--------------------------------------------------------------------------

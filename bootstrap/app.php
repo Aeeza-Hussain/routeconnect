@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'driver.approved' => \App\Http\Middleware\ApprovedDriverMiddleware::class,
+            'passenger' => \App\Http\Middleware\PassengerMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
