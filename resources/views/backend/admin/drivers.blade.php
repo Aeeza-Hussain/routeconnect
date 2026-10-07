@@ -4,7 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RouteConnect — Driver Applications Management</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PWA Manifest & App Theme -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#059669">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Local FontAwesome 6 Icons (Fully Offline) -->
+    <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}">
+
+    <!-- Local Offline-First Stylesheets -->
+    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @endif
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body class="bg-slate-900 text-slate-100 antialiased font-sans flex flex-col min-h-screen">
     
@@ -97,5 +110,6 @@
         </div>
     </main>
 
+    @include('partials.offline_indicator')
 </body>
 </html>

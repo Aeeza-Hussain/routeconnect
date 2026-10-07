@@ -1,0 +1,12 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\api\UserContoller;
+use App\Http\Controllers\api\DriverController;
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
+
+Route::get('get/user', [UserContoller::class, 'index']);
+Route::get('get/driver', [DriverController::class, 'index']);

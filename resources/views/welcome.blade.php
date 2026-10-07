@@ -6,48 +6,25 @@
     <title>RouteConnect — Smart Transport Scheduling & Booking System</title>
     <meta name="description" content="Know your route. Know your time. Travel smarter. Local and intercity scheduled transport booking platform.">
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- PWA Manifest & App Theme -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#059669">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- FontAwesome 6 Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Local FontAwesome 6 Icons (Works Completely Offline) -->
+    <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}">
 
-    <!-- Vite Styles -->
+    <!-- Local Offline-First Stylesheets -->
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @else
-        <!-- Tailwind CSS v4 CDN fallback -->
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script>
-            tailwind.config = {
-                theme: {
-                    extend: {
-                        fontFamily: {
-                            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-                        },
-                        colors: {
-                            brand: {
-                                50: '#f0fdf4',
-                                100: '#dcfce7',
-                                500: '#10b981',
-                                600: '#059669',
-                                700: '#047857',
-                                800: '#065f46',
-                                900: '#064e3b',
-                            },
-                            indigoBrand: {
-                                500: '#6366f1',
-                                600: '#4f46e5',
-                                700: '#4338ca',
-                            }
-                        }
-                    }
-                }
-            }
-        </script>
     @endif
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+
+    <!-- Google Fonts (With zero-delay local system font fallback) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 
     <style>
         body {
@@ -1437,5 +1414,6 @@
             alert('Driver application rejected.');
         }
     </script>
+    @include('partials.offline_indicator')
 </body>
 </html>

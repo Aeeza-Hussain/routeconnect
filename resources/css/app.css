@@ -6,6 +6,24 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --color-brand-50: #f0fdf4;
+    --color-brand-100: #dcfce7;
+    --color-brand-500: #10b981;
+    --color-brand-600: #059669;
+    --color-brand-700: #047857;
+    --color-brand-800: #065f46;
+    --color-brand-900: #064e3b;
+
+    --color-emeraldBrand-50: #f0fdf4;
+    --color-emeraldBrand-100: #dcfce7;
+    --color-emeraldBrand-500: #10b981;
+    --color-emeraldBrand-600: #059669;
+    --color-emeraldBrand-700: #047857;
+    --color-emeraldBrand-800: #065f46;
+    --color-emeraldBrand-900: #064e3b;
+
+    --color-indigoBrand-500: #6366f1;
+    --color-indigoBrand-600: #4f46e5;
+    --color-indigoBrand-700: #4338ca;
 }

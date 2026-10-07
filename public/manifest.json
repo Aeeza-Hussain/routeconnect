@@ -1,0 +1,19 @@
+{
+  "name": "RouteConnect — Smart Transit",
+  "short_name": "RouteConnect",
+  "description": "Smart transport scheduling and advance seat booking system",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b132b",
+  "theme_color": "#059669",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/images/hero.jpg",
+      "sizes": "192x192 512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
