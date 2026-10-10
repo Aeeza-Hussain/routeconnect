@@ -71,15 +71,7 @@ class AdminDashboardController extends Controller
 
     public function placeholderBookings()
     {
-        return view('backend.admin.placeholder', [
-            'title'       => 'Bookings Management',
-            'subtitle'    => 'Review passenger ticket reservations, seat allocations, and payment statuses.',
-            'icon'        => 'fa-ticket',
-            'iconBg'      => 'bg-rose-50 text-rose-600 border-rose-100',
-            'moduleName'  => 'Bookings',
-            'tableCount'  => Booking::count(),
-            'itemLabel'   => 'Total Bookings',
-        ]);
+        return redirect()->route('admin.bookings.index');
     }
 
     public function settings()

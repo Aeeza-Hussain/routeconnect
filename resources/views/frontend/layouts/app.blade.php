@@ -25,8 +25,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+    <!-- Theme Initialization -->
+    @include('partials.theme_init')
 </head>
-<body class="bg-slate-50 text-slate-900 font-sans antialiased flex flex-col min-h-screen">
+<body class="bg-slate-50 dark:bg-[#070D18] text-slate-900 dark:text-slate-100 font-sans antialiased flex flex-col min-h-screen">
 
     <!-- Navigation Header -->
     @include('frontend.partials.navbar')

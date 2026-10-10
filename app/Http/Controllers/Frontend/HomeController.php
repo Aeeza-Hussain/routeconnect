@@ -18,7 +18,23 @@ class HomeController extends Controller
         $allStops = \Illuminate\Support\Facades\Schema::hasTable('stops')
             ? Stop::where('status', 'Active')->orderBy('name')->get()
             : collect();
-        return view('frontend.index', compact('allStops'));
+
+        $featuredTrips = \Illuminate\Support\Facades\Schema::hasTable('trips')
+            ? Trip::with([
+                'route.routeStops.stop',
+                'tripStops.stop',
+                'driver',
+                'vehicle',
+            ])
+            ->whereRaw('LOWER(status) = ?', ['scheduled'])
+            ->where('available_seats', '>', 0)
+            ->orderBy('trip_date')
+            ->orderBy('departure_time')
+            ->take(4)
+            ->get()
+            : collect();
+
+        return view('frontend.index', compact('allStops', 'featuredTrips'));
     }
 
     /**

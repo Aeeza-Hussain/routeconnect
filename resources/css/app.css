@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
@@ -26,4 +28,44 @@
     --color-indigoBrand-500: #6366f1;
     --color-indigoBrand-600: #4f46e5;
     --color-indigoBrand-700: #4338ca;
+}
+
+/* ==========================================================================
+   Dark Mode & Theme Support
+   ========================================================================== */
+html.dark {
+    color-scheme: dark;
+}
+
+html.dark body {
+    background-color: #0b1329;
+    color: #f1f5f9;
+}
+
+/* Base Form Inputs in Dark Mode */
+html.dark input[type="text"],
+html.dark input[type="email"],
+html.dark input[type="password"],
+html.dark input[type="number"],
+html.dark input[type="date"],
+html.dark input[type="time"],
+html.dark input[type="search"],
+html.dark input[type="tel"],
+html.dark select,
+html.dark textarea {
+    background-color: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+    color: #94a3b8;
+}
+
+/* Clean transitions on theme change */
+body, header, nav, main, footer, aside, .theme-transition {
+    transition-property: background-color, border-color, color;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }

@@ -185,6 +185,9 @@ class AdminTripController extends Controller
             'vehicle',
             'route.routeStops.stop',
             'tripStops.stop',
+            'bookings.user',
+            'bookings.fromStop',
+            'bookings.toStop',
         ])->findOrFail($id);
 
         return view('backend.admin.trips.show', compact('trip'));
