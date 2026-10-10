@@ -33,9 +33,6 @@
         ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 6px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.5); }
     </style>
-
-    <!-- Theme Initialization -->
-    @include('partials.theme_init')
 </head>
 <body class="bg-[#0B132B] text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-row">
 

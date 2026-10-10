@@ -33,11 +33,8 @@
         ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.4); border-radius: 6px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.7); }
     </style>
-
-    <!-- Theme Initialization -->
-    @include('partials.theme_init')
 </head>
-<body class="bg-slate-50 dark:bg-[#070D18] text-slate-900 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-row">
+<body class="bg-slate-50 text-slate-900 font-sans antialiased h-screen overflow-hidden flex flex-row">
 
     <!-- Mobile sidebar overlay -->
     <div id="sidebarOverlay"
@@ -56,12 +53,12 @@
         </div>
 
         <!-- Page Content (ONLY this area scrolls vertically) -->
-        <main class="flex-1 p-5 sm:p-8 overflow-y-auto bg-slate-50 dark:bg-[#070D18]">
+        <main class="flex-1 p-5 sm:p-8 overflow-y-auto">
             @yield('content')
         </main>
 
         <!-- Admin Footer (pinned at bottom) -->
-        <footer class="shrink-0 py-3.5 px-6 sm:px-8 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-400 dark:text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <footer class="shrink-0 py-3.5 px-6 sm:px-8 bg-white border-t border-slate-200 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
             <div>© {{ date('Y') }} RouteConnect — Admin Operations Panel</div>
             <div class="flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>

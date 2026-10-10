@@ -27,9 +27,6 @@
             <span>View Website</span>
         </a>
 
-        <!-- Dark / Light Theme Toggle -->
-        @include('partials.theme_toggle')
-
         <!-- Driver Profile Dropdown Badge -->
         <div class="flex items-center gap-3 pl-3 border-l border-slate-800">
             <div class="w-9 h-9 rounded-full bg-emerald-600 text-white font-extrabold flex items-center justify-center text-xs shadow-sm">

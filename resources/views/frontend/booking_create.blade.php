@@ -46,17 +46,17 @@
 </section>
 
 {{-- ─── Main Content ─── --}}
-<section class="py-10 bg-slate-50 dark:bg-[#070D18] min-h-screen">
+<section class="py-10 bg-slate-50 min-h-screen">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
         {{-- Validation Error Alerts --}}
         @if ($errors->any())
-            <div class="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-rose-800 dark:text-rose-300 text-xs sm:text-sm space-y-1 shadow-sm">
-                <div class="flex items-center gap-2 font-bold text-rose-900 dark:text-rose-200">
-                    <i class="fa-solid fa-triangle-exclamation text-rose-600 dark:text-rose-400"></i>
+            <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs sm:text-sm space-y-1 shadow-sm">
+                <div class="flex items-center gap-2 font-bold text-rose-900">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
                     <span>Please correct the following:</span>
                 </div>
-                <ul class="list-disc list-inside pl-1 space-y-0.5 text-xs text-rose-700 dark:text-rose-300">
+                <ul class="list-disc list-inside pl-1 space-y-0.5 text-xs text-rose-700">
                     @foreach ($errors->all() as $err)
                         <li>{{ $err }}</li>
                     @endforeach
@@ -65,12 +65,12 @@
         @endif
 
         @if ($trip->available_seats <= 0)
-            <div class="p-6 rounded-3xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-center space-y-3">
-                <div class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xl mx-auto">
+            <div class="p-6 rounded-3xl bg-rose-50 border border-rose-200 text-center space-y-3">
+                <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-xl mx-auto">
                     <i class="fa-solid fa-ban"></i>
                 </div>
-                <h3 class="text-base font-extrabold text-rose-900 dark:text-rose-200">This Trip is Fully Booked</h3>
-                <p class="text-xs text-rose-700 dark:text-rose-300 max-w-md mx-auto">
+                <h3 class="text-base font-extrabold text-rose-900">This Trip is Fully Booked</h3>
+                <p class="text-xs text-rose-700 max-w-md mx-auto">
                     All seats on this scheduled trip have been reserved. Please check other departure dates or alternative routes.
                 </p>
                 <div class="pt-2">
@@ -91,22 +91,22 @@
                     @csrf
 
                     {{-- Card: Number of Seats --}}
-                    <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-5">
-                        <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-5">
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
                             <div>
-                                <h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                                    <i class="fa-solid fa-couch text-emerald-600 dark:text-emerald-400"></i>
+                                <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                                    <i class="fa-solid fa-couch text-emerald-600"></i>
                                     <span>Select Number of Seats</span>
                                 </h2>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Choose how many passenger seats you wish to reserve.</p>
+                                <p class="text-xs text-slate-500 mt-0.5">Choose how many passenger seats you wish to reserve.</p>
                             </div>
-                            <span class="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 font-mono text-xs font-bold">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-mono text-xs font-bold">
                                 Rs. {{ number_format($trip->fare ?? 0, 2) }} / seat
                             </span>
                         </div>
 
                         <div>
-                            <label for="seats" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                            <label for="seats" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
                                 Number of Seats to Book <span class="text-rose-500">*</span>
                             </label>
 
@@ -121,27 +121,27 @@
                                     step="1"
                                     {{ $trip->available_seats <= 0 ? 'disabled' : '' }}
                                     required
-                                    class="w-full px-4 py-3.5 rounded-2xl border {{ $errors->has('seats') ? 'border-rose-400 focus:ring-rose-400' : 'border-slate-200 dark:border-slate-700 focus:ring-emerald-500' }} text-slate-900 dark:text-white font-mono text-lg font-extrabold focus:outline-none focus:ring-2 bg-slate-50/50 dark:bg-slate-800"
+                                    class="w-full px-4 py-3.5 rounded-2xl border {{ $errors->has('seats') ? 'border-rose-400 focus:ring-rose-400' : 'border-slate-200 focus:ring-emerald-500' }} text-slate-900 font-mono text-lg font-extrabold focus:outline-none focus:ring-2 bg-slate-50/50"
                                 >
                                 <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
                                     Max: {{ $trip->available_seats }}
                                 </span>
                             </div>
 
-                            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5 flex items-center gap-1.5">
+                            <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1.5">
                                 <i class="fa-solid fa-circle-info text-slate-400"></i>
                                 <span>Seats must be at least 1 and cannot exceed {{ $trip->available_seats }} available seats.</span>
                             </p>
                         </div>
 
                         {{-- Total Calculation Bar --}}
-                        <div class="p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-between">
+                        <div class="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex items-center justify-between">
                             <div>
-                                <span class="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider block">Estimated Total Fare</span>
-                                <span class="text-xs text-emerald-700 dark:text-emerald-400">Calculated based on selected seat count</span>
+                                <span class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider block">Estimated Total Fare</span>
+                                <span class="text-xs text-emerald-700">Calculated based on selected seat count</span>
                             </div>
                             <div class="text-right">
-                                <span id="calculated-total" class="text-2xl font-black font-mono text-emerald-900 dark:text-emerald-300 block">
+                                <span id="calculated-total" class="text-2xl font-black font-mono text-emerald-900 block">
                                     Rs. {{ number_format(($trip->fare ?? 0) * (int) old('seats', 1), 2) }}
                                 </span>
                             </div>
@@ -155,7 +155,7 @@
                                     <span>Confirm & Book Seats</span>
                                 </button>
                             @else
-                                <button type="button" disabled id="submit-booking-btn" class="w-full py-4 px-6 rounded-2xl bg-slate-200 dark:bg-slate-800 text-slate-400 font-extrabold text-sm flex items-center justify-center gap-2 cursor-not-allowed">
+                                <button type="button" disabled id="submit-booking-btn" class="w-full py-4 px-6 rounded-2xl bg-slate-200 text-slate-400 font-extrabold text-sm flex items-center justify-center gap-2 cursor-not-allowed">
                                     <i class="fa-solid fa-ban"></i>
                                     <span>Fully Booked</span>
                                 </button>
@@ -164,27 +164,27 @@
                     </div>
 
                     {{-- Passenger Information Card --}}
-                    <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4">
-                        <div class="pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-4">
+                        <div class="pb-3 border-b border-slate-100 flex items-center justify-between">
                             <h3 class="text-xs font-black uppercase tracking-wider text-slate-400">Authenticated Passenger</h3>
-                            <span class="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold">
+                            <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
                                 Verified Passenger
                             </span>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                                 <span class="text-slate-400 text-[10px] font-bold uppercase block">Passenger Name</span>
-                                <span class="font-extrabold text-slate-900 dark:text-white text-sm block mt-0.5">{{ auth()->user()->name }}</span>
+                                <span class="font-extrabold text-slate-900 text-sm block mt-0.5">{{ auth()->user()->name }}</span>
                             </div>
-                            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                                 <span class="text-slate-400 text-[10px] font-bold uppercase block">Contact Email</span>
-                                <span class="font-mono text-slate-800 dark:text-slate-200 text-xs block mt-0.5 truncate">{{ auth()->user()->email }}</span>
+                                <span class="font-mono text-slate-800 text-xs block mt-0.5 truncate">{{ auth()->user()->email }}</span>
                             </div>
                             @if (auth()->user()->phone)
-                                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 sm:col-span-2">
+                                <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100 sm:col-span-2">
                                     <span class="text-slate-400 text-[10px] font-bold uppercase block">Contact Phone</span>
-                                    <span class="font-mono text-slate-800 dark:text-slate-200 text-xs block mt-0.5">{{ auth()->user()->phone }}</span>
+                                    <span class="font-mono text-slate-800 text-xs block mt-0.5">{{ auth()->user()->phone }}</span>
                                 </div>
                             @endif
                         </div>

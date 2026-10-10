@@ -11,7 +11,6 @@ use App\Http\Controllers\Admin\AdminRouteController;
 use App\Http\Controllers\Admin\AdminStopController;
 use App\Http\Controllers\Admin\AdminTripController;
 use App\Http\Controllers\Admin\AdminTripStopController;
-use App\Http\Controllers\Admin\AdminBookingController;
 use App\Http\Controllers\Driver\DriverDashboardController;
 use App\Http\Controllers\Driver\DriverTripController;
 use App\Http\Controllers\Driver\DriverBookingController;
@@ -155,12 +154,8 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::put('/trips/{trip}/stops/{tripStop}', [AdminTripStopController::class, 'update'])->name('admin.trips.stops.update');
     Route::delete('/trips/{trip}/stops/{tripStop}', [AdminTripStopController::class, 'destroy'])->name('admin.trips.stops.destroy');
 
-    // Bookings CRUD Management
-    Route::get('/bookings', [AdminBookingController::class, 'index'])->name('admin.bookings.index');
-    Route::get('/bookings/{id}', [AdminBookingController::class, 'show'])->name('admin.bookings.show');
-    Route::post('/bookings/{id}/cancel', [AdminBookingController::class, 'cancel'])->name('admin.bookings.cancel');
-
     // Platform Modules
+    Route::get('/bookings', [AdminDashboardController::class, 'placeholderBookings'])->name('admin.bookings.index');
     Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('admin.settings.index');
 });
 
