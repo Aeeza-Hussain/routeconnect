@@ -142,6 +142,26 @@ class AdminTripController extends Controller
             ]);
         }
 
+        if (!$vehicle->isApproved()) {
+            return back()->withInput()->withErrors([
+                'vehicle_id' => 'The selected vehicle has not been approved yet. Only approved vehicles can be assigned to trips.',
+            ]);
+        }
+
+        // Verify No Driver Schedule Overlap
+        $overlap = Trip::checkDriverTripOverlap(
+            $driver->id,
+            $request->trip_date,
+            $request->departure_time,
+            $request->expected_arrival_time
+        );
+
+        if ($overlap) {
+            return back()->withInput()->withErrors([
+                'departure_time' => "Driver schedule conflict: Driver {$driver->name} is already scheduled for trip #{$overlap->id} ({$overlap->route?->name}) during this time period.",
+            ]);
+        }
+
         // 3. Verify Route is Active
         $route = RouteModel::where('id', $request->route_id)->first();
         if (!$route || strtolower($route->status) !== 'active') {
@@ -158,15 +178,17 @@ class AdminTripController extends Controller
         }
 
         $trip = Trip::create([
-            'user_id'         => $driver->id,
-            'vehicle_id'      => $vehicle->id,
-            'route_id'        => $route->id,
-            'trip_date'       => $request->trip_date,
-            'departure_time'  => $request->departure_time,
-            'available_seats' => (int) $request->available_seats,
-            'fare'            => $request->fare,
-            'pickup_point'    => $request->pickup_point,
-            'status'          => ucfirst(strtolower($request->status)),
+            'user_id'               => $driver->id,
+            'vehicle_id'            => $vehicle->id,
+            'route_id'              => $route->id,
+            'trip_date'             => $request->trip_date,
+            'departure_time'        => $request->departure_time,
+            'expected_arrival_time' => $request->expected_arrival_time,
+            'available_seats'       => (int) $request->available_seats,
+            'fare'                  => $request->fare,
+            'pickup_point'          => $request->pickup_point,
+            'notes'                 => $request->notes,
+            'status'                => ucfirst(strtolower($request->status)),
         ]);
 
         return redirect()->route('admin.trips.index')
@@ -264,6 +286,27 @@ class AdminTripController extends Controller
             ]);
         }
 
+        if (!$vehicle->isApproved()) {
+            return back()->withInput()->withErrors([
+                'vehicle_id' => 'The selected vehicle has not been approved yet. Only approved vehicles can be assigned to trips.',
+            ]);
+        }
+
+        // Verify No Driver Schedule Overlap
+        $overlap = Trip::checkDriverTripOverlap(
+            $driver->id,
+            $request->trip_date,
+            $request->departure_time,
+            $request->expected_arrival_time,
+            $trip->id
+        );
+
+        if ($overlap) {
+            return back()->withInput()->withErrors([
+                'departure_time' => "Driver schedule conflict: Driver {$driver->name} is already scheduled for trip #{$overlap->id} ({$overlap->route?->name}) during this time period.",
+            ]);
+        }
+
         // 3. Verify Route exists
         $route = RouteModel::findOrFail($request->route_id);
 
@@ -275,15 +318,17 @@ class AdminTripController extends Controller
         }
 
         $trip->update([
-            'user_id'         => $driver->id,
-            'vehicle_id'      => $vehicle->id,
-            'route_id'        => $route->id,
-            'trip_date'       => $request->trip_date,
-            'departure_time'  => $request->departure_time,
-            'available_seats' => (int) $request->available_seats,
-            'fare'            => $request->fare,
-            'pickup_point'    => $request->pickup_point,
-            'status'          => ucfirst(strtolower($request->status)),
+            'user_id'               => $driver->id,
+            'vehicle_id'            => $vehicle->id,
+            'route_id'              => $route->id,
+            'trip_date'             => $request->trip_date,
+            'departure_time'        => $request->departure_time,
+            'expected_arrival_time' => $request->expected_arrival_time,
+            'available_seats'       => (int) $request->available_seats,
+            'fare'                  => $request->fare,
+            'pickup_point'          => $request->pickup_point,
+            'notes'                 => $request->notes,
+            'status'                => ucfirst(strtolower($request->status)),
         ]);
 
         return redirect()->route('admin.trips.index')

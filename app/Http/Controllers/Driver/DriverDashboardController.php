@@ -29,6 +29,8 @@ class DriverDashboardController extends Controller
 
         // Available Vehicle Seats
         $availableVehicleSeats = $vehicle ? (int) $vehicle->total_seats : 0;
+        $vehiclesCount         = Vehicle::where('user_id', $driver->id)->count();
+        $approvedVehiclesCount = Vehicle::where('user_id', $driver->id)->whereIn('status', ['Active', 'active', 'approved', 'Approved'])->count();
 
         // Recent trips and bookings for dashboard display
         $recentTrips = Trip::where('user_id', $driver->id)
@@ -55,6 +57,8 @@ class DriverDashboardController extends Controller
             'completedTripsCount',
             'bookingsCount',
             'availableVehicleSeats',
+            'vehiclesCount',
+            'approvedVehiclesCount',
             'recentTrips',
             'recentBookings',
             'recentMessages'

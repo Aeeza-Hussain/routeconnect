@@ -18,6 +18,7 @@ class Vehicle extends Model
         'model',
         'total_seats',
         'status',
+        'rejection_reason',
     ];
 
     /**
@@ -56,6 +57,21 @@ class Vehicle extends Model
 
     public function isActive(): bool
     {
-        return strtolower($this->status) === 'active';
+        return in_array(strtolower($this->status), ['active', 'approved']);
+    }
+
+    public function isApproved(): bool
+    {
+        return in_array(strtolower($this->status), ['approved', 'active']);
+    }
+
+    public function isPending(): bool
+    {
+        return strtolower($this->status) === 'pending';
+    }
+
+    public function isRejected(): bool
+    {
+        return strtolower($this->status) === 'rejected';
     }
 }

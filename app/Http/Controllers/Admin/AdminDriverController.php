@@ -96,17 +96,23 @@ class AdminDriverController extends Controller
      * Sets driver_status = 'rejected'
      * user_type remains = 2 (driver) — NEVER changed
      */
-    public function reject($id)
+    public function reject(Request $request, $id)
     {
         $driver = User::where('user_type', 2)->findOrFail($id);
+        $reason = $request->input('rejection_reason');
 
         $driver->update([
-            'driver_status' => 'rejected',
+            'driver_status'    => 'rejected',
+            'rejection_reason' => $reason,
         ]);
+
+        $message = $reason 
+            ? "Your driver application has been reviewed and rejected. Reason: {$reason}"
+            : 'Your driver application has been reviewed and rejected. Please review your credentials or contact support.';
 
         Notification::create([
             'user_id' => $driver->id,
-            'message' => 'Your driver application has been reviewed and rejected. Please review your credentials or contact support.',
+            'message' => $message,
             'is_read' => false,
         ]);
 

@@ -38,6 +38,7 @@ class User extends Authenticatable
         'password',
         'user_type',
         'driver_status',
+        'rejection_reason',
     ];
 
     // ─────────────────────────────────────────

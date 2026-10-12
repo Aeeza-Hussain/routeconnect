@@ -40,8 +40,17 @@ class AdminVehicleController extends Controller
         }
 
         // Filter by status
-        if ($status !== 'all' && in_array(strtolower($status), ['active', 'inactive'])) {
-            $query->where('status', ucfirst(strtolower($status)));
+        if ($status !== 'all') {
+            $st = strtolower($status);
+            if ($st === 'active' || $st === 'approved') {
+                $query->whereIn('status', ['Active', 'active', 'approved', 'Approved']);
+            } elseif ($st === 'pending') {
+                $query->where('status', 'pending');
+            } elseif ($st === 'rejected') {
+                $query->where('status', 'rejected');
+            } elseif ($st === 'inactive') {
+                $query->whereIn('status', ['Inactive', 'inactive']);
+            }
         }
 
         $vehicles = $query->latest()->paginate(15)->withQueryString();
@@ -49,8 +58,10 @@ class AdminVehicleController extends Controller
         // Stat counts
         $counts = [
             'all'      => Vehicle::count(),
-            'active'   => Vehicle::where('status', 'Active')->count(),
-            'inactive' => Vehicle::where('status', 'Inactive')->count(),
+            'active'   => Vehicle::whereIn('status', ['Active', 'active', 'approved', 'Approved'])->count(),
+            'pending'  => Vehicle::where('status', 'pending')->count(),
+            'rejected' => Vehicle::where('status', 'rejected')->count(),
+            'inactive' => Vehicle::whereIn('status', ['Inactive', 'inactive'])->count(),
             'van'      => Vehicle::where('type', 'Van')->count(),
             'daba'     => Vehicle::where('type', 'Daba')->count(),
             'car'      => Vehicle::where('type', 'Car')->count(),
@@ -202,5 +213,56 @@ class AdminVehicleController extends Controller
 
         return redirect()->route('admin.vehicles.index')
             ->with('success', "Vehicle '{$number}' has been deleted.");
+    }
+
+    /**
+     * Approve a Vehicle registration.
+     * POST /admin/vehicles/{id}/approve
+     */
+    public function approve($id)
+    {
+        $vehicle = Vehicle::with('driver')->findOrFail($id);
+
+        $vehicle->update([
+            'status'           => 'Active', // Active is approved
+            'rejection_reason' => null,
+        ]);
+
+        if ($vehicle->user_id) {
+            \App\Models\Notification::create([
+                'user_id' => $vehicle->user_id,
+                'message' => "Congratulations! Your vehicle '{$vehicle->registration_no}' ({$vehicle->model}) has been approved. You can now schedule trips with this vehicle.",
+                'is_read' => false,
+            ]);
+        }
+
+        return redirect()->back()
+            ->with('success', "Vehicle '{$vehicle->registration_no}' has been approved successfully.");
+    }
+
+    /**
+     * Reject a Vehicle registration.
+     * POST /admin/vehicles/{id}/reject
+     */
+    public function reject(Request $request, $id)
+    {
+        $vehicle = Vehicle::with('driver')->findOrFail($id);
+        $reason = $request->input('rejection_reason', 'Vehicle details or documentation did not meet verification criteria.');
+
+        $vehicle->update([
+            'status'           => 'rejected',
+            'rejection_reason' => $reason,
+        ]);
+
+        if ($vehicle->user_id) {
+            \App\Models\Notification::create([
+                'user_id' => $vehicle->user_id,
+                'message' => "Your vehicle registration for '{$vehicle->registration_no}' ({$vehicle->model}) was rejected. Reason: {$reason}",
+                'is_read' => false,
+            ]);
+        }
+
+        return redirect()->back()
+            ->with('success', "Vehicle '{$vehicle->registration_no}' has been rejected.");
     }
 }

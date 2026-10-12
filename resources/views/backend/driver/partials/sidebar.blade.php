@@ -22,7 +22,7 @@
     {{-- ── Navigation Items (Scrolls Internally If Needed) ── --}}
     <nav class="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
 
-        {{-- Section label: Overview --}}
+        {{-- Section label: Operations --}}
         <div class="px-3 pt-1 pb-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
             Operations
         </div>
@@ -35,49 +35,62 @@
             <span>Dashboard</span>
         </a>
 
-        {{-- 2. Profile --}}
-        <a href="{{ route('driver.profile') }}"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
-                  {{ request()->routeIs('driver.profile*') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
-            <i class="fa-solid fa-user text-sm w-4 text-center"></i>
-            <span>Profile</span>
-        </a>
-
-        {{-- Section label: Fleet & Journeys --}}
+        {{-- Section label: Vehicles --}}
         <div class="px-3 pt-3.5 pb-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-            Fleet & Journeys
+            Fleet Vehicles
         </div>
 
-        {{-- 3. Vehicle --}}
-        <a href="{{ route('driver.vehicle') }}"
+        {{-- 2. My Vehicles --}}
+        <a href="{{ route('driver.vehicles.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
-                  {{ request()->routeIs('driver.vehicle*') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+                  {{ request()->routeIs('driver.vehicles.index') || request()->routeIs('driver.vehicles.show') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
             <i class="fa-solid fa-van-shuttle text-sm w-4 text-center"></i>
-            <span>Vehicle</span>
+            <span>My Vehicles</span>
         </a>
 
-        {{-- 4. Trips --}}
+        {{-- 3. Register Vehicle --}}
+        <a href="{{ route('driver.vehicles.create') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
+                  {{ request()->routeIs('driver.vehicles.create') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+            <i class="fa-solid fa-square-plus text-sm w-4 text-center"></i>
+            <span>Register Vehicle</span>
+        </a>
+
+        {{-- Section label: Trips & Scheduling --}}
+        <div class="px-3 pt-3.5 pb-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+            Trips & Bookings
+        </div>
+
+        {{-- 4. Schedule a Trip --}}
+        <a href="{{ route('driver.trips.create') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
+                  {{ request()->routeIs('driver.trips.create') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+            <i class="fa-solid fa-calendar-plus text-sm w-4 text-center"></i>
+            <span>Schedule a Trip</span>
+        </a>
+
+        {{-- 5. My Trips --}}
         <a href="{{ route('driver.trips') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
-                  {{ request()->routeIs('driver.trips*') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+                  {{ request()->routeIs('driver.trips') && !request()->routeIs('driver.trips.create') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
             <i class="fa-solid fa-route text-sm w-4 text-center"></i>
-            <span>Trips</span>
+            <span>My Trips</span>
         </a>
 
-        {{-- 5. Bookings --}}
+        {{-- 6. Passenger Bookings --}}
         <a href="{{ route('driver.bookings') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
                   {{ request()->routeIs('driver.bookings*') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
             <i class="fa-solid fa-ticket text-sm w-4 text-center"></i>
-            <span>Bookings</span>
+            <span>Passenger Bookings</span>
         </a>
 
-        {{-- 6. Messages --}}
+        {{-- 7. Messages --}}
         <a href="{{ route('driver.messages') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
                   {{ request()->routeIs('driver.messages*') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
             <i class="fa-solid fa-comments text-sm w-4 text-center"></i>
-            <span>Messages</span>
+            <span>Trip Messages</span>
         </a>
 
         {{-- Section label: Account --}}
@@ -85,7 +98,15 @@
             Account
         </div>
 
-        {{-- 7. Settings --}}
+        {{-- 8. Profile --}}
+        <a href="{{ route('driver.profile') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
+                  {{ request()->routeIs('driver.profile*') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+            <i class="fa-solid fa-user text-sm w-4 text-center"></i>
+            <span>Profile</span>
+        </a>
+
+        {{-- 9. Settings --}}
         <a href="{{ route('driver.settings') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
                   {{ request()->routeIs('driver.settings*') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">

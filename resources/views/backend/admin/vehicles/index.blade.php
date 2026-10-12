@@ -59,8 +59,10 @@
 
         {{-- Status filter --}}
         <select name="status" class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            <option value="all"      {{ $status === 'all'      ? 'selected' : '' }}>All Status</option>
-            <option value="active"   {{ strtolower($status) === 'active'   ? 'selected' : '' }}>Active ({{ $counts['active'] }})</option>
+            <option value="all"      {{ $status === 'all'      ? 'selected' : '' }}>All Status ({{ $counts['all'] }})</option>
+            <option value="pending"  {{ strtolower($status) === 'pending'  ? 'selected' : '' }}>Pending Approval ({{ $counts['pending'] ?? 0 }})</option>
+            <option value="active"   {{ in_array(strtolower($status), ['active', 'approved']) ? 'selected' : '' }}>Approved / Active ({{ $counts['active'] }})</option>
+            <option value="rejected" {{ strtolower($status) === 'rejected' ? 'selected' : '' }}>Rejected ({{ $counts['rejected'] ?? 0 }})</option>
             <option value="inactive" {{ strtolower($status) === 'inactive' ? 'selected' : '' }}>Inactive ({{ $counts['inactive'] }})</option>
         </select>
 
@@ -206,13 +208,21 @@
 
                             {{-- Status --}}
                             <td class="px-6 py-4">
-                                @if ($vehicle->isActive())
+                                @if ($vehicle->isPending())
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-extrabold border border-amber-200">
+                                        <i class="fa-solid fa-hourglass-half text-[9px] animate-pulse"></i> Pending Approval
+                                    </span>
+                                @elseif ($vehicle->isRejected())
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-[11px] font-extrabold border border-rose-200" title="{{ $vehicle->rejection_reason }}">
+                                        <i class="fa-solid fa-circle-xmark text-[9px]"></i> Rejected
+                                    </span>
+                                @elseif ($vehicle->isActive())
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-extrabold border border-emerald-200">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-[11px] font-extrabold border border-rose-200">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Inactive
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 text-[11px] font-extrabold border border-slate-200">
+                                        {{ ucfirst($vehicle->status) }}
                                     </span>
                                 @endif
                             </td>
@@ -224,18 +234,43 @@
 
                             {{-- Actions --}}
                             <td class="px-6 py-4">
-                                <div class="flex items-center justify-end gap-2">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    {{-- Approve action for pending/rejected --}}
+                                    @if ($vehicle->isPending() || $vehicle->isRejected())
+                                        <form action="{{ route('admin.vehicles.approve', $vehicle->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit"
+                                                    title="Approve vehicle"
+                                                    class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition-colors inline-flex items-center gap-1">
+                                                <i class="fa-solid fa-check"></i> <span>Approve</span>
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    {{-- Reject action for pending/active --}}
+                                    @if ($vehicle->isPending())
+                                        <form action="{{ route('admin.vehicles.reject', $vehicle->id) }}" method="POST"
+                                              onsubmit="return confirm('Reject vehicle \'{{ addslashes($vehicle->registration_no) }}\'?')">
+                                            @csrf
+                                            <button type="submit"
+                                                    title="Reject vehicle"
+                                                    class="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] transition-colors inline-flex items-center gap-1">
+                                                <i class="fa-solid fa-xmark"></i> <span>Reject</span>
+                                            </button>
+                                        </form>
+                                    @endif
+
                                     {{-- View --}}
                                     <a href="{{ route('admin.vehicles.show', $vehicle->id) }}"
                                        title="View details"
-                                       class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold transition-colors">
-                                        <i class="fa-solid fa-eye text-[10px]"></i>
+                                       class="px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold transition-colors">
+                                        <i class="fa-solid fa-eye text-[11px]"></i>
                                     </a>
                                     {{-- Edit --}}
                                     <a href="{{ route('admin.vehicles.edit', $vehicle->id) }}"
                                        title="Edit vehicle"
-                                       class="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold transition-colors border border-indigo-200">
-                                        <i class="fa-solid fa-pen text-[10px]"></i>
+                                       class="px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold transition-colors border border-indigo-200">
+                                        <i class="fa-solid fa-pen text-[11px]"></i>
                                     </a>
                                     {{-- Delete --}}
                                     <form action="{{ route('admin.vehicles.destroy', $vehicle->id) }}" method="POST"
@@ -244,8 +279,8 @@
                                         @method('DELETE')
                                         <button type="submit"
                                                 title="Delete vehicle"
-                                                class="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold transition-colors border border-rose-200">
-                                            <i class="fa-solid fa-trash text-[10px]"></i>
+                                                class="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold transition-colors border border-rose-200">
+                                            <i class="fa-solid fa-trash text-[11px]"></i>
                                         </button>
                                     </form>
                                 </div>

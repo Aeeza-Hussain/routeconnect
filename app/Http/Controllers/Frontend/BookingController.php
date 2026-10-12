@@ -51,7 +51,14 @@ class BookingController extends Controller
             // Pessimistic write lock
             $lockedTrip = Trip::with(['route.routeStops'])->where('id', $trip->id)->lockForUpdate()->firstOrFail();
 
-            // 1. Check if fully booked
+            // 1. Check trip status
+            if (strtolower($lockedTrip->status) !== 'scheduled') {
+                throw ValidationException::withMessages([
+                    'seats' => 'This trip is no longer active or scheduled for booking.',
+                ]);
+            }
+
+            // 2. Check if fully booked
             if ($lockedTrip->available_seats <= 0) {
                 throw ValidationException::withMessages([
                     'seats' => 'This trip is fully booked. No seats are available.',

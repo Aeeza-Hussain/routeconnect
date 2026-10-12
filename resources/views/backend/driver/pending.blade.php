@@ -81,6 +81,12 @@
                     Hello <strong class="text-white">{{ auth()->user()->name }}</strong>,<br>
                     Your driver registration was reviewed and could not be approved at this time.
                 </p>
+                @if (auth()->user()->rejection_reason)
+                    <div class="mt-4 p-3.5 bg-rose-950/60 rounded-xl border border-rose-800/80 text-xs text-rose-300 text-left">
+                        <strong class="font-bold text-rose-200 block mb-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Reason for Rejection:</strong>
+                        <span>{{ auth()->user()->rejection_reason }}</span>
+                    </div>
+                @endif
                 <div class="mt-6 p-4 bg-slate-950/70 rounded-2xl border border-slate-800/80 text-xs text-slate-400 text-left space-y-2">
                     <div class="flex items-start gap-2.5">
                         <i class="fa-solid fa-headset text-rose-400 mt-0.5"></i>

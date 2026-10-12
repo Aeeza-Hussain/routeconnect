@@ -11,7 +11,9 @@ use App\Http\Controllers\Admin\AdminRouteController;
 use App\Http\Controllers\Admin\AdminStopController;
 use App\Http\Controllers\Admin\AdminTripController;
 use App\Http\Controllers\Admin\AdminTripStopController;
+use App\Http\Controllers\Admin\AdminBookingController;
 use App\Http\Controllers\Driver\DriverDashboardController;
+use App\Http\Controllers\Driver\DriverVehicleController;
 use App\Http\Controllers\Driver\DriverTripController;
 use App\Http\Controllers\Driver\DriverBookingController;
 use App\Http\Controllers\Driver\DriverMessageController;
@@ -107,7 +109,7 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::put('/users/{id}', [AdminUserController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{id}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
 
-    // Vehicles CRUD Management
+    // Vehicles CRUD Management & Approvals
     Route::get('/vehicles', [AdminVehicleController::class, 'index'])->name('admin.vehicles.index');
     Route::get('/vehicles/create', [AdminVehicleController::class, 'create'])->name('admin.vehicles.create');
     Route::post('/vehicles', [AdminVehicleController::class, 'store'])->name('admin.vehicles.store');
@@ -115,6 +117,8 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::get('/vehicles/{id}/edit', [AdminVehicleController::class, 'edit'])->name('admin.vehicles.edit');
     Route::put('/vehicles/{id}', [AdminVehicleController::class, 'update'])->name('admin.vehicles.update');
     Route::delete('/vehicles/{id}', [AdminVehicleController::class, 'destroy'])->name('admin.vehicles.destroy');
+    Route::post('/vehicles/{id}/approve', [AdminVehicleController::class, 'approve'])->name('admin.vehicles.approve');
+    Route::post('/vehicles/{id}/reject', [AdminVehicleController::class, 'reject'])->name('admin.vehicles.reject');
 
     // Routes CRUD Management
     Route::get('/routes', [AdminRouteController::class, 'index'])->name('admin.routes.index');
@@ -154,8 +158,12 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::put('/trips/{trip}/stops/{tripStop}', [AdminTripStopController::class, 'update'])->name('admin.trips.stops.update');
     Route::delete('/trips/{trip}/stops/{tripStop}', [AdminTripStopController::class, 'destroy'])->name('admin.trips.stops.destroy');
 
+    // Passenger Bookings Management
+    Route::get('/bookings', [AdminBookingController::class, 'index'])->name('admin.bookings.index');
+    Route::get('/bookings/{id}', [AdminBookingController::class, 'show'])->name('admin.bookings.show');
+    Route::post('/bookings/{id}/cancel', [AdminBookingController::class, 'cancel'])->name('admin.bookings.cancel');
+
     // Platform Modules
-    Route::get('/bookings', [AdminDashboardController::class, 'placeholderBookings'])->name('admin.bookings.index');
     Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('admin.settings.index');
 });
 
@@ -173,14 +181,21 @@ Route::middleware(['driver.approved'])->prefix('driver')->group(function () {
     Route::get('/settings', [DriverProfileController::class, 'settings'])->name('driver.settings');
     Route::put('/settings/password', [DriverProfileController::class, 'updatePassword'])->name('driver.settings.password');
 
-    // Assigned Vehicle (read-only for own vehicle)
-    Route::get('/vehicle', [DriverDashboardController::class, 'vehicle'])->name('driver.vehicle');
+    // Driver Multiple Vehicles Management
+    Route::get('/vehicles', [DriverVehicleController::class, 'index'])->name('driver.vehicles.index');
+    Route::get('/vehicles/create', [DriverVehicleController::class, 'create'])->name('driver.vehicles.create');
+    Route::post('/vehicles', [DriverVehicleController::class, 'store'])->name('driver.vehicles.store');
+    Route::get('/vehicles/{id}', [DriverVehicleController::class, 'show'])->name('driver.vehicles.show');
+    Route::get('/vehicle', [DriverDashboardController::class, 'vehicle'])->name('driver.vehicle'); // legacy alias
 
-    // Trips (view, details with stops & timings, edit)
+    // Schedule Trips & Manage Trips
     Route::get('/trips', [DriverTripController::class, 'index'])->name('driver.trips');
+    Route::get('/trips/create', [DriverTripController::class, 'create'])->name('driver.trips.create');
+    Route::post('/trips', [DriverTripController::class, 'store'])->name('driver.trips.store');
     Route::get('/trips/{trip}', [DriverTripController::class, 'show'])->name('driver.trips.show');
     Route::get('/trips/{trip}/edit', [DriverTripController::class, 'edit'])->name('driver.trips.edit');
     Route::put('/trips/{trip}', [DriverTripController::class, 'update'])->name('driver.trips.update');
+    Route::post('/trips/{trip}/cancel', [DriverTripController::class, 'cancel'])->name('driver.trips.cancel');
 
     // Bookings (view passenger reservations for own trips)
     Route::get('/bookings', [DriverBookingController::class, 'index'])->name('driver.bookings');
