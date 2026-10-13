@@ -259,13 +259,24 @@
                             </div>
 
                             <!-- Date of Birth -->
-                            <div class="sm:col-span-2">
+                            <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Date of Birth (DOB)</label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
                                         <i class="fa-solid fa-calendar"></i>
                                     </span>
                                     <input type="date" name="dob" value="{{ old('dob') }}" class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
+                                </div>
+                            </div>
+
+                            <!-- Driving License Number -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Driving License No. <span class="text-rose-500">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
+                                        <i class="fa-solid fa-address-card"></i>
+                                    </span>
+                                    <input type="text" name="license_no" value="{{ old('license_no') }}" placeholder="e.g. GLT-DL-12345" class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
                                 </div>
                             </div>
                         </div>

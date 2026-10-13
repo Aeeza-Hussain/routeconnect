@@ -49,7 +49,7 @@ class BookingController extends Controller
         // Execute inside database transaction with row lock to prevent race conditions & overbooking
         $booking = DB::transaction(function () use ($trip, $seatsToBook, $request) {
             // Pessimistic write lock
-            $lockedTrip = Trip::with(['route.routeStops'])->where('id', $trip->id)->lockForUpdate()->firstOrFail();
+            $lockedTrip = Trip::with(['route.routeStops', 'driver', 'vehicle'])->where('id', $trip->id)->lockForUpdate()->firstOrFail();
 
             // 1. Check trip status
             if (strtolower($lockedTrip->status) !== 'scheduled') {

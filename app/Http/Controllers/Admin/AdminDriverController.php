@@ -60,7 +60,7 @@ class AdminDriverController extends Controller
      */
     public function show($id)
     {
-        $driver = User::where('user_type', 2)->findOrFail($id);
+        $driver = User::where('user_type', 2)->with('vehicles')->findOrFail($id);
         return view('backend.admin.drivers.show', compact('driver'));
     }
 
@@ -76,7 +76,8 @@ class AdminDriverController extends Controller
         $driver = User::where('user_type', 2)->findOrFail($id);
 
         $driver->update([
-            'driver_status' => 'approved',
+            'driver_status'    => 'approved',
+            'rejection_reason' => null,
         ]);
 
         Notification::create([

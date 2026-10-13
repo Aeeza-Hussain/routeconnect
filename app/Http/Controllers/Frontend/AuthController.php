@@ -86,6 +86,7 @@ class AuthController extends Controller
             'gender'            => ['nullable', 'string', 'in:male,female,other'],
             'dob'               => ['nullable', 'date'],
             'cnic'              => ['nullable', 'string', 'max:30'],
+            'license_no'        => ['nullable', 'string', 'max:50'],
             'bio'               => ['nullable', 'string', 'max:1000'],
             'image'             => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:4096'],
             'profile_photo'     => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:4096'],
@@ -126,6 +127,16 @@ class AuthController extends Controller
         Auth::login($user);
 
         if ($isDriver) {
+            // Notify administrators about new driver registration
+            $admins = User::where('user_type', 1)->get();
+            foreach ($admins as $admin) {
+                \App\Models\Notification::create([
+                    'user_id' => $admin->id,
+                    'message' => "New driver application submitted by {$user->name} ({$user->email}). Pending administrator review.",
+                    'is_read' => false,
+                ]);
+            }
+
             return redirect()->route('driver.pending')
                 ->with('success', 'Driver application submitted! Pending admin approval.');
         }

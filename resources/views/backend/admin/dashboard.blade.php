@@ -120,7 +120,7 @@
             </div>
         </div>
         <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
-            <span>Fleet capacity</span>
+            <span>{{ $pendingVehicles }} Pending · {{ $approvedVehicles }} Active</span>
             <a href="{{ route('admin.vehicles.index') }}" class="text-indigo-600 font-extrabold hover:text-indigo-800 transition-colors">Manage →</a>
         </div>
     </div>
@@ -222,7 +222,7 @@
                 <i class="fa-solid fa-van-shuttle"></i>
             </div>
             <span class="text-xs font-bold leading-tight">Vehicles</span>
-            <span class="text-[10px] text-slate-500 group-hover:text-indigo-600 font-semibold mt-0.5">{{ $totalVehicles }} Fleet</span>
+            <span class="text-[10px] text-amber-600 font-semibold mt-0.5">{{ $pendingVehicles }} Pending</span>
         </a>
 
         {{-- 4. Routes --}}
@@ -355,6 +355,110 @@
                                         </form>
                                         <form action="{{ route('admin.drivers.reject', $driver->id) }}" method="POST" class="inline">
                                             @csrf
+                                            <button type="submit"
+                                                    class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold transition-colors inline-flex items-center gap-1">
+                                                <i class="fa-solid fa-xmark text-[10px]"></i> Reject
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+
+    {{-- ── 2. RECENT PENDING VEHICLE APPROVALS TABLE ── --}}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+
+        <div class="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                    <span class="w-2.5 h-5 bg-indigo-500 rounded-full inline-block"></span>
+                    Recent Pending Vehicle Approvals
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5 ml-4">Newly registered commercial vehicles awaiting separate administrator review.</p>
+            </div>
+            <a href="{{ route('admin.vehicles.index', ['status' => 'pending']) }}"
+               class="shrink-0 px-4 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-extrabold text-xs border border-indigo-200 transition-colors inline-flex items-center gap-2">
+                <i class="fa-solid fa-van-shuttle"></i>
+                View All {{ $pendingVehicles }} Pending Vehicles
+            </a>
+        </div>
+
+        @if ($recentPendingVehicles->isEmpty())
+            <div class="p-12 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-2xl mx-auto mb-3">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div class="text-sm font-extrabold text-slate-700">All clear — no vehicles pending review!</div>
+                <p class="text-xs text-slate-400 mt-1">All commercial fleet vehicles have been reviewed.</p>
+            </div>
+        @else
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 text-slate-400 font-extrabold uppercase tracking-wider border-b border-slate-100">
+                        <tr>
+                            <th class="px-6 py-3">Vehicle Number</th>
+                            <th class="px-6 py-3">Model</th>
+                            <th class="px-6 py-3">Type</th>
+                            <th class="px-6 py-3">Assigned Driver</th>
+                            <th class="px-6 py-3">Capacity</th>
+                            <th class="px-6 py-3">Status</th>
+                            <th class="px-6 py-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach ($recentPendingVehicles as $veh)
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="px-6 py-4 font-mono font-extrabold text-slate-900 text-sm">
+                                    {{ $veh->registration_no }}
+                                </td>
+                                <td class="px-6 py-4 text-slate-700 font-bold">
+                                    {{ $veh->model }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200">
+                                        {{ $veh->type }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if ($veh->driver)
+                                        <div class="font-extrabold text-slate-900">{{ $veh->driver->name }}</div>
+                                        <div class="text-[10px] text-slate-400">Status: {{ ucfirst($veh->driver->driver_status) }}</div>
+                                    @else
+                                        <span class="text-slate-400 italic">Unassigned</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 font-extrabold text-slate-700">
+                                    {{ $veh->total_seats }} Seats
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-extrabold border border-amber-200">
+                                        <i class="fa-solid fa-hourglass-half text-amber-500 animate-pulse"></i> Pending Approval
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <a href="{{ route('admin.vehicles.show', $veh->id) }}"
+                                           class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold transition-colors inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-eye text-[10px]"></i> Details
+                                        </a>
+
+                                        <form action="{{ route('admin.vehicles.approve', $veh->id) }}" method="POST" class="inline">
+                                            @csrf
+                                            <button type="submit"
+                                                    class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-colors inline-flex items-center gap-1">
+                                                <i class="fa-solid fa-check text-[10px]"></i> Approve
+                                            </button>
+                                        </form>
+
+                                        <form action="{{ route('admin.vehicles.reject', $veh->id) }}" method="POST" class="inline"
+                                              onsubmit="const r = prompt('Optional rejection reason for vehicle \'{{ addslashes($veh->registration_no) }}\':'); if (r === null) return false; this.rejection_reason.value = r;">
+                                            @csrf
+                                            <input type="hidden" name="rejection_reason" value="">
                                             <button type="submit"
                                                     class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold transition-colors inline-flex items-center gap-1">
                                                 <i class="fa-solid fa-xmark text-[10px]"></i> Reject

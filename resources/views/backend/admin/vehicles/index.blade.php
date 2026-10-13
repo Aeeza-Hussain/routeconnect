@@ -248,10 +248,11 @@
                                     @endif
 
                                     {{-- Reject action for pending/active --}}
-                                    @if ($vehicle->isPending())
+                                    @if ($vehicle->isPending() || $vehicle->isActive())
                                         <form action="{{ route('admin.vehicles.reject', $vehicle->id) }}" method="POST"
-                                              onsubmit="return confirm('Reject vehicle \'{{ addslashes($vehicle->registration_no) }}\'?')">
+                                              onsubmit="const r = prompt('Optional rejection reason for vehicle \'{{ addslashes($vehicle->registration_no) }}\': (Leave blank if none)'); if (r === null) return false; this.rejection_reason.value = r;">
                                             @csrf
+                                            <input type="hidden" name="rejection_reason" value="">
                                             <button type="submit"
                                                     title="Reject vehicle"
                                                     class="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] transition-colors inline-flex items-center gap-1">

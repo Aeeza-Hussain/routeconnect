@@ -150,43 +150,76 @@
 {{-- ─── Vehicle Overview & Quick Actions Banner ─── --}}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
-    {{-- Assigned Vehicle Card --}}
+    {{-- Fleet & Vehicle Approval Status Card --}}
     <div class="lg:col-span-1 bg-slate-950/60 rounded-2xl border border-slate-800 p-6 flex flex-col justify-between">
         <div>
             <div class="flex items-center justify-between mb-4">
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-van-shuttle text-teal-400"></i> Assigned Vehicle
+                    <i class="fa-solid fa-van-shuttle text-teal-400"></i> Fleet Approval Status
                 </span>
-                @if ($vehicle)
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> {{ $vehicle->status }}
-                    </span>
-                @else
-                    <span class="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-bold border border-amber-500/20">Unassigned</span>
-                @endif
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Driver Approved
+                </span>
             </div>
 
+            {{-- Fleet Approval Counters --}}
+            <div class="grid grid-cols-3 gap-2 text-center mb-4">
+                <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                    <span class="text-xs font-extrabold text-emerald-400 block">{{ $approvedVehiclesCount }}</span>
+                    <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block mt-0.5">Approved</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                    <span class="text-xs font-extrabold text-amber-400 block">{{ $pendingVehiclesCount }}</span>
+                    <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block mt-0.5">Pending</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                    <span class="text-xs font-extrabold text-rose-400 block">{{ $rejectedVehiclesCount }}</span>
+                    <span class="text-[9px] uppercase tracking-wider text-slate-400 font-bold block mt-0.5">Rejected</span>
+                </div>
+            </div>
+
+            @if ($pendingVehiclesCount > 0)
+                <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 mb-3 flex items-start gap-2">
+                    <i class="fa-solid fa-hourglass-half text-amber-400 mt-0.5 shrink-0"></i>
+                    <span><strong>{{ $pendingVehiclesCount }} vehicle(s)</strong> awaiting administrator approval before trips can be scheduled.</span>
+                </div>
+            @endif
+
+            @if ($rejectedVehiclesCount > 0)
+                <div class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-[11px] text-rose-300 mb-3 flex items-start gap-2">
+                    <i class="fa-solid fa-circle-exclamation text-rose-400 mt-0.5 shrink-0"></i>
+                    <span><strong>{{ $rejectedVehiclesCount }} vehicle(s)</strong> rejected. Review details under My Vehicles.</span>
+                </div>
+            @endif
+
             @if ($vehicle)
-                <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 mb-4">
-                    <div class="text-xl font-black text-white font-mono">{{ $vehicle->registration_no }}</div>
-                    <div class="text-xs text-slate-400 mt-1">{{ $vehicle->model }} · {{ $vehicle->type }}</div>
-                    <div class="mt-3 flex items-center justify-between text-xs text-slate-300 pt-3 border-t border-slate-800">
-                        <span>Total Capacity</span>
-                        <span class="font-bold text-teal-400">{{ $vehicle->total_seats }} Seats</span>
+                <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 mb-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-mono font-black text-white">{{ $vehicle->registration_no }}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full capitalize
+                            {{ $vehicle->isApproved() ? 'bg-emerald-500/10 text-emerald-400' : ($vehicle->isRejected() ? 'bg-rose-500/10 text-rose-400' : 'bg-amber-500/10 text-amber-400') }}">
+                            {{ $vehicle->status }}
+                        </span>
                     </div>
+                    <div class="text-[11px] text-slate-400 mt-1">{{ $vehicle->model }} · {{ $vehicle->total_seats }} Seats</div>
                 </div>
             @else
-                <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 text-center py-6 mb-4">
-                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-2xl mb-2"></i>
-                    <p class="text-xs text-slate-300 font-semibold">No vehicle assigned yet</p>
-                    <p class="text-[11px] text-slate-500 mt-1">Please contact your RouteConnect administrator.</p>
+                <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 text-center py-4 mb-4">
+                    <i class="fa-solid fa-car-side text-slate-500 text-xl mb-1"></i>
+                    <p class="text-xs text-slate-300 font-semibold">No vehicles registered yet</p>
+                    <p class="text-[10px] text-slate-500 mt-0.5">Register a vehicle to begin scheduling trips.</p>
                 </div>
             @endif
         </div>
 
-        <a href="{{ route('driver.vehicle') }}" class="w-full text-center px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-bold border border-slate-800 transition-all">
-            View Vehicle Full Specs →
-        </a>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('driver.vehicles.index') }}" class="flex-1 text-center px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-bold border border-slate-800 transition-all">
+                My Fleet ({{ $vehiclesCount }}) →
+            </a>
+            <a href="{{ route('driver.vehicles.create') }}" class="px-3 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-extrabold transition-all">
+                <i class="fa-solid fa-plus"></i> Add
+            </a>
+        </div>
     </div>
 
     {{-- Quick Shortcuts --}}

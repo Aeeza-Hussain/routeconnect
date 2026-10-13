@@ -8,11 +8,24 @@ use App\Models\User;
 
 class DriverController extends Controller
 {
-    public function index(){
-        $driver = User::where('user_type', 2)->get();
+    public function index(Request $request)
+    {
+        $status = $request->query('status');
+
+        $query = User::where('user_type', 2)
+            ->with(['vehicles' => function ($q) {
+                $q->latest();
+            }]);
+
+        if ($status && $status !== 'all') {
+            $query->where('driver_status', $status);
+        }
+
+        $driver = $query->latest()->get();
+
         return response()->json([
             'status' => true,
-            'driver' => $driver
+            'driver' => $driver,
         ]);
     }
 }

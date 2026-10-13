@@ -177,6 +177,11 @@
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 text-rose-800 text-[11px] font-extrabold border border-rose-200">
                                         <i class="fa-solid fa-circle-xmark text-rose-500"></i> Rejected
                                     </span>
+                                    @if ($driver->rejection_reason)
+                                        <div class="text-[10px] text-rose-600 mt-1 max-w-xs truncate" title="{{ $driver->rejection_reason }}">
+                                            Reason: {{ $driver->rejection_reason }}
+                                        </div>
+                                    @endif
                                 @endif
                             </td>
 
@@ -205,10 +210,11 @@
 
                                     {{-- Reject Button (only if not already rejected) --}}
                                     @if ($driver->driver_status !== 'rejected')
-                                        <form action="{{ route('admin.drivers.reject', $driver->id) }}" method="POST" class="inline">
+                                        <form action="{{ route('admin.drivers.reject', $driver->id) }}" method="POST" class="inline"
+                                              onsubmit="const r = prompt('Optional rejection reason for driver {{ addslashes($driver->name) }}: (Leave blank if none)'); if (r === null) return false; this.rejection_reason.value = r;">
                                             @csrf
+                                            <input type="hidden" name="rejection_reason" value="">
                                             <button type="submit"
-                                                    onclick="return confirm('Reject this driver application?')"
                                                     class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold transition-colors inline-flex items-center gap-1">
                                                 <i class="fa-solid fa-xmark text-[10px]"></i> Reject
                                             </button>

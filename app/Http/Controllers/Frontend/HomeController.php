@@ -37,7 +37,7 @@ class HomeController extends Controller
         $date = $request->input('date');
         $time = $request->input('time');
 
-        // 1. Base Query: Only scheduled trips with available seats > 0
+        // 1. Base Query: Only scheduled trips with available seats > 0 belonging to approved drivers with approved vehicles
         $query = Trip::with([
             'route.routeStops.stop',
             'tripStops.stop',
@@ -46,7 +46,13 @@ class HomeController extends Controller
             'tripMessages'
         ])
         ->whereRaw('LOWER(status) = ?', ['scheduled'])
-        ->where('available_seats', '>', 0);
+        ->where('available_seats', '>', 0)
+        ->whereHas('driver', function ($q) {
+            $q->where('user_type', 2)->where('driver_status', 'approved');
+        })
+        ->whereHas('vehicle', function ($q) {
+            $q->whereIn('status', ['Active', 'active', 'approved', 'Approved']);
+        });
 
         // 2. Date match
         if (!empty($date)) {
@@ -151,6 +157,12 @@ class HomeController extends Controller
             'vehicle',
             'tripMessages.user'
         ])
+        ->whereHas('driver', function ($q) {
+            $q->where('user_type', 2)->where('driver_status', 'approved');
+        })
+        ->whereHas('vehicle', function ($q) {
+            $q->whereIn('status', ['Active', 'active', 'approved', 'Approved']);
+        })
         ->findOrFail($id);
 
         $orderedStops = $this->getTripOrderedStops($trip);

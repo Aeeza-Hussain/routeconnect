@@ -247,7 +247,7 @@ class AdminVehicleController extends Controller
     public function reject(Request $request, $id)
     {
         $vehicle = Vehicle::with('driver')->findOrFail($id);
-        $reason = $request->input('rejection_reason', 'Vehicle details or documentation did not meet verification criteria.');
+        $reason = $request->filled('rejection_reason') ? trim($request->input('rejection_reason')) : null;
 
         $vehicle->update([
             'status'           => 'rejected',
@@ -255,9 +255,13 @@ class AdminVehicleController extends Controller
         ]);
 
         if ($vehicle->user_id) {
+            $msg = $reason 
+                ? "Your vehicle registration for '{$vehicle->registration_no}' ({$vehicle->model}) was rejected. Reason: {$reason}"
+                : "Your vehicle registration for '{$vehicle->registration_no}' ({$vehicle->model}) was rejected.";
+
             \App\Models\Notification::create([
                 'user_id' => $vehicle->user_id,
-                'message' => "Your vehicle registration for '{$vehicle->registration_no}' ({$vehicle->model}) was rejected. Reason: {$reason}",
+                'message' => $msg,
                 'is_read' => false,
             ]);
         }

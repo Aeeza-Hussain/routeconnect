@@ -31,14 +31,25 @@ class AdminDashboardController extends Controller
         $rejectedDrivers = User::where('user_type', 2)->where('driver_status', 'rejected')->count();
 
         // ── Platform Statistics ───────────────────────────────────────
-        $totalVehicles = Vehicle::count();
+        $totalVehicles    = Vehicle::count();
+        $approvedVehicles = Vehicle::whereIn('status', ['Active', 'active', 'approved', 'Approved'])->count();
+        $pendingVehicles  = Vehicle::where('status', 'pending')->count();
+        $rejectedVehicles = Vehicle::where('status', 'rejected')->count();
+
         $totalRoutes   = RouteModel::count();
         $totalTrips    = Trip::count();
         $totalBookings = Booking::count();
 
-        // ── Recent Pending Applications (latest 5) ────────────────────
+        // ── Recent Pending Driver Applications (latest 5) ─────────────
         $recentApplications = User::where('user_type', 2)
             ->where('driver_status', 'pending')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // ── Recent Pending Vehicles (latest 5) ────────────────────────
+        $recentPendingVehicles = Vehicle::where('status', 'pending')
+            ->with('driver')
             ->latest()
             ->take(5)
             ->get();
@@ -57,10 +68,14 @@ class AdminDashboardController extends Controller
             'pendingDrivers',
             'rejectedDrivers',
             'totalVehicles',
+            'approvedVehicles',
+            'pendingVehicles',
+            'rejectedVehicles',
             'totalRoutes',
             'totalTrips',
             'totalBookings',
             'recentApplications',
+            'recentPendingVehicles',
             'recentBookings'
         ));
     }

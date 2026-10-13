@@ -27,6 +27,9 @@ class DriverVehicleController extends Controller
     public function create()
     {
         $driver = auth()->user();
+        if (!$driver || !$driver->isApprovedDriver()) {
+            abort(403, 'Unauthorized access. Only approved drivers can register vehicles.');
+        }
         return view('backend.driver.vehicles.create', compact('driver'));
     }
 
@@ -36,6 +39,11 @@ class DriverVehicleController extends Controller
      */
     public function store(Request $request)
     {
+        $driver = auth()->user();
+        if (!$driver || !$driver->isApprovedDriver()) {
+            abort(403, 'Unauthorized access. Only approved drivers can register vehicles.');
+        }
+
         $request->validate([
             'registration_no' => ['required', 'string', 'max:50', 'unique:vehicles,registration_no'],
             'type'            => ['required', 'in:Van,Daba,Car,Bus,Other'],
