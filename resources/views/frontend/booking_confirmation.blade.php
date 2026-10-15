@@ -100,14 +100,20 @@
 
                 {{-- Action Links --}}
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-                    <a href="{{ url('/trips') }}" class="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all text-center">
-                        <i class="fa-solid fa-magnifying-glass mr-1.5"></i>
-                        <span>Search More Trips</span>
+                    <a href="{{ url('/my-bookings') }}" class="w-full sm:w-auto px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition-all text-center flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20">
+                        <i class="fa-solid fa-ticket"></i>
+                        <span>Go to My Bookings</span>
                     </a>
-                    <a href="{{ url('/trips/' . $booking->trip_id) }}" class="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all text-center">
-                        <i class="fa-solid fa-circle-info mr-1.5"></i>
-                        <span>View Trip Details</span>
-                    </a>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <a href="{{ url('/trips') }}" class="flex-1 sm:flex-none px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all text-center">
+                            <i class="fa-solid fa-magnifying-glass mr-1"></i>
+                            <span>Search Trips</span>
+                        </a>
+                        <a href="{{ url('/trips/' . $booking->trip_id) }}" class="flex-1 sm:flex-none px-4 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all text-center">
+                            <i class="fa-solid fa-circle-info mr-1"></i>
+                            <span>Trip Itinerary</span>
+                        </a>
+                    </div>
                 </div>
 
             </div>

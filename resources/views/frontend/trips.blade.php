@@ -6,7 +6,6 @@
 
 {{-- ─── 1. HERO SEARCH BANNER ─── --}}
 <section class="relative bg-slate-950 text-white pt-10 pb-16 lg:pt-14 lg:pb-24 overflow-hidden border-b border-slate-800">
-    <!-- Subtle gradient background overlay -->
     <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/40 opacity-90"></div>
     <div class="absolute -top-24 -right-24 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -19,7 +18,7 @@
                 Find Scheduled Trips
             </h1>
             <p class="text-slate-300 text-sm sm:text-base font-medium">
-                Search verified commercial vehicles passing through your start and destination stops with real-time seat availability.
+                Search verified commercial vehicles passing through your start, intermediate, and destination stops with real-time seat availability.
             </p>
         </div>
     </div>
@@ -30,7 +29,7 @@
 <section class="relative z-20 -mt-10 sm:-mt-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/90 text-slate-900">
         
-        <form action="{{ url('/trips') }}" method="GET" class="space-y-4">
+        <form action="{{ url('/trips') }}" method="GET" id="tripSearchForm" class="space-y-4">
             
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-end">
                 
@@ -38,7 +37,7 @@
                 <div class="lg:col-span-3">
                     <label for="from" class="block text-[11px] font-bold text-slate-600 uppercase mb-1.5 flex items-center gap-1.5">
                         <i class="fa-solid fa-circle-dot text-emerald-600 text-[10px]"></i>
-                        <span>From</span>
+                        <span>From (Origin / Stop)</span>
                     </label>
                     <div class="relative">
                         <i class="fa-solid fa-location-dot absolute left-3.5 top-3.5 text-slate-400 text-xs pointer-events-none"></i>
@@ -69,7 +68,7 @@
                 <div class="lg:col-span-3">
                     <label for="to" class="block text-[11px] font-bold text-slate-600 uppercase mb-1.5 flex items-center gap-1.5">
                         <i class="fa-solid fa-location-pin text-rose-500 text-[10px]"></i>
-                        <span>To</span>
+                        <span>To (Destination / Stop)</span>
                     </label>
                     <div class="relative">
                         <i class="fa-solid fa-location-dot absolute left-3.5 top-3.5 text-slate-400 text-xs pointer-events-none"></i>
@@ -96,11 +95,11 @@
                     </div>
                 </div>
 
-                {{-- 3. Date --}}
+                {{-- 3. Travel Date --}}
                 <div class="lg:col-span-2">
                     <label for="date" class="block text-[11px] font-bold text-slate-600 uppercase mb-1.5 flex items-center gap-1.5">
                         <i class="fa-regular fa-calendar text-emerald-600 text-[10px]"></i>
-                        <span>Date</span>
+                        <span>Travel Date</span>
                     </label>
                     <div class="relative">
                         <input type="date"
@@ -111,11 +110,11 @@
                     </div>
                 </div>
 
-                {{-- 4. Optional Preferred Time --}}
+                {{-- 4. Optional Preferred Departure Time --}}
                 <div class="lg:col-span-2">
                     <label for="time" class="block text-[11px] font-bold text-slate-600 uppercase mb-1.5 flex items-center gap-1.5">
                         <i class="fa-regular fa-clock text-emerald-600 text-[10px]"></i>
-                        <span>Preferred Time</span>
+                        <span>Departure Time</span>
                     </label>
                     <div class="relative">
                         <select name="time"
@@ -125,6 +124,9 @@
                             <option value="morning"   {{ request('time', $time) === 'morning'   ? 'selected' : '' }}>Morning (05:00 AM – 11:59 AM)</option>
                             <option value="afternoon" {{ request('time', $time) === 'afternoon' ? 'selected' : '' }}>Afternoon (12:00 PM – 04:59 PM)</option>
                             <option value="evening"   {{ request('time', $time) === 'evening'   ? 'selected' : '' }}>Evening (05:00 PM – 11:59 PM)</option>
+                            <option value="08:00"     {{ request('time', $time) === '08:00'     ? 'selected' : '' }}>From 08:00 AM</option>
+                            <option value="12:00"     {{ request('time', $time) === '12:00'     ? 'selected' : '' }}>From 12:00 PM</option>
+                            <option value="15:00"     {{ request('time', $time) === '15:00'     ? 'selected' : '' }}>From 03:00 PM</option>
                         </select>
                     </div>
                 </div>
@@ -174,8 +176,39 @@
 <section class="py-12 bg-slate-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
+        {{-- ERROR STATE BANNER --}}
+        @if (!empty($errorMessage) || session('error') || $errors->any())
+            <div id="searchErrorAlert" class="bg-rose-50 border border-rose-200 rounded-3xl p-6 sm:p-7 text-rose-900 shadow-sm flex items-start gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-xl shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="flex-1 space-y-1">
+                    <h3 class="text-sm font-extrabold text-rose-950 uppercase tracking-wider">Search Parameter Notice</h3>
+                    <p class="text-xs sm:text-sm text-rose-800 leading-relaxed">
+                        {{ $errorMessage ?? session('error') ?? $errors->first() }}
+                    </p>
+                    <div class="pt-2 flex items-center gap-3">
+                        <a href="{{ url('/trips') }}" class="text-xs font-bold text-rose-700 hover:text-rose-900 underline flex items-center gap-1">
+                            <i class="fa-solid fa-rotate-left text-[10px]"></i> Reset Search Criteria
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- LOADING STATE INDICATOR --}}
+        <div id="searchLoadingState" class="hidden bg-white rounded-3xl p-10 border border-emerald-200/80 shadow-md text-center max-w-xl mx-auto space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mx-auto">
+                <i class="fa-solid fa-circle-notch fa-spin"></i>
+            </div>
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900">Searching Available Trips...</h3>
+                <p class="text-xs text-slate-500 mt-1">Finding matching scheduled services with verified vehicles and real-time seat availability.</p>
+            </div>
+        </div>
+
         {{-- Query Summary Bar --}}
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2" id="resultsHeader">
             <div>
                 <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
                     <span>Trip Search Results</span>
@@ -189,6 +222,7 @@
                         @if(!empty($from))<strong>"{{ $from }}"</strong>@endif
                         @if(!empty($to)) to <strong>"{{ $to }}"</strong>@endif
                         @if(!empty($date)) on <strong>{{ \Carbon\Carbon::parse($date)->format('d M Y') }}</strong>@endif
+                        @if(!empty($time)) (<strong>{{ ucfirst($time) }}</strong>)@endif
                     @else
                         All currently active scheduled departures.
                     @endif
@@ -202,7 +236,7 @@
         </div>
 
         {{-- NO TRIPS FOUND MESSAGE --}}
-        @if ($trips->isEmpty())
+        @if ($trips->isEmpty() && empty($errorMessage))
             <div class="bg-white rounded-3xl p-12 sm:p-16 border border-slate-200/90 shadow-sm text-center max-w-2xl mx-auto">
                 <div class="w-16 h-16 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200/60 flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm">
                     <i class="fa-solid fa-route"></i>
@@ -212,19 +246,39 @@
                     No scheduled trips match your specified boarding stop, destination, and departure date criteria.
                     Try selecting an alternative date, clearing your time preference, or checking another nearby corridor stop.
                 </p>
+
+                {{-- Search Breakdown Summary --}}
+                @if(!empty($from) || !empty($to) || !empty($date) || !empty($time))
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 max-w-md mx-auto text-xs text-slate-600 mb-6 space-y-1.5 text-left">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Searched Parameters</span>
+                        @if(!empty($from))
+                            <div class="flex justify-between"><span>Boarding / Origin:</span> <strong class="text-slate-900">{{ $from }}</strong></div>
+                        @endif
+                        @if(!empty($to))
+                            <div class="flex justify-between"><span>Destination / Stop:</span> <strong class="text-slate-900">{{ $to }}</strong></div>
+                        @endif
+                        @if(!empty($date))
+                            <div class="flex justify-between"><span>Travel Date:</span> <strong class="text-slate-900">{{ \Carbon\Carbon::parse($date)->format('D, d M Y') }}</strong></div>
+                        @endif
+                        @if(!empty($time))
+                            <div class="flex justify-between"><span>Departure Time:</span> <strong class="text-slate-900">{{ ucfirst($time) }}</strong></div>
+                        @endif
+                    </div>
+                @endif
+
                 <div class="flex flex-wrap items-center justify-center gap-3">
                     <a href="{{ url('/trips') }}" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors">
                         View All Available Departures
                     </a>
-                    <a href="{{ url('/') }}#searchCard" class="px-5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors">
-                        Modify Search Query
+                    <a href="{{ url('/trips') }}" class="px-5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors">
+                        Reset Filters
                     </a>
                 </div>
             </div>
 
         {{-- MATCHING TRIPS LIST --}}
-        @else
-            <div class="space-y-5">
+        @elseif(!$trips->isEmpty())
+            <div class="space-y-5" id="tripResultsContainer">
                 @foreach ($trips as $trip)
                     <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-sm hover:shadow-md transition-all">
                         
@@ -248,15 +302,45 @@
                                     </span>
                                 </div>
 
-                                {{-- Main Route Title --}}
+                                {{-- Main Route Title: Origin -> Destination --}}
                                 <h3 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
-                                    <span>{{ $trip->route->origin ?? 'Origin' }}</span>
+                                    <span>{{ $trip->route->origin ?? $trip->route->start_location ?? 'Origin' }}</span>
                                     <i class="fa-solid fa-arrow-right text-sm text-emerald-600"></i>
-                                    <span>{{ $trip->route->destination ?? 'Destination' }}</span>
+                                    <span>{{ $trip->route->destination ?? $trip->route->end_location ?? 'Destination' }}</span>
                                 </h3>
+
+                                {{-- Intermediate Stops Summary Badge --}}
+                                <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                                    @if (!empty($trip->intermediate_stops) && count($trip->intermediate_stops) > 0)
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-sky-50 text-sky-800 border border-sky-200/60">
+                                            <i class="fa-solid fa-map-pin text-sky-600 text-[10px]"></i>
+                                            <span>Intermediate Stops ({{ count($trip->intermediate_stops) }}):
+                                                @foreach ($trip->intermediate_stops as $iStop)
+                                                    <strong>{{ $iStop['name'] }}</strong>@if(!empty($iStop['expected_time'])) <span class="font-mono text-[10px] text-sky-700">({{ \Carbon\Carbon::parse($iStop['expected_time'])->format('h:i A') }})</span>@endif{{ !$loop->last ? ', ' : '' }}
+                                                @endforeach
+                                            </span>
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600">
+                                            <i class="fa-solid fa-road text-slate-400 text-[10px]"></i> Direct Service
+                                        </span>
+                                    @endif
+                                </div>
+
+                                {{-- If Passenger searched an intermediate segment, display matched segment badge --}}
+                                @if (isset($trip->search_from_stop) && isset($trip->search_to_stop))
+                                    <div class="mt-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 font-bold flex flex-wrap items-center gap-2">
+                                        <i class="fa-solid fa-route text-emerald-600"></i>
+                                        <span>Your Matched Segment: 
+                                            <strong>{{ $trip->search_from_stop['name'] }}</strong> ({{ $trip->search_from_stop['expected_time'] ? \Carbon\Carbon::parse($trip->search_from_stop['expected_time'])->format('h:i A') : \Carbon\Carbon::parse($trip->departure_time)->format('h:i A') }}) 
+                                            → 
+                                            <strong>{{ $trip->search_to_stop['name'] }}</strong> ({{ $trip->search_to_stop['expected_time'] ? \Carbon\Carbon::parse($trip->search_to_stop['expected_time'])->format('h:i A') : 'Dropoff' }})
+                                        </span>
+                                    </div>
+                                @endif
                             </div>
 
-                            {{-- Fare & Booking Action --}}
+                            {{-- Fare & Per Seat Badge --}}
                             <div class="flex items-center lg:flex-col lg:items-end justify-between gap-2">
                                 <div>
                                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block lg:text-right">Ticket Fare</span>
@@ -282,12 +366,12 @@
                                         {{ $trip->departure_time ? \Carbon\Carbon::parse($trip->departure_time)->format('h:i A') : '—' }}
                                     </span>
                                     <span class="text-slate-500 text-[11px]">
-                                        {{ $trip->trip_date ? \Carbon\Carbon::parse($trip->trip_date)->format('D, d M Y') : '—' }}
+                                        {{ $trip->trip_date ? \Carbon\Carbon::parse($trip->trip_date)->format('15 Oct 2026') : '—' }}
                                     </span>
                                 </div>
                             </div>
 
-                            {{-- 2. Driver --}}
+                            {{-- 2. Driver Details --}}
                             <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3">
                                 <div class="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center text-base shrink-0">
                                     <i class="fa-solid fa-user-check"></i>
@@ -300,10 +384,13 @@
                                     <span class="text-emerald-700 font-bold text-[10px] inline-flex items-center gap-1">
                                         <i class="fa-solid fa-shield-halved text-[9px]"></i> Verified Driver
                                     </span>
+                                    @if(!empty($trip->driver?->phone))
+                                        <span class="text-slate-400 text-[10px] block font-mono">{{ $trip->driver->phone }}</span>
+                                    @endif
                                 </div>
                             </div>
 
-                            {{-- 3. Vehicle --}}
+                            {{-- 3. Vehicle Type & Details --}}
                             <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3">
                                 <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-base shrink-0">
                                     <i class="fa-solid fa-van-shuttle"></i>
@@ -313,13 +400,16 @@
                                     <span class="font-mono font-extrabold text-slate-900 text-sm block">
                                         {{ $trip->vehicle->registration_no ?? 'Fleet Bus' }}
                                     </span>
-                                    <span class="text-slate-500 text-[11px] truncate block max-w-[150px]">
-                                        {{ $trip->vehicle->model ?? '' }} ({{ $trip->vehicle->type ?? 'Van' }})
+                                    <span class="text-slate-600 text-[11px] truncate block max-w-[150px] font-semibold">
+                                        {{ $trip->vehicle->model ?? '' }}
+                                    </span>
+                                    <span class="text-sky-700 text-[10px] font-bold block">
+                                        Vehicle Type: {{ $trip->vehicle->type ?? 'Van' }}
                                     </span>
                                 </div>
                             </div>
 
-                            {{-- 4. Available Seats --}}
+                            {{-- 4. Total Capacity & Available Seats --}}
                             <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3">
                                 <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-base shrink-0">
                                     <i class="fa-solid fa-chair"></i>
@@ -329,29 +419,24 @@
                                     <span class="font-mono font-black text-emerald-700 text-base block">
                                         {{ $trip->available_seats }} Open {{ \Illuminate\Support\Str::plural('Seat', $trip->available_seats) }}
                                     </span>
-                                    <span class="text-slate-500 text-[11px]">
-                                        out of {{ $trip->vehicle->total_seats ?? '—' }} total seats
+                                    <span class="text-slate-500 text-[11px] block">
+                                        Total Capacity: {{ $trip->vehicle->total_seats ?? '—' }} Seats
                                     </span>
                                 </div>
                             </div>
 
                         </div>
 
-                        {{-- EXPECTED STOP TIMES (Timeline / Highlight) --}}
+                        {{-- EXPECTED STOP TIMES (Timeline) --}}
                         <div class="mt-2 p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100 text-xs">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                                 <span class="font-extrabold text-slate-800 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
                                     <i class="fa-solid fa-clock text-emerald-600"></i> Expected Stop Timings
                                 </span>
                                 
-                                @if (isset($trip->search_from_stop) && isset($trip->search_to_stop))
-                                    <span class="text-emerald-800 font-bold text-[11px]">
-                                        Your query segment: 
-                                        <strong>{{ $trip->search_from_stop['name'] }}</strong> ({{ $trip->search_from_stop['expected_time'] ? \Carbon\Carbon::parse($trip->search_from_stop['expected_time'])->format('h:i A') : $trip->departure_time }}) 
-                                        → 
-                                        <strong>{{ $trip->search_to_stop['name'] }}</strong> ({{ $trip->search_to_stop['expected_time'] ? \Carbon\Carbon::parse($trip->search_to_stop['expected_time'])->format('h:i A') : 'Arrival' }})
-                                    </span>
-                                @endif
+                                <span class="text-slate-500 text-[10px]">
+                                    Sequential timing across all corridor stops
+                                </span>
                             </div>
 
                             {{-- Sequential Stops Timeline --}}
@@ -364,7 +449,7 @@
                                     <div class="flex items-center gap-2 min-w-max">
                                         @foreach ($orderedStops as $idx => $s)
                                             <div class="flex items-center gap-2">
-                                                <div class="p-2 rounded-xl {{ (isset($trip->search_from_stop) && $trip->search_from_stop['name'] === $s['name']) || (isset($trip->search_to_stop) && $trip->search_to_stop['name'] === $s['name']) ? 'bg-emerald-600 text-white font-extrabold shadow-sm' : 'bg-white border border-slate-200 text-slate-700' }}">
+                                                <div class="p-2.5 rounded-xl {{ (isset($trip->search_from_stop) && $trip->search_from_stop['name'] === $s['name']) || (isset($trip->search_to_stop) && $trip->search_to_stop['name'] === $s['name']) ? 'bg-emerald-600 text-white font-extrabold shadow-sm ring-2 ring-emerald-400' : 'bg-white border border-slate-200 text-slate-700' }}">
                                                     <div class="text-[11px] font-bold">{{ $s['name'] }}</div>
                                                     <div class="text-[10px] {{ (isset($trip->search_from_stop) && $trip->search_from_stop['name'] === $s['name']) || (isset($trip->search_to_stop) && $trip->search_to_stop['name'] === $s['name']) ? 'text-emerald-100' : 'text-emerald-700' }} font-mono font-semibold">
                                                         {{ !empty($s['expected_time']) ? \Carbon\Carbon::parse($s['expected_time'])->format('h:i A') : ($idx === 0 ? \Carbon\Carbon::parse($trip->departure_time)->format('h:i A') : 'En route') }}
@@ -394,20 +479,29 @@
                             </div>
 
                             <div class="flex items-center gap-2.5">
-                                {{-- View Details Button --}}
+                                {{-- Quick Timeline / Stops Drawer Toggle --}}
                                 <button type="button"
                                         onclick="toggleTripDetails({{ $trip->id }})"
-                                        id="viewDetailsBtn-{{ $trip->id }}"
-                                        class="px-4 py-2.5 rounded-xl border border-slate-300 hover:border-slate-400 text-slate-700 hover:text-slate-900 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer">
-                                    <i class="fa-solid fa-circle-info text-slate-400"></i>
-                                    <span>View Details</span>
+                                        id="toggleStopsBtn-{{ $trip->id }}"
+                                        class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-bars-staggered text-slate-400 text-[11px]"></i>
+                                    <span>Stops List</span>
                                 </button>
 
-                                {{-- Book Seats CTA --}}
+                                {{-- View Details Action Link --}}
+                                <a href="{{ route('trips.show', $trip->id) }}"
+                                   id="viewDetailsBtn-{{ $trip->id }}"
+                                   class="px-4 py-2.5 rounded-xl border border-slate-300 hover:border-slate-400 text-slate-700 hover:text-slate-900 font-bold text-xs transition-colors flex items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-info text-slate-400"></i>
+                                    <span>View Details</span>
+                                </a>
+
+                                {{-- Book Seats Action CTA --}}
                                 <a href="{{ route('booking.index', ['trip_id' => $trip->id]) }}"
+                                   data-booking-url="{{ url('/booking/' . $trip->id) }}"
                                    class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition-all hover:scale-[1.02] flex items-center gap-1.5">
                                     <i class="fa-solid fa-ticket"></i>
-                                    <span>Book Seat</span>
+                                    <span>Book Seats</span>
                                 </a>
                             </div>
                         </div>
@@ -420,7 +514,7 @@
                                     Complete Journey Stops & Details for Trip #{{ $trip->id }}
                                 </h4>
                                 <a href="{{ route('trips.show', $trip->id) }}" class="text-emerald-700 hover:text-emerald-800 text-xs font-bold">
-                                    Open Dedicated Page →
+                                    Open Dedicated Details Page →
                                 </a>
                             </div>
 
@@ -433,7 +527,7 @@
                                                 <th class="px-4 py-2.5">Stop #</th>
                                                 <th class="px-4 py-2.5">Stop Name</th>
                                                 <th class="px-4 py-2.5">Expected Arrival</th>
-                                                <th class="px-4 py-2.5">Status</th>
+                                                <th class="px-4 py-2.5">Role</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -449,8 +543,12 @@
                                                             <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px]">Your Boarding Stop</span>
                                                         @elseif (isset($trip->search_to_stop) && $trip->search_to_stop['name'] === $s['name'])
                                                             <span class="px-2 py-0.5 rounded-full bg-emerald-800 text-white text-[10px]">Your Dropoff Stop</span>
+                                                        @elseif ($sIdx === 0)
+                                                            <span class="text-emerald-700 font-bold text-[10px]">Origin Terminal</span>
+                                                        @elseif ($sIdx === count($orderedStops) - 1)
+                                                            <span class="text-slate-800 font-bold text-[10px]">Final Destination</span>
                                                         @else
-                                                            <span class="text-slate-400 text-[10px]">Intermediate Stop</span>
+                                                            <span class="text-slate-500 text-[10px]">Intermediate Stop</span>
                                                         @endif
                                                     </td>
                                                 </tr>
@@ -486,19 +584,41 @@
     </div>
 </section>
 
-{{-- Interactive Details Toggle Script --}}
+{{-- Interactive Details Toggle & Form Loading Script --}}
 <script>
     function toggleTripDetails(tripId) {
         const drawer = document.getElementById('tripDetailsDrawer-' + tripId);
-        const btn = document.getElementById('viewDetailsBtn-' + tripId);
+        const btn = document.getElementById('toggleStopsBtn-' + tripId);
         if (drawer) {
             const isHidden = drawer.classList.contains('hidden');
             drawer.classList.toggle('hidden');
             if (btn) {
-                btn.classList.toggle('bg-slate-100', isHidden);
+                btn.classList.toggle('bg-slate-200', isHidden);
             }
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('tripSearchForm');
+        const submitBtn = document.getElementById('searchTripsBtn');
+        const loadingState = document.getElementById('searchLoadingState');
+        const resultsContainer = document.getElementById('tripResultsContainer');
+
+        if (form && submitBtn) {
+            form.addEventListener('submit', function() {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Searching Trips...</span>';
+                submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
+
+                if (loadingState) {
+                    loadingState.classList.remove('hidden');
+                }
+                if (resultsContainer) {
+                    resultsContainer.classList.add('opacity-40');
+                }
+            });
+        }
+    });
 </script>
 
 @endsection

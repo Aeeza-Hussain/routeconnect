@@ -37,8 +37,20 @@ class AdminDashboardController extends Controller
         $rejectedVehicles = Vehicle::where('status', 'rejected')->count();
 
         $totalRoutes   = RouteModel::count();
-        $totalTrips    = Trip::count();
-        $totalBookings = Booking::count();
+        $totalStops    = \App\Models\Stop::count();
+
+        // ── Trip Statistics ───────────────────────────────────────────
+        $totalTrips     = Trip::count();
+        $scheduledTrips = Trip::whereRaw('LOWER(status) = ?', ['scheduled'])->count();
+        $completedTrips = Trip::whereRaw('LOWER(status) = ?', ['completed'])->count();
+        $cancelledTrips = Trip::whereRaw('LOWER(status) = ?', ['cancelled'])->count();
+
+        // ── Booking Statistics ────────────────────────────────────────
+        $totalBookings     = Booking::count();
+        $confirmedBookings = Booking::whereRaw("LOWER(COALESCE(booking_status, status)) = 'confirmed'")->count();
+        $cancelledBookings = Booking::whereRaw("LOWER(COALESCE(booking_status, status)) = 'cancelled'")->count();
+        $totalSeatsBooked  = (int) Booking::whereRaw("LOWER(COALESCE(booking_status, status)) = 'confirmed'")->sum('seats');
+        $totalRevenue      = (float) Booking::whereRaw("LOWER(COALESCE(booking_status, status)) = 'confirmed'")->sum('total_fare');
 
         // ── Recent Pending Driver Applications (latest 5) ─────────────
         $recentApplications = User::where('user_type', 2)
@@ -51,6 +63,13 @@ class AdminDashboardController extends Controller
         $recentPendingVehicles = Vehicle::where('status', 'pending')
             ->with('driver')
             ->latest()
+            ->take(5)
+            ->get();
+
+        // ── Recent Scheduled Trips (latest 5) ─────────────────────────
+        $recentTrips = Trip::with(['driver', 'vehicle', 'route'])
+            ->latest('trip_date')
+            ->latest('departure_time')
             ->take(5)
             ->get();
 
@@ -72,10 +91,19 @@ class AdminDashboardController extends Controller
             'pendingVehicles',
             'rejectedVehicles',
             'totalRoutes',
+            'totalStops',
             'totalTrips',
+            'scheduledTrips',
+            'completedTrips',
+            'cancelledTrips',
             'totalBookings',
+            'confirmedBookings',
+            'cancelledBookings',
+            'totalSeatsBooked',
+            'totalRevenue',
             'recentApplications',
             'recentPendingVehicles',
+            'recentTrips',
             'recentBookings'
         ));
     }

@@ -50,8 +50,8 @@
     </div>
 @endif
 
-{{-- ─────────────────── STATISTICS GRID (7 CARDS) ─────────────────── --}}
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-8">
+{{-- ─────────────────── STATISTICS GRID (8 REAL METRIC CARDS) ─────────────────── --}}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
 
     {{-- 1. Total Users --}}
     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow group">
@@ -71,20 +71,20 @@
         </div>
     </div>
 
-    {{-- 2. Pending Drivers --}}
+    {{-- 2. Pending Applications --}}
     <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm hover:shadow-md transition-shadow group">
         <div class="flex items-start justify-between">
             <div>
-                <p class="text-[11px] font-extrabold text-amber-600 uppercase tracking-wider">Pending Drivers</p>
+                <p class="text-[11px] font-extrabold text-amber-600 uppercase tracking-wider">Pending Applications &amp; Pending Drivers</p>
                 <p class="text-3xl font-black text-amber-600 mt-2">{{ $pendingDrivers }}</p>
                 <p class="text-[11px] text-amber-500 mt-0.5">Awaiting verification</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center text-xl border border-amber-200 group-hover:bg-amber-100 transition-colors">
-                <i class="fa-solid fa-clock"></i>
+                <i class="fa-solid fa-id-card"></i>
             </div>
         </div>
-        <div class="mt-4 pt-3 border-t border-amber-100 flex items-center justify-between text-[11px] font-semibold text-amber-600">
-            <span>Requires action</span>
+        <div class="mt-4 pt-3 border-t border-amber-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
+            <span>Requires review</span>
             <a href="{{ route('admin.drivers.applications') }}" class="text-amber-700 font-extrabold hover:text-amber-900 transition-colors">Review →</a>
         </div>
     </div>
@@ -113,14 +113,14 @@
             <div>
                 <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Total Vehicles</p>
                 <p class="text-3xl font-black text-indigo-600 mt-2">{{ $totalVehicles }}</p>
-                <p class="text-[11px] text-slate-400 mt-0.5">Fleet registered</p>
+                <p class="text-[11px] text-slate-400 mt-0.5">Commercial fleet</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl border border-indigo-100 group-hover:bg-indigo-100 transition-colors">
                 <i class="fa-solid fa-van-shuttle"></i>
             </div>
         </div>
         <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
-            <span>{{ $pendingVehicles }} Pending · {{ $approvedVehicles }} Active</span>
+            <span><span class="text-amber-600 font-bold">{{ $pendingVehicles }}</span> Pending · {{ $approvedVehicles }} Active</span>
             <a href="{{ route('admin.vehicles.index') }}" class="text-indigo-600 font-extrabold hover:text-indigo-800 transition-colors">Manage →</a>
         </div>
     </div>
@@ -131,14 +131,14 @@
             <div>
                 <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Total Routes</p>
                 <p class="text-3xl font-black text-sky-600 mt-2">{{ $totalRoutes }}</p>
-                <p class="text-[11px] text-slate-400 mt-0.5">Transit paths defined</p>
+                <p class="text-[11px] text-slate-400 mt-0.5">Transit corridors</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl border border-sky-100 group-hover:bg-sky-100 transition-colors">
                 <i class="fa-solid fa-route"></i>
             </div>
         </div>
         <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
-            <span>Intercity & Urban</span>
+            <span>{{ $totalStops }} Stops & Stations</span>
             <a href="{{ route('admin.routes.index') }}" class="text-sky-600 font-extrabold hover:text-sky-800 transition-colors">Manage →</a>
         </div>
     </div>
@@ -156,7 +156,7 @@
             </div>
         </div>
         <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
-            <span>Active departures</span>
+            <span>{{ $scheduledTrips }} Sched · {{ $completedTrips }} Comp · {{ $cancelledTrips }} Canc</span>
             <a href="{{ route('admin.trips.index') }}" class="text-violet-600 font-extrabold hover:text-violet-800 transition-colors">Manage →</a>
         </div>
     </div>
@@ -174,22 +174,47 @@
             </div>
         </div>
         <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
-            <span>Confirmed tickets</span>
+            <span>{{ $confirmedBookings }} Conf · {{ $totalSeatsBooked }} Seats</span>
             <a href="{{ route('admin.bookings.index') }}" class="text-rose-600 font-extrabold hover:text-rose-800 transition-colors">Manage →</a>
+        </div>
+    </div>
+
+    {{-- 8. Platform Revenue --}}
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow group">
+        <div class="flex items-start justify-between">
+            <div>
+                <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Platform Revenue</p>
+                <p class="text-2xl font-black text-slate-900 mt-2 font-mono">Rs. {{ number_format($totalRevenue, 2) }}</p>
+                <p class="text-[11px] text-slate-400 mt-0.5">Confirmed ticket fares</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl border border-amber-100 group-hover:bg-amber-100 transition-colors">
+                <i class="fa-solid fa-coins"></i>
+            </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
+            <span>Gross transactions</span>
+            <a href="{{ route('admin.bookings.index') }}" class="text-amber-600 font-extrabold hover:text-amber-800 transition-colors">Audit →</a>
         </div>
     </div>
 
 </div>
 
-{{-- ────────────────────────── QUICK ACTION BUTTONS ────────────────────────── --}}
+{{-- ────────────────────────── OPERATIONS HUB & QUICK JUMP ────────────────────────── --}}
 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8">
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
         <div>
             <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2">
-                <i class="fa-solid fa-bolt text-emerald-500"></i>
-                Quick Actions
+                <i class="fa-solid fa-layer-group text-emerald-500"></i>
+                Operations Hub &amp; Quick Actions
             </h3>
-            <p class="text-xs text-slate-500 mt-0.5">Direct shortcuts to manage RouteConnect platform operations.</p>
+            <p class="text-xs text-slate-500 mt-0.5">Jump directly to any transport booking workflow section.</p>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+            <span class="text-slate-400">Jump on page:</span>
+            <a href="#driver-apps" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-colors">Drivers</a>
+            <a href="#vehicle-approvals" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-colors">Vehicles</a>
+            <a href="#scheduled-trips" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-colors">Trips</a>
+            <a href="#passenger-bookings" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-colors">Bookings</a>
         </div>
     </div>
 
@@ -205,7 +230,7 @@
             <span class="text-[10px] text-amber-600 font-semibold mt-0.5">{{ $pendingDrivers }} Pending</span>
         </a>
 
-        {{-- 2. Users --}}
+        {{-- 2. Users & Drivers --}}
         <a href="{{ route('admin.users.index') }}"
            class="flex flex-col items-center justify-center p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 text-slate-800 hover:text-emerald-800 transition-all text-center group">
             <div class="w-10 h-10 rounded-xl bg-slate-200/80 group-hover:bg-emerald-100 text-slate-700 group-hover:text-emerald-700 flex items-center justify-center text-base mb-2 group-hover:scale-105 transition-transform">
@@ -215,7 +240,7 @@
             <span class="text-[10px] text-slate-500 group-hover:text-emerald-600 font-semibold mt-0.5">{{ $totalUsers }} Accounts</span>
         </a>
 
-        {{-- 3. Vehicles --}}
+        {{-- 3. Commercial Vehicles --}}
         <a href="{{ route('admin.vehicles.index') }}"
            class="flex flex-col items-center justify-center p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 text-slate-800 hover:text-indigo-800 transition-all text-center group">
             <div class="w-10 h-10 rounded-xl bg-slate-200/80 group-hover:bg-indigo-100 text-slate-700 group-hover:text-indigo-700 flex items-center justify-center text-base mb-2 group-hover:scale-105 transition-transform">
@@ -242,10 +267,10 @@
                 <i class="fa-solid fa-location-dot"></i>
             </div>
             <span class="text-xs font-bold leading-tight">Stops</span>
-            <span class="text-[10px] text-slate-500 group-hover:text-teal-600 font-semibold mt-0.5">Stations</span>
+            <span class="text-[10px] text-slate-500 group-hover:text-teal-600 font-semibold mt-0.5">{{ $totalStops }} Stations</span>
         </a>
 
-        {{-- 6. Trips --}}
+        {{-- 6. Scheduled Trips --}}
         <a href="{{ route('admin.trips.index') }}"
            class="flex flex-col items-center justify-center p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-violet-50 hover:border-violet-200 text-slate-800 hover:text-violet-800 transition-all text-center group">
             <div class="w-10 h-10 rounded-xl bg-slate-200/80 group-hover:bg-violet-100 text-slate-700 group-hover:text-violet-700 flex items-center justify-center text-base mb-2 group-hover:scale-105 transition-transform">
@@ -268,11 +293,11 @@
     </div>
 </div>
 
-{{-- ────────────────────── TWO TABLES SECTION ────────────────────── --}}
+{{-- ────────────────────── COMPLETE WORKFLOW TABLES SECTION ────────────────────── --}}
 <div class="space-y-8">
 
-    {{-- ── 1. RECENT DRIVER APPLICATIONS TABLE ── --}}
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    {{-- ── 1. DRIVER APPLICATIONS TABLE ── --}}
+    <div id="driver-apps" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden scroll-mt-6">
 
         <div class="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -280,7 +305,7 @@
                     <span class="w-2.5 h-5 bg-amber-500 rounded-full inline-block"></span>
                     Recent Pending Driver Applications
                 </h3>
-                <p class="text-xs text-slate-500 mt-0.5 ml-4">Latest driver registrations awaiting verification.</p>
+                <p class="text-xs text-slate-500 mt-0.5 ml-4">Review credentials, driving licenses, and approve or reject driver applicants.</p>
             </div>
             <a href="{{ route('admin.drivers.applications') }}"
                class="shrink-0 px-4 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-extrabold text-xs border border-amber-200 transition-colors inline-flex items-center gap-2">
@@ -327,7 +352,7 @@
                                         @endif
                                         <div>
                                             <span class="font-extrabold text-slate-900 block">{{ $driver->name }}</span>
-                                            <span class="text-[10px] text-slate-400">user_type = 2</span>
+                                            <span class="text-[10px] text-slate-400">Driver Account</span>
                                         </div>
                                     </div>
                                 </td>
@@ -336,7 +361,7 @@
                                 <td class="px-6 py-4 text-slate-600 font-mono text-[11px]">{{ $driver->license_no ?? '—' }}</td>
                                 <td class="px-6 py-4">
                                     <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-extrabold border border-amber-200">
-                                        Pending
+                                        Pending Review
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-slate-500">{{ $driver->created_at->format('d M Y') }}</td>
@@ -353,8 +378,10 @@
                                                 <i class="fa-solid fa-check text-[10px]"></i> Approve
                                             </button>
                                         </form>
-                                        <form action="{{ route('admin.drivers.reject', $driver->id) }}" method="POST" class="inline">
+                                        <form action="{{ route('admin.drivers.reject', $driver->id) }}" method="POST" class="inline"
+                                              onsubmit="const r = prompt('Optional rejection reason for driver \'{{ addslashes($driver->name) }}\':'); if (r === null) return false; this.rejection_reason.value = r;">
                                             @csrf
+                                            <input type="hidden" name="rejection_reason" value="">
                                             <button type="submit"
                                                     class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold transition-colors inline-flex items-center gap-1">
                                                 <i class="fa-solid fa-xmark text-[10px]"></i> Reject
@@ -370,16 +397,16 @@
         @endif
     </div>
 
-    {{-- ── 2. RECENT PENDING VEHICLE APPROVALS TABLE ── --}}
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    {{-- ── 2. COMMERCIAL VEHICLE APPROVALS TABLE ── --}}
+    <div id="vehicle-approvals" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden scroll-mt-6">
 
         <div class="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
                 <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
                     <span class="w-2.5 h-5 bg-indigo-500 rounded-full inline-block"></span>
-                    Recent Pending Vehicle Approvals
+                    Vehicle Approvals &amp; Recent Pending Vehicle Approvals
                 </h3>
-                <p class="text-xs text-slate-500 mt-0.5 ml-4">Newly registered commercial vehicles awaiting separate administrator review.</p>
+                <p class="text-xs text-slate-500 mt-0.5 ml-4">Separately inspect and approve or reject every commercial fleet vehicle registration.</p>
             </div>
             <a href="{{ route('admin.vehicles.index', ['status' => 'pending']) }}"
                class="shrink-0 px-4 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-extrabold text-xs border border-indigo-200 transition-colors inline-flex items-center gap-2">
@@ -427,7 +454,7 @@
                                 <td class="px-6 py-4">
                                     @if ($veh->driver)
                                         <div class="font-extrabold text-slate-900">{{ $veh->driver->name }}</div>
-                                        <div class="text-[10px] text-slate-400">Status: {{ ucfirst($veh->driver->driver_status) }}</div>
+                                        <div class="text-[10px] text-slate-400">Driver Status: {{ ucfirst($veh->driver->driver_status) }}</div>
                                     @else
                                         <span class="text-slate-400 italic">Unassigned</span>
                                     @endif
@@ -440,7 +467,7 @@
                                         <i class="fa-solid fa-hourglass-half text-amber-500 animate-pulse"></i> Pending Approval
                                     </span>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         <a href="{{ route('admin.vehicles.show', $veh->id) }}"
                                            class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold transition-colors inline-flex items-center gap-1">
@@ -474,20 +501,157 @@
         @endif
     </div>
 
-    {{-- ── 2. RECENT BOOKINGS TABLE ── --}}
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    {{-- ── 3. SCHEDULED TRIPS TABLE ── --}}
+    <div id="scheduled-trips" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden scroll-mt-6">
+
+        <div class="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                    <span class="w-2.5 h-5 bg-violet-500 rounded-full inline-block"></span>
+                    Scheduled Journeys & Live Operations
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5 ml-4">Scheduled transport services, route corridors, capacity, and real-time status.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('admin.trips.create') }}"
+                   class="shrink-0 px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs shadow-sm transition-colors inline-flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus text-[10px]"></i> New Trip
+                </a>
+                <a href="{{ route('admin.trips.index') }}"
+                   class="shrink-0 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs border border-slate-200 transition-colors inline-flex items-center gap-2">
+                    <i class="fa-solid fa-bus"></i> All Trips ({{ $totalTrips }})
+                </a>
+            </div>
+        </div>
+
+        @if ($recentTrips->isEmpty())
+            <div class="p-12 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-violet-50 text-violet-400 flex items-center justify-center text-2xl mx-auto mb-3">
+                    <i class="fa-solid fa-bus"></i>
+                </div>
+                <div class="text-sm font-extrabold text-slate-700">No scheduled trips found</div>
+                <p class="text-xs text-slate-400 mt-1">Trips scheduled by approved drivers or administrators will appear here.</p>
+            </div>
+        @else
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 text-slate-400 font-extrabold uppercase tracking-wider border-b border-slate-100">
+                        <tr>
+                            <th class="px-6 py-3">Trip # / Route</th>
+                            <th class="px-6 py-3">Driver</th>
+                            <th class="px-6 py-3">Vehicle</th>
+                            <th class="px-6 py-3">Date & Time</th>
+                            <th class="px-6 py-3">Seats Availability</th>
+                            <th class="px-6 py-3">Fare / Seat</th>
+                            <th class="px-6 py-3">Status</th>
+                            <th class="px-6 py-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach ($recentTrips as $trip)
+                            @php
+                                $tripStatus = strtolower($trip->status);
+                            @endphp
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="font-extrabold text-slate-900 text-xs">
+                                        {{ $trip->route->name ?? 'Direct Service' }}
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
+                                        <span>{{ $trip->route->start_location ?? 'Origin' }}</span>
+                                        <i class="fa-solid fa-arrow-right text-[8px] text-slate-300"></i>
+                                        <span>{{ $trip->route->end_location ?? 'Destination' }}</span>
+                                        <span class="text-slate-300">•</span>
+                                        <span class="font-mono text-violet-600 font-bold">#{{ $trip->id }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-slate-800">{{ $trip->driver->name ?? '—' }}</div>
+                                    <div class="text-[10px] text-slate-400">{{ $trip->driver->phone ?? '' }}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="font-mono font-bold text-slate-800 block">{{ $trip->vehicle->registration_no ?? '—' }}</span>
+                                    <span class="text-[10px] text-slate-400 block">{{ $trip->vehicle->model ?? '' }} ({{ $trip->vehicle->type ?? '' }})</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="font-bold text-slate-800 block">
+                                        {{ $trip->trip_date ? \Carbon\Carbon::parse($trip->trip_date)->format('d M Y') : '—' }}
+                                    </span>
+                                    <span class="text-[10px] text-slate-400 font-mono block">
+                                        {{ $trip->departure_time ? \Carbon\Carbon::parse($trip->departure_time)->format('h:i A') : '—' }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-mono font-extrabold {{ $trip->available_seats > 0 ? 'text-emerald-700' : 'text-rose-600' }}">
+                                            {{ $trip->available_seats }}
+                                        </span>
+                                        <span class="text-slate-400 text-[10px]">/ {{ $trip->vehicle->total_seats ?? $trip->available_seats }} left</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 font-mono font-bold text-slate-900">
+                                    Rs. {{ number_format($trip->fare ?? 0, 2) }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if ($tripStatus === 'scheduled')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-100 text-sky-800 text-[10px] font-extrabold border border-sky-200">
+                                            <i class="fa-solid fa-clock text-[9px]"></i> Scheduled
+                                        </span>
+                                    @elseif ($tripStatus === 'completed')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold border border-emerald-200">
+                                            <i class="fa-solid fa-circle-check text-[9px]"></i> Completed
+                                        </span>
+                                    @elseif ($tripStatus === 'cancelled')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-[10px] font-extrabold border border-rose-200">
+                                            <i class="fa-solid fa-ban text-[9px]"></i> Cancelled
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[10px] font-extrabold border border-slate-200 capitalize">
+                                            {{ $trip->status }}
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <a href="{{ route('admin.trips.stops.index', $trip->id) }}"
+                                           title="Manage Ordered Stops"
+                                           class="px-2.5 py-1.5 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 font-bold transition-colors border border-teal-200">
+                                            <i class="fa-solid fa-route text-[11px]"></i>
+                                        </a>
+                                        <a href="{{ route('admin.trips.show', $trip->id) }}"
+                                           title="View Details"
+                                           class="px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold transition-colors">
+                                            <i class="fa-solid fa-eye text-[11px]"></i>
+                                        </a>
+                                        <a href="{{ route('admin.trips.edit', $trip->id) }}"
+                                           title="Edit Trip"
+                                           class="px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold transition-colors border border-indigo-200">
+                                            <i class="fa-solid fa-pen text-[11px]"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+
+    {{-- ── 4. RECENT PASSENGER BOOKINGS TABLE ── --}}
+    <div id="passenger-bookings" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden scroll-mt-6">
 
         <div class="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
                 <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
                     <span class="w-2.5 h-5 bg-rose-500 rounded-full inline-block"></span>
-                    Recent Bookings
+                    Recent Bookings &amp; Passenger Seat Management
                 </h3>
-                <p class="text-xs text-slate-500 mt-0.5 ml-4">Latest passenger seat reservations across scheduled routes.</p>
+                <p class="text-xs text-slate-500 mt-0.5 ml-4">Live passenger ticket reservations, seat allocations, fare payments, and cancellations.</p>
             </div>
             <a href="{{ route('admin.bookings.index') }}"
                class="shrink-0 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs border border-slate-200 transition-colors inline-flex items-center gap-2">
-                <i class="fa-solid fa-list"></i>
+                <i class="fa-solid fa-ticket"></i>
                 All Bookings ({{ $totalBookings }})
             </a>
         </div>
@@ -512,10 +676,15 @@
                             <th class="px-6 py-3">Total Fare</th>
                             <th class="px-6 py-3">Status</th>
                             <th class="px-6 py-3">Booked At</th>
+                            <th class="px-6 py-3 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($recentBookings as $booking)
+                            @php
+                                $bStatus = strtolower($booking->booking_status ?? $booking->status);
+                                $isConfirmed = $bStatus === 'confirmed';
+                            @endphp
                             <tr class="hover:bg-slate-50/60 transition-colors">
                                 <td class="px-6 py-4 font-mono font-bold text-slate-900">
                                     #{{ $booking->booking_reference ?? $booking->id }}
@@ -524,7 +693,7 @@
                                     <div class="font-extrabold text-slate-900">
                                         {{ $booking->user->name ?? 'Guest Passenger' }}
                                     </div>
-                                    <div class="text-[11px] text-slate-400">
+                                    <div class="text-[11px] text-slate-400 font-mono">
                                         {{ $booking->user->email ?? '—' }}
                                     </div>
                                 </td>
@@ -538,26 +707,47 @@
                                 <td class="px-6 py-4 font-bold text-slate-800">
                                     {{ $booking->seats }} {{ Str::plural('seat', $booking->seats) }}
                                 </td>
-                                <td class="px-6 py-4 font-extrabold text-emerald-600">
+                                <td class="px-6 py-4 font-extrabold text-emerald-600 font-mono">
                                     Rs. {{ number_format($booking->total_fare, 2) }}
                                 </td>
                                 <td class="px-6 py-4">
-                                    @if ($booking->status === 'confirmed')
-                                        <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-extrabold border border-emerald-200">
-                                            Confirmed
+                                    @if ($isConfirmed)
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold border border-emerald-200">
+                                            <i class="fa-solid fa-circle-check text-[9px]"></i> Confirmed
                                         </span>
-                                    @elseif ($booking->status === 'cancelled')
-                                        <span class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-[11px] font-extrabold border border-rose-200">
-                                            Cancelled
+                                    @elseif ($bStatus === 'cancelled')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-[10px] font-extrabold border border-rose-200">
+                                            <i class="fa-solid fa-ban text-[9px]"></i> Cancelled
                                         </span>
                                     @else
-                                        <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-extrabold border border-amber-200 capitalize">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold border border-amber-200 capitalize">
                                             {{ $booking->status ?? 'Pending' }}
                                         </span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-slate-500">
                                     {{ $booking->created_at->format('d M Y, h:i A') }}
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <a href="{{ route('admin.bookings.show', $booking->id) }}"
+                                           title="View Ticket Details"
+                                           class="px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold transition-colors">
+                                            <i class="fa-solid fa-eye text-[11px]"></i>
+                                        </a>
+
+                                        @if ($isConfirmed)
+                                            <form action="{{ route('admin.bookings.cancel', $booking->id) }}" method="POST" class="inline"
+                                                  onsubmit="return confirm('Cancel booking #{{ $booking->booking_reference }}? This will restore {{ $booking->seats }} seat(s) to the scheduled trip.')">
+                                                @csrf
+                                                <button type="submit"
+                                                        title="Admin Cancel Booking & Restore Seats"
+                                                        class="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold transition-colors border border-rose-200">
+                                                    <i class="fa-solid fa-ban text-[11px]"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach

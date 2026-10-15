@@ -45,7 +45,7 @@ class NotificationTest extends TestCase
             'name'          => 'Kareem Driver',
             'email'         => 'kareem@driver.test',
             'user_type'     => 2,
-            'driver_status' => 'pending',
+            'driver_status' => 'approved',
         ]);
 
         $this->admin = User::factory()->create([

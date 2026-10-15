@@ -303,4 +303,169 @@ class SeatBookingTest extends TestCase
             'trip_id' => $this->fullyBookedTrip->id,
         ]);
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 5. CANCELLED, COMPLETED & UNAVAILABLE TRIPS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function test_cannot_book_seats_on_cancelled_trip(): void
+    {
+        $cancelledTrip = Trip::create([
+            'user_id'         => $this->driver->id,
+            'vehicle_id'      => $this->vehicle->id,
+            'route_id'        => $this->route->id,
+            'trip_date'       => '2026-11-27',
+            'departure_time'  => '14:00:00',
+            'available_seats' => 8,
+            'fare'            => 1000.00,
+            'pickup_point'    => 'Central Gilgit Stand',
+            'status'          => 'Cancelled',
+        ]);
+
+        $response = $this->actingAs($this->passenger)->post("/booking/{$cancelledTrip->id}", [
+            'seats' => 1,
+        ]);
+
+        $response->assertSessionHasErrors(['seats']);
+        $this->assertDatabaseMissing('bookings', [
+            'trip_id' => $cancelledTrip->id,
+        ]);
+    }
+
+    public function test_cannot_book_seats_on_completed_trip(): void
+    {
+        $completedTrip = Trip::create([
+            'user_id'         => $this->driver->id,
+            'vehicle_id'      => $this->vehicle->id,
+            'route_id'        => $this->route->id,
+            'trip_date'       => '2026-11-20',
+            'departure_time'  => '08:00:00',
+            'available_seats' => 5,
+            'fare'            => 1000.00,
+            'pickup_point'    => 'Central Gilgit Stand',
+            'status'          => 'Completed',
+        ]);
+
+        $response = $this->actingAs($this->passenger)->post("/booking/{$completedTrip->id}", [
+            'seats' => 1,
+        ]);
+
+        $response->assertSessionHasErrors(['seats']);
+        $this->assertDatabaseMissing('bookings', [
+            'trip_id' => $completedTrip->id,
+        ]);
+    }
+
+    public function test_cannot_book_seats_when_driver_or_vehicle_unapproved(): void
+    {
+        // Unapproved driver
+        $unapprovedDriver = User::factory()->create([
+            'user_type'     => 2,
+            'driver_status' => 'pending',
+        ]);
+
+        $tripWithUnapprovedDriver = Trip::create([
+            'user_id'         => $unapprovedDriver->id,
+            'vehicle_id'      => $this->vehicle->id,
+            'route_id'        => $this->route->id,
+            'trip_date'       => '2026-11-29',
+            'departure_time'  => '09:00:00',
+            'available_seats' => 4,
+            'fare'            => 1000.00,
+            'pickup_point'    => 'Central Gilgit Stand',
+            'status'          => 'Scheduled',
+        ]);
+
+        $responseDriver = $this->actingAs($this->passenger)->post("/booking/{$tripWithUnapprovedDriver->id}", [
+            'seats' => 1,
+        ]);
+        $responseDriver->assertSessionHasErrors(['seats']);
+
+        // Unapproved vehicle
+        $unapprovedVehicle = Vehicle::factory()->create([
+            'user_id'         => $this->driver->id,
+            'registration_no' => 'GLT-PENDING',
+            'model'           => 'Toyota HiAce',
+            'type'            => 'Van',
+            'total_seats'     => 12,
+            'status'          => 'Pending',
+        ]);
+
+        $tripWithUnapprovedVehicle = Trip::create([
+            'user_id'         => $this->driver->id,
+            'vehicle_id'      => $unapprovedVehicle->id,
+            'route_id'        => $this->route->id,
+            'trip_date'       => '2026-11-30',
+            'departure_time'  => '09:00:00',
+            'available_seats' => 4,
+            'fare'            => 1000.00,
+            'pickup_point'    => 'Central Gilgit Stand',
+            'status'          => 'Scheduled',
+        ]);
+
+        $responseVehicle = $this->actingAs($this->passenger)->post("/booking/{$tripWithUnapprovedVehicle->id}", [
+            'seats' => 1,
+        ]);
+        $responseVehicle->assertSessionHasErrors(['seats']);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 6. VEHICLE PERMANENT CAPACITY PRESERVATION
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function test_vehicle_permanent_capacity_is_never_modified_by_bookings(): void
+    {
+        $originalCapacity = $this->vehicle->total_seats; // 14
+
+        // Book 4 seats on trip
+        $this->actingAs($this->passenger)->post("/booking/{$this->trip->id}", [
+            'seats' => 4,
+        ]);
+
+        $this->trip->refresh();
+        $this->vehicle->refresh();
+
+        // Trip available_seats decreased from 6 to 2
+        $this->assertEquals(2, $this->trip->available_seats);
+
+        // Vehicle permanent total_seats remains exactly 14
+        $this->assertEquals($originalCapacity, $this->vehicle->total_seats);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 7. CONCURRENCY & ATOMIC OVERBOOKING PREVENTION
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function test_concurrent_booking_prevents_overbooking_when_seats_are_limited(): void
+    {
+        // Trip has only 2 seats available
+        $this->trip->update(['available_seats' => 2]);
+
+        $passenger2 = User::factory()->create([
+            'user_type' => 0,
+            'name'      => 'Farhan Passenger',
+            'email'     => 'farhan@passenger.test',
+        ]);
+
+        // Passenger 1 requests 2 seats (should succeed)
+        $response1 = $this->actingAs($this->passenger)->post("/booking/{$this->trip->id}", [
+            'seats' => 2,
+        ]);
+        $response1->assertSessionHasNoErrors();
+
+        // Passenger 2 also attempts to book 2 seats for the same trip (must fail due to insufficient seats)
+        $response2 = $this->actingAs($passenger2)->post("/booking/{$this->trip->id}", [
+            'seats' => 2,
+        ]);
+        $response2->assertSessionHasErrors(['seats']);
+
+        // Check database state: exactly 1 booking exists, trip available_seats is 0, no overbooking
+        $this->trip->refresh();
+        $this->assertEquals(0, $this->trip->available_seats);
+
+        $bookings = Booking::where('trip_id', $this->trip->id)->get();
+        $this->assertCount(1, $bookings);
+        $this->assertEquals($this->passenger->id, $bookings->first()->user_id);
+        $this->assertEquals(2, $bookings->first()->seats);
+    }
 }

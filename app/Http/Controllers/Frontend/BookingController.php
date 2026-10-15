@@ -52,9 +52,35 @@ class BookingController extends Controller
             $lockedTrip = Trip::with(['route.routeStops', 'driver', 'vehicle'])->where('id', $trip->id)->lockForUpdate()->firstOrFail();
 
             // 1. Check trip status
-            if (strtolower($lockedTrip->status) !== 'scheduled') {
+            if ($lockedTrip->isCancelled()) {
+                throw ValidationException::withMessages([
+                    'seats' => 'This trip has been cancelled and cannot be booked.',
+                ]);
+            }
+
+            if ($lockedTrip->isCompleted()) {
+                throw ValidationException::withMessages([
+                    'seats' => 'This trip has already been completed and cannot be booked.',
+                ]);
+            }
+
+            if (!$lockedTrip->isScheduled()) {
                 throw ValidationException::withMessages([
                     'seats' => 'This trip is no longer active or scheduled for booking.',
+                ]);
+            }
+
+            // Check if driver is approved
+            if ($lockedTrip->driver && !$lockedTrip->driver->isApprovedDriver()) {
+                throw ValidationException::withMessages([
+                    'seats' => 'This trip is unavailable because the assigned driver is not approved.',
+                ]);
+            }
+
+            // Check if vehicle is approved
+            if ($lockedTrip->vehicle && !$lockedTrip->vehicle->isApproved()) {
+                throw ValidationException::withMessages([
+                    'seats' => 'This trip is unavailable because the assigned vehicle is not approved.',
                 ]);
             }
 
@@ -65,7 +91,7 @@ class BookingController extends Controller
                 ]);
             }
 
-            // 2. Check if sufficient seats are available
+            // 3. Check if sufficient seats are available
             if ($seatsToBook > $lockedTrip->available_seats) {
                 throw ValidationException::withMessages([
                     'seats' => "Cannot book {$seatsToBook} seats. Only {$lockedTrip->available_seats} seat(s) available.",
@@ -206,55 +232,64 @@ class BookingController extends Controller
             return redirect()->back()->with('error', 'This booking has already been cancelled.');
         }
 
+        // Check if trip is completed
+        if ($booking->trip && $booking->trip->isCompleted()) {
+            return redirect()->back()->with('error', 'Cannot cancel a booking for a trip that has already been completed.');
+        }
+
         // 3. Atomically restore seats and update booking status
-        DB::transaction(function () use ($booking) {
-            $lockedBooking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
+        try {
+            DB::transaction(function () use ($booking) {
+                $lockedBooking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
 
-            if ($lockedBooking->isCancelled()) {
-                throw new \DomainException('This booking has already been cancelled.');
-            }
-
-            // Lock the trip to prevent race conditions & overbooking
-            $lockedTrip = Trip::with('vehicle')->where('id', $lockedBooking->trip_id)->lockForUpdate()->first();
-
-            if ($lockedTrip) {
-                $seatsToRestore = max(0, (int) $lockedBooking->seats);
-                $maxCapacity    = $lockedTrip->vehicle?->total_seats;
-
-                $newAvailableSeats = $lockedTrip->available_seats + $seatsToRestore;
-
-                // Prevent invalid / overcapacity restoration
-                if ($maxCapacity && $newAvailableSeats > $maxCapacity) {
-                    $newAvailableSeats = $maxCapacity;
+                if ($lockedBooking->isCancelled()) {
+                    throw new \DomainException('This booking has already been cancelled.');
                 }
 
-                $lockedTrip->available_seats = $newAvailableSeats;
-                $lockedTrip->save();
-            }
+                // Lock the trip to prevent race conditions & overbooking
+                $lockedTrip = Trip::with('vehicle')->where('id', $lockedBooking->trip_id)->lockForUpdate()->first();
 
-            // Update booking status
-            $lockedBooking->booking_status = 'cancelled';
-            $lockedBooking->status         = 'cancelled';
-            $lockedBooking->save();
+                if ($lockedTrip) {
+                    $seatsToRestore = max(0, (int) $lockedBooking->seats);
+                    $maxCapacity    = $lockedTrip->vehicle?->total_seats;
 
-            // Notification for passenger
-            Notification::create([
-                'user_id' => $lockedBooking->user_id,
-                'trip_id' => $lockedBooking->trip_id,
-                'message' => "Your booking #{$lockedBooking->booking_reference} for {$lockedBooking->seats} seat(s) has been cancelled.",
-                'is_read' => false,
-            ]);
+                    $newAvailableSeats = $lockedTrip->available_seats + $seatsToRestore;
 
-            // Notification for driver (if distinct)
-            if ($lockedTrip && $lockedTrip->user_id && $lockedTrip->user_id !== $lockedBooking->user_id) {
+                    // Prevent invalid / overcapacity restoration
+                    if ($maxCapacity && $newAvailableSeats > $maxCapacity) {
+                        $newAvailableSeats = $maxCapacity;
+                    }
+
+                    $lockedTrip->available_seats = $newAvailableSeats;
+                    $lockedTrip->save();
+                }
+
+                // Update booking status
+                $lockedBooking->booking_status = 'cancelled';
+                $lockedBooking->status         = 'cancelled';
+                $lockedBooking->save();
+
+                // Notification for passenger
                 Notification::create([
-                    'user_id' => $lockedTrip->user_id,
+                    'user_id' => $lockedBooking->user_id,
                     'trip_id' => $lockedBooking->trip_id,
-                    'message' => "Booking cancellation: #{$lockedBooking->booking_reference} ({$lockedBooking->seats} seats) on trip #{$lockedTrip->id} was cancelled by passenger.",
+                    'message' => "Your booking #{$lockedBooking->booking_reference} for {$lockedBooking->seats} seat(s) has been cancelled.",
                     'is_read' => false,
                 ]);
-            }
-        });
+
+                // Notification for driver (if distinct)
+                if ($lockedTrip && $lockedTrip->user_id && $lockedTrip->user_id !== $lockedBooking->user_id) {
+                    Notification::create([
+                        'user_id' => $lockedTrip->user_id,
+                        'trip_id' => $lockedBooking->trip_id,
+                        'message' => "Booking cancellation: #{$lockedBooking->booking_reference} ({$lockedBooking->seats} seats) on trip #{$lockedTrip->id} was cancelled by passenger.",
+                        'is_read' => false,
+                    ]);
+                }
+            });
+        } catch (\DomainException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('passenger.bookings.index')
             ->with('success', 'Booking #' . $booking->booking_reference . ' has been cancelled successfully. Your reserved seats have been returned.');

@@ -4,6 +4,15 @@
 
 @section('content')
 
+@php
+    $isDriverApproved = !$trip->driver || $trip->driver->isApprovedDriver();
+    $isVehicleApproved = !$trip->vehicle || $trip->vehicle->isApproved();
+    $isTripScheduled = strtolower($trip->status) === 'scheduled';
+    $isTripAvailable = $isTripScheduled && $isDriverApproved && $isVehicleApproved;
+    $isFullyBooked = $trip->available_seats <= 0;
+    $canBook = $isTripAvailable && !$isFullyBooked;
+@endphp
+
 {{-- ─── Hero Header ─── --}}
 <section class="bg-slate-950 text-white py-10 sm:py-12 border-b border-slate-800 relative overflow-hidden">
     <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,185,129,0.15),rgba(255,255,255,0))]"></div>
@@ -30,7 +39,15 @@
             </div>
 
             <div class="self-start sm:self-center">
-                @if ($trip->available_seats <= 0)
+                @if (!$isTripScheduled)
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-400/30 text-rose-300 text-xs font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-ban text-rose-400"></i> {{ ucfirst($trip->status) }}
+                    </span>
+                @elseif (!$isTripAvailable)
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Unavailable
+                    </span>
+                @elseif ($isFullyBooked)
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-400/30 text-rose-300 text-xs font-bold uppercase tracking-wider">
                         <i class="fa-solid fa-ban text-rose-400"></i> Fully Booked
                     </span>
@@ -64,7 +81,39 @@
             </div>
         @endif
 
-        @if ($trip->available_seats <= 0)
+        @if (!$isTripScheduled)
+            <div class="p-6 rounded-3xl bg-rose-50 border border-rose-200 text-center space-y-3">
+                <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-xl mx-auto">
+                    <i class="fa-solid fa-ban"></i>
+                </div>
+                <h3 class="text-base font-extrabold text-rose-900">Trip is {{ ucfirst($trip->status) }}</h3>
+                <p class="text-xs text-rose-700 max-w-md mx-auto">
+                    This trip is marked as {{ strtolower($trip->status) }} and is no longer accepting seat reservations.
+                </p>
+                <div class="pt-2">
+                    <a href="{{ url('/trips') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>Search Other Trips</span>
+                    </a>
+                </div>
+            </div>
+        @elseif (!$isTripAvailable)
+            <div class="p-6 rounded-3xl bg-amber-50 border border-amber-200 text-center space-y-3">
+                <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-xl mx-auto">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h3 class="text-base font-extrabold text-amber-900">Trip is Currently Unavailable</h3>
+                <p class="text-xs text-amber-700 max-w-md mx-auto">
+                    This trip cannot be booked because the assigned driver or vehicle is currently pending administrative approval.
+                </p>
+                <div class="pt-2">
+                    <a href="{{ url('/trips') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>Search Other Trips</span>
+                    </a>
+                </div>
+            </div>
+        @elseif ($isFullyBooked)
             <div class="p-6 rounded-3xl bg-rose-50 border border-rose-200 text-center space-y-3">
                 <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-xl mx-auto">
                     <i class="fa-solid fa-ban"></i>
@@ -119,7 +168,7 @@
                                     min="1" 
                                     max="{{ $trip->available_seats }}" 
                                     step="1"
-                                    {{ $trip->available_seats <= 0 ? 'disabled' : '' }}
+                                    {{ !$canBook ? 'disabled' : '' }}
                                     required
                                     class="w-full px-4 py-3.5 rounded-2xl border {{ $errors->has('seats') ? 'border-rose-400 focus:ring-rose-400' : 'border-slate-200 focus:ring-emerald-500' }} text-slate-900 font-mono text-lg font-extrabold focus:outline-none focus:ring-2 bg-slate-50/50"
                                 >
@@ -149,7 +198,7 @@
 
                         {{-- Submit Booking Button --}}
                         <div>
-                            @if ($trip->available_seats > 0)
+                            @if ($canBook)
                                 <button type="submit" id="submit-booking-btn" class="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition-all hover:scale-[1.01] active:scale-[0.99]">
                                     <i class="fa-solid fa-shield-check"></i>
                                     <span>Confirm & Book Seats</span>
@@ -157,7 +206,7 @@
                             @else
                                 <button type="button" disabled id="submit-booking-btn" class="w-full py-4 px-6 rounded-2xl bg-slate-200 text-slate-400 font-extrabold text-sm flex items-center justify-center gap-2 cursor-not-allowed">
                                     <i class="fa-solid fa-ban"></i>
-                                    <span>Fully Booked</span>
+                                    <span>{{ !$isTripScheduled ? 'Trip ' . ucfirst($trip->status) : (!$isTripAvailable ? 'Trip Unavailable' : 'Fully Booked') }}</span>
                                 </button>
                             @endif
                         </div>

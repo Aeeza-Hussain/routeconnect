@@ -286,6 +286,82 @@ class TripSearchTest extends TestCase
 
         // View Details button
         $response->assertSee('View Details');
+        // Book Seats button
+        $response->assertSee('Book Seats');
+        // Vehicle Type and Total Capacity
+        $response->assertSee('Vehicle Type: HiAce Van');
+        $response->assertSee('Total Capacity: 14 Seats');
+        // Fare per seat
+        $response->assertSee('/ passenger seat');
+    }
+
+    public function test_trip_with_unapproved_driver_does_not_appear_in_search(): void
+    {
+        $this->driver->update(['driver_status' => 'pending']);
+
+        $response = $this->get('/trips?from=Gilgit&to=Hunza&date=2026-10-15');
+
+        $response->assertStatus(200);
+        $response->assertSee('No trips found');
+        $response->assertDontSee('GLT-9900');
+    }
+
+    public function test_trip_with_unapproved_vehicle_does_not_appear_in_search(): void
+    {
+        $this->vehicle->update(['status' => 'Pending']);
+
+        $response = $this->get('/trips?from=Gilgit&to=Hunza&date=2026-10-15');
+
+        $response->assertStatus(200);
+        $response->assertSee('No trips found');
+        $response->assertDontSee('GLT-9900');
+    }
+
+    public function test_custom_time_filter_matches_or_excludes_trips(): void
+    {
+        // Trip is at 08:00:00. Filtering for departure at or after 08:00 matches.
+        $responseMatch = $this->get('/trips?from=Gilgit&to=Hunza&date=2026-10-15&time=08:00');
+        $responseMatch->assertStatus(200);
+        $responseMatch->assertSee('GLT-9900');
+
+        // Filtering for departure at or after 12:00 excludes the 08:00 AM trip.
+        $responseNoMatch = $this->get('/trips?from=Gilgit&to=Hunza&date=2026-10-15&time=12:00');
+        $responseNoMatch->assertStatus(200);
+        $responseNoMatch->assertSee('No trips found');
+        $responseNoMatch->assertDontSee('GLT-9900');
+    }
+
+    public function test_search_displays_error_state_when_from_and_to_are_identical(): void
+    {
+        $response = $this->get('/trips?from=Gilgit&to=Gilgit');
+
+        $response->assertStatus(200);
+        $response->assertSee('Search Parameter Notice');
+        $response->assertSee('Origin and destination cannot be the same stop');
+        $response->assertDontSee('GLT-9900');
+    }
+
+    public function test_search_displays_error_state_when_date_format_is_invalid(): void
+    {
+        $response = $this->get('/trips?from=Gilgit&to=Hunza&date=not-a-real-date');
+
+        $response->assertStatus(200);
+        $response->assertSee('Search Parameter Notice');
+        $response->assertSee('Invalid travel date format provided');
+        $response->assertDontSee('GLT-9900');
+    }
+
+    public function test_search_displays_no_results_state_with_searched_parameters(): void
+    {
+        $response = $this->get('/trips?from=Gilgit&to=Skardu&date=2026-10-15');
+
+        $response->assertStatus(200);
+        $response->assertSee('No trips found');
+        $response->assertSee('Searched Parameters');
+        $response->assertSee('Gilgit');
+        $response->assertSee('Skardu');
+        $response->assertSee('Reset Filters');
+        $response->assertSee('View All Available Departures');
     }
 
     // ─────────────────────────────────────────────────────────────────────────

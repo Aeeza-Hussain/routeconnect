@@ -22,7 +22,11 @@
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             Driver Status: Approved
         </span>
-        <a href="{{ route('driver.trips') }}" class="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition-all shadow-lg shadow-teal-600/20 flex items-center gap-2">
+        <a href="{{ route('driver.trips.create') }}" class="px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-extrabold transition-all shadow-lg shadow-teal-500/20 flex items-center gap-2">
+            <i class="fa-solid fa-calendar-plus"></i>
+            <span>Schedule Trip</span>
+        </a>
+        <a href="{{ route('driver.trips') }}" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all border border-slate-700 flex items-center gap-2">
             <i class="fa-solid fa-route"></i>
             <span>My Trips</span>
         </a>
@@ -230,6 +234,14 @@
                 Operations Quick Shortcuts
             </h3>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <a href="{{ route('driver.trips.create') }}" class="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
+                    <div class="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-calendar-plus text-sm"></i>
+                    </div>
+                    <span class="text-xs font-bold text-white block">Schedule a Trip</span>
+                    <span class="text-[10px] text-slate-500">Plan new departure</span>
+                </a>
+
                 <a href="{{ route('driver.trips') }}" class="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
                     <div class="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-route text-sm"></i>

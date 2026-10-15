@@ -275,4 +275,39 @@ class MyBookingsTest extends TestCase
         $this->trip->refresh();
         $this->assertEquals($seatsAfterFirstCancel, $this->trip->available_seats);
     }
+
+    public function test_cannot_cancel_booking_on_completed_trip(): void
+    {
+        // Mark trip as completed
+        $this->trip->update(['status' => 'Completed']);
+
+        $response = $this->actingAs($this->passenger1)->post("/my-bookings/{$this->booking1->id}/cancel");
+
+        $response->assertSessionHas('error', 'Cannot cancel a booking for a trip that has already been completed.');
+
+        // Booking status must still be confirmed
+        $this->booking1->refresh();
+        $this->assertEquals('confirmed', $this->booking1->booking_status);
+
+        // Trip seats unchanged
+        $this->trip->refresh();
+        $this->assertEquals(6, $this->trip->available_seats);
+    }
+
+    public function test_vehicle_permanent_capacity_is_never_modified_by_cancellations(): void
+    {
+        $originalVehicleSeats = $this->vehicle->total_seats; // 14
+
+        // Cancel booking
+        $this->actingAs($this->passenger1)->post("/my-bookings/{$this->booking1->id}/cancel");
+
+        $this->vehicle->refresh();
+        $this->trip->refresh();
+
+        // Trip seats increased by 3
+        $this->assertEquals(9, $this->trip->available_seats);
+
+        // Vehicle permanent total_seats remains exactly 14
+        $this->assertEquals($originalVehicleSeats, $this->vehicle->total_seats);
+    }
 }

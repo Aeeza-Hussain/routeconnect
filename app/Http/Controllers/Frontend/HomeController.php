@@ -36,6 +36,22 @@ class HomeController extends Controller
         $to   = trim((string) $request->input('to', ''));
         $date = $request->input('date');
         $time = $request->input('time');
+        $errorMessage = null;
+
+        // Validation: Identical origin and destination
+        if ($from !== '' && $to !== '' && strcasecmp($from, $to) === 0) {
+            $errorMessage = 'Origin and destination cannot be the same stop. Please select different boarding and arrival locations.';
+        }
+
+        // Validation: Valid calendar date format
+        if (!empty($date)) {
+            try {
+                Carbon::parse($date);
+            } catch (\Exception $e) {
+                $errorMessage = 'Invalid travel date format provided. Please select a valid calendar date.';
+                $date = null;
+            }
+        }
 
         // 1. Base Query: Only scheduled trips with available seats > 0 belonging to approved drivers with approved vehicles
         $query = Trip::with([
@@ -55,12 +71,12 @@ class HomeController extends Controller
         });
 
         // 2. Date match
-        if (!empty($date)) {
+        if (!empty($date) && !$errorMessage) {
             $query->whereDate('trip_date', $date);
         }
 
         // 3. Optional Preferred Time filter
-        if (!empty($time)) {
+        if (!empty($time) && !$errorMessage) {
             if ($time === 'morning') {
                 $query->whereTime('departure_time', '>=', '05:00:00')
                       ->whereTime('departure_time', '<=', '11:59:59');
@@ -75,13 +91,22 @@ class HomeController extends Controller
             }
         }
 
-        $candidateTrips = $query->orderBy('trip_date')->orderBy('departure_time')->get();
+        if ($errorMessage) {
+            $candidateTrips = collect();
+        } else {
+            $candidateTrips = $query->orderBy('trip_date')->orderBy('departure_time')->get();
+        }
 
         // 4. Route Stop Order Filter:
         // Filter candidate trips ensuring From stop occurs before To stop in route order.
         $trips = $candidateTrips->filter(function ($trip) use ($from, $to) {
             $orderedStops = $this->getTripOrderedStops($trip);
             $trip->search_ordered_stops = $orderedStops;
+
+            // Compute intermediate stops (all stops strictly between origin and destination)
+            $trip->intermediate_stops = count($orderedStops) > 2
+                ? array_values(array_slice($orderedStops, 1, -1))
+                : [];
 
             // If neither 'from' nor 'to' is specified, include trip
             if ($from === '' && $to === '') {
@@ -141,7 +166,8 @@ class HomeController extends Controller
             'to',
             'date',
             'time',
-            'hasSearched'
+            'hasSearched',
+            'errorMessage'
         ));
     }
 
@@ -166,6 +192,9 @@ class HomeController extends Controller
         ->findOrFail($id);
 
         $orderedStops = $this->getTripOrderedStops($trip);
+        $trip->intermediate_stops = count($orderedStops) > 2
+            ? array_values(array_slice($orderedStops, 1, -1))
+            : [];
 
         return view('frontend.trips_show', compact('trip', 'orderedStops'));
     }

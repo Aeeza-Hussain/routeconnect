@@ -116,7 +116,7 @@
                     <span class="text-xl font-black text-emerald-700 font-mono block">
                         {{ $trip->available_seats }} Open {{ \Illuminate\Support\Str::plural('Seat', $trip->available_seats) }}
                     </span>
-                    <span class="text-slate-500 text-[11px] block mt-0.5">out of {{ $trip->vehicle->total_seats ?? '—' }} vehicle seats</span>
+                    <span class="text-slate-500 text-[11px] block mt-0.5">Total Capacity: {{ $trip->vehicle->total_seats ?? '—' }} vehicle seats</span>
                 @else
                     <span class="text-xl font-black text-rose-600 font-mono block">
                         0 Seats
@@ -191,7 +191,7 @@
                                                 @elseif ($idx === count($orderedStops) - 1)
                                                     <span class="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-800 font-black">Final Destination</span>
                                                 @else
-                                                    <span class="px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-800 font-semibold border border-sky-100">Waystation</span>
+                                                    <span class="px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-800 font-semibold border border-sky-100">Intermediate Stop</span>
                                                 @endif
                                             </td>
                                         </tr>
