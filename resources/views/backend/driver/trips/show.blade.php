@@ -18,10 +18,21 @@
         </p>
     </div>
     <div class="flex items-center gap-2.5">
-        <a href="{{ route('driver.trips.edit', $trip->id) }}"
-           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition-all shadow-lg shadow-teal-600/20">
-            <i class="fa-solid fa-pen"></i> Edit Trip Status & Details
-        </a>
+        @if (!$trip->isCancelled() && !$trip->isCompleted())
+            <a href="{{ route('driver.trips.edit', $trip->id) }}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition-all shadow-lg shadow-teal-600/20">
+                <i class="fa-solid fa-pen"></i> Edit Trip
+            </a>
+
+            <form method="POST" action="{{ route('driver.trips.cancel', $trip->id) }}" onsubmit="return confirm('Are you sure you want to cancel Trip #{{ $trip->id }}? All booked passengers will be notified.');" class="inline">
+                @csrf
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-bold transition-all">
+                    <i class="fa-solid fa-ban"></i> Cancel Trip
+                </button>
+            </form>
+        @endif
+
         <a href="{{ route('driver.trips') }}"
            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors border border-slate-700">
             <i class="fa-solid fa-arrow-left"></i> All Trips
@@ -40,9 +51,19 @@
     </div>
 @endif
 
+@if (session('error'))
+    <div class="mb-6 p-4 bg-rose-950/40 border border-rose-800 text-rose-300 text-sm rounded-2xl font-semibold flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-triangle-exclamation text-rose-400 text-base shrink-0"></i>
+            <span>{{ session('error') }}</span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-rose-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+@endif
+
 {{-- ─── Trip Status Banner ─── --}}
-<div class="bg-slate-950/60 rounded-2xl border border-slate-800 p-6 mb-8">
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+<div class="bg-slate-950/60 rounded-2xl border border-slate-800 p-6 mb-8 space-y-4">
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 text-xs">
         <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
             <span class="text-slate-500 block mb-1 font-bold text-[10px] uppercase tracking-wider">Current Status</span>
             @php $st = strtolower($trip->status); @endphp
@@ -79,12 +100,29 @@
         </div>
 
         <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+            <span class="text-slate-500 block mb-1 font-bold text-[10px] uppercase tracking-wider">Destination Arrival</span>
+            <span class="font-extrabold text-teal-400 text-xs font-mono block">
+                {{ $trip->expected_arrival_time ? substr($trip->expected_arrival_time, 0, 5) : 'Estimated' }}
+            </span>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
             <span class="text-slate-500 block mb-1 font-bold text-[10px] uppercase tracking-wider">Pickup Point</span>
             <span class="font-extrabold text-white text-xs truncate block" title="{{ $trip->pickup_point ?? 'Standard Terminal' }}">
                 {{ $trip->pickup_point ?? 'Standard Terminal' }}
             </span>
         </div>
     </div>
+
+    @if ($trip->notes)
+        <div class="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs flex items-start gap-2.5">
+            <i class="fa-solid fa-circle-info text-teal-400 mt-0.5 shrink-0"></i>
+            <div>
+                <strong class="text-slate-300 font-bold">Driver Trip Notes:</strong>
+                <span class="text-slate-400 ml-1">{{ $trip->notes }}</span>
+            </div>
+        </div>
+    @endif
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">

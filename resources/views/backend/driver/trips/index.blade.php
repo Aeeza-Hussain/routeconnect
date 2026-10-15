@@ -16,6 +16,10 @@
         </p>
     </div>
     <div class="flex items-center gap-3">
+        <a href="{{ route('driver.trips.create') }}"
+           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-extrabold transition-all shadow-lg shadow-teal-500/20">
+            <i class="fa-solid fa-calendar-plus"></i> Schedule Trip
+        </a>
         <a href="{{ route('driver.dashboard') }}"
            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors border border-slate-700">
             <i class="fa-solid fa-arrow-left"></i> Dashboard
@@ -31,6 +35,16 @@
             <span>{{ session('success') }}</span>
         </div>
         <button onclick="this.parentElement.remove()" class="text-emerald-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+@endif
+
+@if (session('error'))
+    <div class="mb-6 p-4 bg-rose-950/40 border border-rose-800 text-rose-300 text-sm rounded-2xl font-semibold flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-triangle-exclamation text-rose-400 text-base shrink-0"></i>
+            <span>{{ session('error') }}</span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-rose-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
     </div>
 @endif
 
@@ -79,13 +93,16 @@
                 <i class="fa-solid fa-route"></i>
             </div>
             <h3 class="text-base font-extrabold text-white mb-1">No Trips Found</h3>
-            <p class="text-xs text-slate-400 max-w-sm mx-auto">
+            <p class="text-xs text-slate-400 max-w-sm mx-auto mb-4">
                 @if(request()->hasAny(['search', 'status']))
                     No trips match the specified filters. Try resetting the search filters.
                 @else
-                    Trips assigned to your vehicle and driver profile will appear here.
+                    You have not scheduled any trips yet. Get started by publishing your first departure.
                 @endif
             </p>
+            <a href="{{ route('driver.trips.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-extrabold transition-all shadow-lg shadow-teal-500/20">
+                <i class="fa-solid fa-calendar-plus"></i> Schedule a Trip Now
+            </a>
         </div>
     @else
         <div class="bg-slate-950/60 rounded-2xl border border-slate-800 overflow-hidden">
@@ -104,6 +121,10 @@
                     </thead>
                     <tbody class="divide-y divide-slate-800 text-slate-300">
                         @foreach ($trips as $trip)
+                            @php
+                                $st = strtolower($trip->status);
+                                $isFinalized = in_array($st, ['completed', 'cancelled']);
+                            @endphp
                             <tr class="hover:bg-slate-900/40 transition-colors">
                                 {{-- Route --}}
                                 <td class="px-6 py-4">
@@ -128,6 +149,11 @@
                                 {{-- Departure Time --}}
                                 <td class="px-6 py-4 font-mono font-semibold text-slate-200">
                                     {{ $trip->departure_time }}
+                                    @if ($trip->expected_arrival_time)
+                                        <div class="text-[10px] text-slate-500">
+                                            Arr: {{ substr($trip->expected_arrival_time, 0, 5) }}
+                                        </div>
+                                    @endif
                                 </td>
 
                                 {{-- Vehicle --}}
@@ -150,7 +176,6 @@
 
                                 {{-- Status --}}
                                 <td class="px-6 py-4">
-                                    @php $st = strtolower($trip->status); @endphp
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold
                                         {{ $st === 'scheduled' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : '' }}
                                         {{ $st === 'boarding' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : '' }}
@@ -177,11 +202,23 @@
                                             <i class="fa-solid fa-eye text-[10px]"></i>
                                             <span>Details</span>
                                         </a>
-                                        <a href="{{ route('driver.trips.edit', $trip->id) }}"
-                                           class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition-all flex items-center gap-1.5">
-                                            <i class="fa-solid fa-pen text-[10px]"></i>
-                                            <span>Edit</span>
-                                        </a>
+
+                                        @if (!$isFinalized)
+                                            <a href="{{ route('driver.trips.edit', $trip->id) }}"
+                                               class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition-all flex items-center gap-1.5">
+                                                <i class="fa-solid fa-pen text-[10px]"></i>
+                                                <span>Edit</span>
+                                            </a>
+
+                                            <form method="POST" action="{{ route('driver.trips.cancel', $trip->id) }}" onsubmit="return confirm('Are you sure you want to cancel Trip #{{ $trip->id }}? Booked passengers will be notified.');" class="inline">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-bold transition-all flex items-center gap-1">
+                                                    <i class="fa-solid fa-ban text-[10px]"></i>
+                                                    <span>Cancel</span>
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
