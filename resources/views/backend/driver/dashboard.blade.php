@@ -44,6 +44,83 @@
     </div>
 @endif
 
+@if (session('error'))
+    <div class="mb-6 p-4 bg-rose-950/40 border border-rose-800 text-rose-300 text-sm rounded-2xl font-semibold flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-circle-exclamation text-rose-400 text-base shrink-0"></i>
+            <span>{{ session('error') }}</span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-rose-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+@endif
+
+{{-- ─── Helpful Status Notices ─── --}}
+@if ($approvedVehiclesCount === 0)
+    @if ($vehiclesCount === 0)
+        <div class="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs sm:text-sm rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg shrink-0 border border-amber-500/30">
+                    <i class="fa-solid fa-van-shuttle"></i>
+                </div>
+                <div>
+                    <span class="font-extrabold text-white block">No Vehicles Registered Yet</span>
+                    <span class="text-amber-300/90 text-xs">Register your commercial fleet vehicle to request administrator approval and begin scheduling trips.</span>
+                </div>
+            </div>
+            <a href="{{ route('driver.vehicles.create') }}" class="shrink-0 px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold text-xs transition-all shadow-md shadow-teal-500/20 text-center">
+                <i class="fa-solid fa-square-plus mr-1"></i> Register Vehicle
+            </a>
+        </div>
+    @elseif ($pendingVehiclesCount > 0)
+        <div class="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs sm:text-sm rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg shrink-0 border border-amber-500/30">
+                    <i class="fa-solid fa-hourglass-half animate-pulse"></i>
+                </div>
+                <div>
+                    <span class="font-extrabold text-white block">Vehicle Approval Pending</span>
+                    <span class="text-amber-300/90 text-xs">You have {{ $pendingVehiclesCount }} vehicle(s) awaiting administrator verification. Trip scheduling will unlock once approved.</span>
+                </div>
+            </div>
+            <a href="{{ route('driver.vehicles.index') }}" class="shrink-0 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-colors text-center">
+                View Vehicle Status →
+            </a>
+        </div>
+    @elseif ($rejectedVehiclesCount > 0)
+        <div class="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-200 text-xs sm:text-sm rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-lg shrink-0 border border-rose-500/30">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+                <div>
+                    <span class="font-extrabold text-white block">Vehicle Registration Rejected</span>
+                    <span class="text-rose-300/90 text-xs">Your vehicle registration was rejected. Please review administrator notes under My Vehicles and submit an eligible vehicle.</span>
+                </div>
+            </div>
+            <a href="{{ route('driver.vehicles.create') }}" class="shrink-0 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs transition-colors text-center">
+                Register New Vehicle
+            </a>
+        </div>
+    @endif
+@endif
+
+@if ($totalTrips === 0 && $approvedVehiclesCount > 0)
+    <div class="mb-6 p-4 bg-teal-500/10 border border-teal-500/20 text-teal-200 text-xs sm:text-sm rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center text-lg shrink-0 border border-teal-500/30">
+                <i class="fa-solid fa-route"></i>
+            </div>
+            <div>
+                <span class="font-extrabold text-white block">Ready to Schedule Departures</span>
+                <span class="text-teal-300/90 text-xs">You have approved vehicles in your fleet! Publish your first departure to allow passengers to discover and book seats.</span>
+            </div>
+        </div>
+        <a href="{{ route('driver.trips.create') }}" class="shrink-0 px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold text-xs transition-all shadow-md shadow-teal-500/20 text-center">
+            <i class="fa-solid fa-calendar-plus mr-1"></i> Schedule a Trip
+        </a>
+    </div>
+@endif
+
 {{-- ─── Statistics Grid (5 Required KPIs) ─── --}}
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
 
@@ -142,8 +219,8 @@
             </div>
         </div>
         <div class="mt-4 pt-3 border-t border-slate-800/80">
-            <a href="{{ route('driver.vehicle') }}" class="text-[11px] font-bold text-amber-400 hover:text-amber-300 transition-colors flex items-center justify-between">
-                <span>Vehicle Details</span>
+            <a href="{{ route('driver.vehicles.index') }}" class="text-[11px] font-bold text-amber-400 hover:text-amber-300 transition-colors flex items-center justify-between">
+                <span>Fleet Details ({{ $vehiclesCount }})</span>
                 <i class="fa-solid fa-arrow-right text-[10px]"></i>
             </a>
         </div>
@@ -233,61 +310,77 @@
                 <i class="fa-solid fa-bolt text-teal-400"></i>
                 Operations Quick Shortcuts
             </h3>
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <a href="{{ route('driver.trips.create') }}" class="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {{-- 1. Schedule a Trip --}}
+                <a href="{{ route('driver.trips.create') }}" class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
                     <div class="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-calendar-plus text-sm"></i>
                     </div>
                     <span class="text-xs font-bold text-white block">Schedule a Trip</span>
-                    <span class="text-[10px] text-slate-500">Plan new departure</span>
+                    <span class="text-[10px] text-slate-500">Plan departure</span>
                 </a>
 
-                <a href="{{ route('driver.trips') }}" class="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
+                {{-- 2. My Trips --}}
+                <a href="{{ route('driver.trips') }}" class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
                     <div class="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-route text-sm"></i>
                     </div>
                     <span class="text-xs font-bold text-white block">My Trips</span>
-                    <span class="text-[10px] text-slate-500">View & edit trips</span>
+                    <span class="text-[10px] text-slate-500">{{ $totalTrips }} journeys</span>
                 </a>
 
-                <a href="{{ route('driver.bookings') }}" class="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
+                {{-- 3. My Vehicles --}}
+                <a href="{{ route('driver.vehicles.index') }}" class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-van-shuttle text-sm"></i>
+                    </div>
+                    <span class="text-xs font-bold text-white block">My Vehicles</span>
+                    <span class="text-[10px] text-slate-500">{{ $vehiclesCount }} registered</span>
+                </a>
+
+                {{-- 4. Register Vehicle --}}
+                <a href="{{ route('driver.vehicles.create') }}" class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-square-plus text-sm"></i>
+                    </div>
+                    <span class="text-xs font-bold text-white block">Register Vehicle</span>
+                    <span class="text-[10px] text-slate-500">New vehicle</span>
+                </a>
+
+                {{-- 5. Passenger Bookings --}}
+                <a href="{{ route('driver.bookings') }}" class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
                     <div class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-ticket text-sm"></i>
                     </div>
                     <span class="text-xs font-bold text-white block">Passenger Bookings</span>
-                    <span class="text-[10px] text-slate-500">Seat reservations</span>
+                    <span class="text-[10px] text-slate-500">{{ $bookingsCount }} seats</span>
                 </a>
 
-                <a href="{{ route('driver.messages') }}" class="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
-                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                {{-- 6. Trip Messages --}}
+                <a href="{{ route('driver.messages') }}" class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
+                    <div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-comments text-sm"></i>
                     </div>
                     <span class="text-xs font-bold text-white block">Trip Messages</span>
-                    <span class="text-[10px] text-slate-500">Broadcast updates</span>
+                    <span class="text-[10px] text-slate-500">Updates</span>
                 </a>
 
-                <a href="{{ route('driver.vehicle') }}" class="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
-                    <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-van-shuttle text-sm"></i>
-                    </div>
-                    <span class="text-xs font-bold text-white block">My Vehicle</span>
-                    <span class="text-[10px] text-slate-500">Assigned fleet</span>
-                </a>
-
-                <a href="{{ route('driver.profile') }}" class="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
-                    <div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                {{-- 7. Profile --}}
+                <a href="{{ route('driver.profile') }}" class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
+                    <div class="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-user text-sm"></i>
                     </div>
                     <span class="text-xs font-bold text-white block">Profile</span>
-                    <span class="text-[10px] text-slate-500">Driver credentials</span>
+                    <span class="text-[10px] text-slate-500">Credentials</span>
                 </a>
 
-                <a href="{{ route('driver.settings') }}" class="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
+                {{-- 8. Settings --}}
+                <a href="{{ route('driver.settings') }}" class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
                     <div class="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-gear text-sm"></i>
                     </div>
                     <span class="text-xs font-bold text-white block">Settings</span>
-                    <span class="text-[10px] text-slate-500">Security & alerts</span>
+                    <span class="text-[10px] text-slate-500">Security</span>
                 </a>
             </div>
         </div>
@@ -317,7 +410,11 @@
         @if ($recentTrips->isEmpty())
             <div class="p-8 text-center text-slate-400 text-xs">
                 <i class="fa-solid fa-route text-slate-600 text-2xl mb-2 block"></i>
-                No trips scheduled yet for your account.
+                <div class="font-extrabold text-white text-sm mb-1">No trips scheduled yet</div>
+                <p class="text-slate-400 max-w-xs mx-auto mb-3">You have not scheduled any trips yet. Create your first journey to start accepting bookings.</p>
+                <a href="{{ route('driver.trips.create') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold text-xs transition-all shadow-md shadow-teal-500/20">
+                    <i class="fa-solid fa-calendar-plus"></i> Schedule Trip
+                </a>
             </div>
         @else
             <div class="overflow-x-auto">
