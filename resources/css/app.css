@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
@@ -26,4 +28,136 @@
     --color-indigoBrand-500: #6366f1;
     --color-indigoBrand-600: #4f46e5;
     --color-indigoBrand-700: #4338ca;
+}
+
+/* ─── RouteConnect Modern Light & Dark Mode System ─── */
+:root {
+    --bg-main: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #ffffff;
+    --bg-subtle: #f1f5f9;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border-subtle: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --primary-main: #059669;
+    --primary-hover: #047857;
+}
+
+.dark {
+    --bg-main: #090e17;
+    --bg-surface: #111827;
+    --bg-surface-elevated: #162032;
+    --bg-subtle: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #64748b;
+    --border-subtle: #1e293b;
+    --border-strong: #334155;
+    --primary-main: #10b981;
+    --primary-hover: #34d399;
+}
+
+/* Smooth transition when toggling themes */
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+    transition: background-color 250ms ease, border-color 250ms ease, color 200ms ease, fill 200ms ease, stroke 200ms ease !important;
+}
+
+/* Dark mode base overrides */
+.dark body {
+    background-color: #090e17;
+    color: #f8fafc;
+}
+
+/* Custom scrollbars that adapt to dark mode */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.6);
+}
+.dark ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.2);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.4);
+}
+
+/* ─── Global Dark Mode Surface & Text System ─── */
+.dark .bg-white {
+    background-color: #111827 !important;
+}
+.dark .bg-slate-50 {
+    background-color: #0b1120 !important;
+}
+.dark .bg-slate-100 {
+    background-color: #162032 !important;
+}
+.dark .text-slate-900,
+.dark .text-slate-800 {
+    color: #f8fafc !important;
+}
+.dark .text-slate-700,
+.dark .text-slate-600 {
+    color: #cbd5e1 !important;
+}
+.dark .text-slate-500 {
+    color: #94a3b8 !important;
+}
+.dark .border-slate-200,
+.dark .border-slate-100,
+.dark .border-slate-200\/80,
+.dark .border-slate-200\/90,
+.dark .border-slate-200\/60,
+.dark .border-slate-200\/70 {
+    border-color: #1e293b !important;
+}
+.dark .divide-slate-100 > :not(:last-child),
+.dark .divide-slate-200 > :not(:last-child) {
+    border-color: #1e293b !important;
+}
+
+/* Form controls in dark mode */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="range"]),
+.dark select,
+.dark textarea {
+    background-color: #162032 !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: #64748b !important;
+}
+
+/* Selected state and focus rings */
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
+}
+
+/* Tables in dark mode */
+.dark th {
+    background-color: #162032 !important;
+    color: #cbd5e1 !important;
+    border-color: #1e293b !important;
+}
+.dark td {
+    border-color: #1e293b !important;
+}
+.dark tr:hover td {
+    background-color: rgba(30, 41, 59, 0.5) !important;
 }

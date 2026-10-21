@@ -23,15 +23,24 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+    <!-- RouteConnect Theme Engine (Zero FOUC) -->
+    @include('partials.theme_init')
+
     <style>
         body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         .font-script { font-family: 'Caveat', cursive, sans-serif; }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
+<body class="bg-slate-100 dark:bg-[#090e17] text-slate-800 dark:text-slate-100 antialiased min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 transition-colors duration-200">
+
+    <!-- Floating Theme Switcher for Register Page -->
+    <div class="fixed top-4 right-4 z-50">
+        @include('partials.theme_switcher')
+    </div>
 
     <!-- Split-Screen Registration Container -->
-    <div class="w-full max-w-6xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px] border border-slate-200/60">
+    <div class="w-full max-w-6xl bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px] border border-slate-200/60 dark:border-slate-800 transition-colors">
         
         <!-- LEFT HALF: Hero Visual Banner -->
         <div class="lg:col-span-5 relative bg-slate-900 text-white p-8 sm:p-10 flex flex-col justify-between overflow-hidden min-h-[400px] lg:min-h-full">
@@ -119,29 +128,29 @@
         </div>
 
         <!-- RIGHT HALF: Registration Form -->
-        <div class="lg:col-span-7 p-8 sm:p-10 lg:p-12 flex flex-col justify-between bg-white overflow-y-auto max-h-[90vh] lg:max-h-none">
+        <div class="lg:col-span-7 p-8 sm:p-10 lg:p-12 flex flex-col justify-between bg-white dark:bg-slate-900 overflow-y-auto max-h-[90vh] lg:max-h-none transition-colors">
             <div>
                 <!-- Form Top Header Badge & Title -->
                 <div class="mb-6">
                     <div class="flex items-center gap-3 mb-2">
-                        <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg shadow-xs">
+                        <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-lg shadow-xs">
                             <i class="fa-solid fa-user-plus"></i>
                         </div>
-                        <span class="text-xs font-extrabold tracking-wide text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                        <span class="text-xs font-extrabold tracking-wide text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
                             Create Account
                         </span>
                     </div>
-                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Join RouteConnect</h2>
-                    <p class="text-xs sm:text-sm text-slate-500 mt-1 font-medium">Fill in your details to create your account and start your journey.</p>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Join RouteConnect</h2>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">Fill in your details to create your account and start your journey.</p>
                 </div>
 
                 <!-- Validation Error Alert -->
                 @if ($errors->any())
-                    <div class="bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-2xl p-3.5 mb-6 space-y-1">
-                        <div class="font-bold flex items-center gap-1.5 text-rose-800 mb-0.5">
-                            <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> Please fix the errors below:
+                    <div class="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs rounded-2xl p-3.5 mb-6 space-y-1">
+                        <div class="font-bold flex items-center gap-1.5 text-rose-800 dark:text-rose-300 mb-0.5">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-600 dark:text-rose-400"></i> Please fix the errors below:
                         </div>
-                        <ul class="list-disc list-inside space-y-0.5 text-rose-600 font-semibold pl-1">
+                        <ul class="list-disc list-inside space-y-0.5 text-rose-600 dark:text-rose-400 font-semibold pl-1">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
@@ -153,7 +162,7 @@
                     @csrf
 
                     <!-- Role Selector Pill Tabs -->
-                    <div class="bg-slate-100 p-1.5 rounded-2xl grid grid-cols-2 gap-1.5 border border-slate-200/80 mb-5">
+                    <div class="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl grid grid-cols-2 gap-1.5 border border-slate-200/80 dark:border-slate-700 mb-5">
                         <!-- User / Passenger Role Tab -->
                         <label id="tabUser" class="relative flex items-center justify-center gap-2 py-3 px-4 rounded-xl cursor-pointer font-bold text-xs transition-all bg-emerald-700 text-white shadow-md shadow-emerald-700/20">
                             <input type="radio" name="role" value="passenger" {{ ($selectedRole ?? 'passenger') === 'passenger' ? 'checked' : '' }} onchange="toggleRoleSelection('passenger')" class="sr-only">

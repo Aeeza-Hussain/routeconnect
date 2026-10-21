@@ -18,21 +18,25 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+
+    <!-- RouteConnect Theme Engine (Zero FOUC) -->
+    @include('partials.theme_init')
 </head>
-<body class="bg-slate-900 text-slate-100 antialiased font-sans flex flex-col min-h-screen">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 antialiased font-sans flex flex-col min-h-screen transition-colors duration-200">
     
-    <nav class="bg-slate-800 border-b border-slate-700 py-4 px-6 flex items-center justify-between">
-        <a href="{{ route('admin.dashboard') }}" class="text-xl font-bold text-indigo-400">RouteConnect Admin Portal</a>
+    <nav class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 py-4 px-6 flex items-center justify-between transition-colors">
+        <a href="{{ route('admin.dashboard') }}" class="text-xl font-bold text-emerald-600 dark:text-indigo-400">RouteConnect Admin Portal</a>
         <div class="flex items-center gap-4">
-            <a href="{{ route('admin.dashboard') }}" class="text-xs font-bold text-slate-300 hover:text-white">Dashboard Overview</a>
+            @include('partials.theme_switcher')
+            <a href="{{ route('admin.dashboard') }}" class="text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">Dashboard Overview</a>
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
-                <button type="submit" class="text-xs font-bold text-slate-300 hover:text-white bg-slate-700 px-3 py-1.5 rounded-lg">Logout</button>
+                <button type="submit" class="text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600">Logout</button>
             </form>
         </div>
     </nav>
 
-    <main class="flex-1 max-w-5xl mx-auto my-12 p-8 bg-slate-800 rounded-2xl border border-slate-700 shadow-xl w-full">
+    <main class="flex-1 max-w-5xl mx-auto my-12 p-8 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl w-full transition-colors">
         <div class="flex items-center justify-between mb-6">
             <div>
                 <span class="text-xs font-bold uppercase tracking-wider text-indigo-400 bg-indigo-950 px-3 py-1 rounded-full border border-indigo-800">Admin Approval Queue</span>

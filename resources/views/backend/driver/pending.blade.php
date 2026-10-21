@@ -24,25 +24,32 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+    <!-- RouteConnect Theme Engine (Zero FOUC) -->
+    @include('partials.theme_init')
 </head>
-<body class="bg-[#0B132B] text-slate-100 antialiased font-sans flex flex-col min-h-screen">
+<body class="bg-slate-50 dark:bg-[#0B132B] text-slate-900 dark:text-slate-100 antialiased font-sans flex flex-col min-h-screen transition-colors duration-200">
     
     <!-- ─── Navbar ─── -->
-    <nav class="bg-[#070E1E] border-b border-slate-800/80 py-4 px-6 flex items-center justify-between">
+    <nav class="bg-white dark:bg-[#070E1E] border-b border-slate-200 dark:border-slate-800/80 py-4 px-6 flex items-center justify-between transition-colors">
         <a href="{{ url('/') }}" class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-lg bg-teal-500 flex items-center justify-center text-white shadow-md shadow-teal-500/20">
                 <i class="fa-solid fa-car-side text-sm"></i>
             </div>
-            <span class="font-extrabold text-lg text-white">Route<span class="text-teal-400">Driver</span> Workspace</span>
+            <span class="font-extrabold text-lg text-slate-900 dark:text-white">Route<span class="text-teal-600 dark:text-teal-400">Driver</span> Workspace</span>
         </a>
         
-        <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button type="submit" class="text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3.5 py-2 rounded-xl transition-all border border-slate-700 flex items-center gap-2">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                <span>Logout</span>
-            </button>
-        </form>
+        <div class="flex items-center gap-3">
+            @include('partials.theme_switcher')
+            
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-3.5 py-2 rounded-xl transition-all border border-slate-200 dark:border-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
     </nav>
 
     <!-- ─── Main Content Card ─── -->

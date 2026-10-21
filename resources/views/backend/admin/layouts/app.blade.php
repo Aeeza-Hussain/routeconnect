@@ -26,6 +26,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 
+    <!-- RouteConnect Theme Engine (Zero FOUC) -->
+    @include('partials.theme_init')
+
     <style>
         /* Custom scrollbar for modern sleek feel */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -34,7 +37,7 @@
         ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.7); }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 font-sans antialiased h-screen overflow-hidden flex flex-row">
+<body class="bg-slate-50 dark:bg-[#090e17] text-slate-900 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden flex flex-row transition-colors duration-200">
 
     <!-- Mobile sidebar overlay -->
     <div id="sidebarOverlay"
@@ -45,7 +48,7 @@
     @include('backend.admin.partials.sidebar')
 
     <!-- Main Content Area (independent scrollable view) -->
-    <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+    <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-slate-50 dark:bg-[#090e17]">
 
         <!-- Admin Top Header (pinned at top) -->
         <div class="shrink-0">
@@ -58,7 +61,7 @@
         </main>
 
         <!-- Admin Footer (pinned at bottom) -->
-        <footer class="shrink-0 py-3.5 px-6 sm:px-8 bg-white border-t border-slate-200 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <footer class="shrink-0 py-3.5 px-6 sm:px-8 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-400 dark:text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
             <div>© {{ date('Y') }} RouteConnect — Admin Operations Panel</div>
             <div class="flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>

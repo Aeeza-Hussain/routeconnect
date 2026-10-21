@@ -45,10 +45,13 @@
 
 <div class="max-w-3xl space-y-8">
 
+    {{-- Appearance & Theme Preference --}}
+    @include('partials.theme_settings_card')
+
     {{-- Change Password Section --}}
-    <div class="bg-slate-950/60 rounded-2xl border border-slate-800 p-6 sm:p-8">
-        <h3 class="text-base font-extrabold text-white mb-1 flex items-center gap-2">
-            <i class="fa-solid fa-lock text-teal-400"></i> Account Security & Password
+    <div class="bg-white dark:bg-slate-950/60 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 transition-colors">
+        <h3 class="text-base font-extrabold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+            <i class="fa-solid fa-lock text-teal-600 dark:text-teal-400"></i> Account Security & Password
         </h3>
         <p class="text-xs text-slate-400 mb-6">
             Ensure your account is using a long, random password to stay secure.

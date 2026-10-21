@@ -24,24 +24,29 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+    <!-- RouteConnect Theme Engine (Zero FOUC) -->
+    @include('partials.theme_init')
 </head>
-<body class="bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-slate-800 antialiased font-sans flex flex-col min-h-screen">
+<body class="bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 dark:from-[#090e17] dark:via-[#0b1120] dark:to-[#0f172a] text-slate-800 dark:text-slate-100 antialiased font-sans flex flex-col min-h-screen transition-colors duration-200">
     
     <!-- ─── Navbar ─── -->
-    <nav class="bg-white/95 backdrop-blur-md border-b border-slate-200/80 py-4 px-6 flex items-center justify-between shadow-xs sticky top-0 z-30">
+    <nav class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 py-4 px-6 flex items-center justify-between shadow-xs sticky top-0 z-30 transition-colors">
         <a href="{{ url('/') }}" class="flex items-center gap-2.5 group">
             <div class="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-600/20">
                 <i class="fa-solid fa-location-dot text-base"></i>
             </div>
-            <span class="font-extrabold text-xl tracking-tight text-slate-900 group-hover:text-emerald-600 transition-colors">
-                Route<span class="text-emerald-600">Connect</span>
+            <span class="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                Route<span class="text-emerald-600 dark:text-emerald-400">Connect</span>
             </span>
         </a>
-        <div class="flex items-center gap-5 text-xs sm:text-sm font-semibold">
-            <a href="{{ url('/') }}" class="text-slate-600 hover:text-emerald-600 transition-colors">Home</a>
-            <a href="{{ route('login') }}" class="text-slate-600 hover:text-emerald-600 transition-colors">Login</a>
-            <a href="{{ route('register') }}" class="text-slate-600 hover:text-emerald-600 transition-colors">Passenger Register</a>
-            <a href="{{ route('driver.register') }}" class="text-emerald-700 font-bold">Become a Driver</a>
+        <div class="flex items-center gap-4 text-xs sm:text-sm font-semibold">
+            <a href="{{ url('/') }}" class="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Home</a>
+            <a href="{{ route('login') }}" class="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Login</a>
+            <a href="{{ route('register') }}" class="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors hidden sm:inline">Passenger Register</a>
+            <div class="pl-2 border-l border-slate-200 dark:border-slate-700">
+                @include('partials.theme_switcher')
+            </div>
         </div>
     </nav>
 
