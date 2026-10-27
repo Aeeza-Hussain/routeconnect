@@ -120,4 +120,46 @@ class AdminDriverController extends Controller
         return redirect()->route('admin.drivers.applications')
             ->with('success', "Driver '{$driver->name}' application has been rejected.");
     }
+
+    /**
+     * Securely View or Download Driver Identity Verification Document
+     * Restricted to authenticated administrators only.
+     * Documents are stored in private local storage (storage/app/private/...).
+     */
+    public function viewDocument(Request $request, $id, $type)
+    {
+        $driver = User::where('user_type', 2)->findOrFail($id);
+
+        $allowedDocuments = [
+            'cnic_front'    => $driver->cnic_front_image,
+            'cnic_back'     => $driver->cnic_back_image,
+            'license_front' => $driver->license_front_image,
+            'license_back'  => $driver->license_back_image,
+        ];
+
+        if (!array_key_exists($type, $allowedDocuments) || empty($allowedDocuments[$type])) {
+            abort(404, 'Requested driver document is not available or has not been uploaded.');
+        }
+
+        $relativePath = $allowedDocuments[$type];
+
+        if (!\Illuminate\Support\Facades\Storage::disk('local')->exists($relativePath)) {
+            abort(404, 'Document file not found in secure storage.');
+        }
+
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        $mimeType = $disk->mimeType($relativePath) ?? 'application/octet-stream';
+        $extension = pathinfo($relativePath, PATHINFO_EXTENSION);
+        $downloadName = "Driver_{$driver->id}_{$type}." . ($extension ?: 'bin');
+
+        if ($request->query('download') == 1) {
+            return $disk->download($relativePath, $downloadName);
+        }
+
+        return $disk->response($relativePath, null, [
+            'Content-Type'        => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . $downloadName . '"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
 }

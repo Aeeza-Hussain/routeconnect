@@ -34,11 +34,23 @@ class User extends Authenticatable
         'cnic',
         'bio',
         'license_no',
+        'license_issue_date',
+        'license_expiry_date',
+        'cnic_front_image',
+        'cnic_back_image',
+        'license_front_image',
+        'license_back_image',
+        'emergency_contact_name',
+        'emergency_contact_phone',
         'profile_photo',
         'password',
         'user_type',
         'driver_status',
         'rejection_reason',
+        'terms_accepted_at',
+        'privacy_accepted_at',
+        'declaration_confirmed_at',
+        'verification_consent_at',
     ];
 
     // ─────────────────────────────────────────
@@ -112,9 +124,15 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'user_type'         => 'integer',
+            'email_verified_at'        => 'datetime',
+            'password'                 => 'hashed',
+            'user_type'                => 'integer',
+            'license_issue_date'       => 'date',
+            'license_expiry_date'      => 'date',
+            'terms_accepted_at'        => 'datetime',
+            'privacy_accepted_at'      => 'datetime',
+            'declaration_confirmed_at' => 'datetime',
+            'verification_consent_at'  => 'datetime',
         ];
     }
 }

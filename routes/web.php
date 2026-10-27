@@ -71,10 +71,13 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:20,1');
 
 Route::get('/driver/register', [AuthController::class, 'showDriverRegisterForm'])->name('driver.register');
-Route::post('/driver/register', [AuthController::class, 'registerDriver'])->name('driver.register.submit');
+Route::post('/driver/register', [AuthController::class, 'registerDriver'])->name('driver.register.submit')->middleware('throttle:20,1');
+
+Route::view('/terms', 'frontend.terms')->name('terms');
+Route::view('/privacy', 'frontend.privacy')->name('privacy');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -93,9 +96,10 @@ Route::middleware(['auth'])->get('/driver/pending', [DriverDashboardController::
 Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     
-    // Driver Applications Management
+    // Driver Applications Management & Secure Document Review
     Route::get('/drivers/applications', [AdminDriverController::class, 'applications'])->name('admin.drivers.applications');
     Route::get('/drivers/applications/{id}', [AdminDriverController::class, 'show'])->name('admin.drivers.show');
+    Route::get('/drivers/{id}/documents/{type}', [AdminDriverController::class, 'viewDocument'])->name('admin.drivers.document');
     Route::post('/drivers/{id}/approve', [AdminDriverController::class, 'approve'])->name('admin.drivers.approve');
     Route::post('/drivers/{id}/reject', [AdminDriverController::class, 'reject'])->name('admin.drivers.reject');
     Route::get('/drivers', [AdminDriverController::class, 'index'])->name('admin.drivers.index');

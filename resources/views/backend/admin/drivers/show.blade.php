@@ -115,6 +115,39 @@
                 </div>
 
                 <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Licence Issue Date</div>
+                    <div class="text-sm font-extrabold text-slate-900">
+                        {{ $driver->license_issue_date ? \Carbon\Carbon::parse($driver->license_issue_date)->format('d M Y') : 'Not Provided' }}
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Licence Expiry Date</div>
+                    <div class="text-sm font-extrabold flex items-center gap-1.5">
+                        @if ($driver->license_expiry_date)
+                            <span class="{{ \Carbon\Carbon::parse($driver->license_expiry_date)->isPast() ? 'text-rose-600 font-extrabold' : 'text-slate-900' }}">
+                                {{ \Carbon\Carbon::parse($driver->license_expiry_date)->format('d M Y') }}
+                            </span>
+                            @if (\Carbon\Carbon::parse($driver->license_expiry_date)->isPast())
+                                <span class="px-1.5 py-0.5 rounded text-[9px] bg-rose-100 text-rose-700 font-bold">Expired</span>
+                            @else
+                                <span class="px-1.5 py-0.5 rounded text-[9px] bg-emerald-100 text-emerald-700 font-bold">Valid</span>
+                            @endif
+                        @else
+                            <span class="text-slate-500">Not Provided</span>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Emergency Contact</div>
+                    <div class="text-sm font-extrabold text-slate-900">{{ $driver->emergency_contact_name ?? 'Not Provided' }}</div>
+                    @if ($driver->emergency_contact_phone)
+                        <div class="text-xs text-indigo-600 font-semibold mt-0.5"><i class="fa-solid fa-phone text-[10px]"></i> {{ $driver->emergency_contact_phone }}</div>
+                    @endif
+                </div>
+
+                <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
                     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Gender</div>
                     <div class="text-sm font-extrabold text-slate-900 capitalize">{{ $driver->gender ?? 'Not Provided' }}</div>
                 </div>
@@ -123,13 +156,6 @@
                     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date of Birth</div>
                     <div class="text-sm font-extrabold text-slate-900">
                         {{ $driver->dob ? \Carbon\Carbon::parse($driver->dob)->format('d M Y') : 'Not Provided' }}
-                    </div>
-                </div>
-
-                <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">User Type</div>
-                    <div class="text-sm font-extrabold text-slate-900">
-                        Driver (user_type = {{ $driver->user_type }})
                     </div>
                 </div>
 
@@ -161,6 +187,102 @@
                     <p class="leading-relaxed">{{ $driver->rejection_reason }}</p>
                 </div>
             @endif
+        </div>
+    </div>
+
+    {{-- ─────────────────── IDENTITY & LICENCE VERIFICATION DOCUMENTS ─────────────────── --}}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-indigo-600"></i>
+                    Uploaded Identity &amp; Licence Verification Documents
+                </h4>
+                <p class="text-xs text-slate-500 mt-0.5">Stored securely in private storage. Authorized for administrator review only.</p>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+                <i class="fa-solid fa-lock text-[10px]"></i> Private Storage Protected
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            @php
+                $docs = [
+                    'cnic_front'    => ['title' => 'CNIC Front Image', 'path' => $driver->cnic_front_image, 'icon' => 'fa-id-card-clip'],
+                    'cnic_back'     => ['title' => 'CNIC Back Image', 'path' => $driver->cnic_back_image, 'icon' => 'fa-id-card-clip'],
+                    'license_front' => ['title' => 'Driving Licence Front', 'path' => $driver->license_front_image, 'icon' => 'fa-address-card'],
+                    'license_back'  => ['title' => 'Driving Licence Back', 'path' => $driver->license_back_image, 'icon' => 'fa-address-card'],
+                ];
+            @endphp
+
+            @foreach ($docs as $key => $doc)
+                <div class="p-4 rounded-xl border {{ $doc['path'] ? 'bg-slate-50 border-slate-200' : 'bg-slate-50/50 border-dashed border-slate-200' }} flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-xl {{ $doc['path'] ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : 'bg-slate-200 text-slate-400' }} flex items-center justify-center text-lg shrink-0">
+                            <i class="fa-solid {{ $doc['icon'] }}"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h5 class="text-xs font-extrabold text-slate-900 truncate">{{ $doc['title'] }}</h5>
+                            @if ($doc['path'])
+                                <span class="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
+                                    <i class="fa-solid fa-circle-check text-[9px]"></i> Document Uploaded
+                                </span>
+                            @else
+                                <span class="text-[10px] text-slate-400 font-semibold mt-0.5 block">Not Uploaded</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    @if ($doc['path'])
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <a href="{{ route('admin.drivers.document', [$driver->id, $key]) }}" target="_blank"
+                               class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all inline-flex items-center gap-1 shadow-xs">
+                                <i class="fa-solid fa-eye text-[10px]"></i> View
+                            </a>
+                            <a href="{{ route('admin.drivers.document', [$driver->id, $key]) }}?download=1"
+                               class="px-2.5 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition-all inline-flex items-center"
+                               title="Download document">
+                                <i class="fa-solid fa-download text-[11px]"></i>
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+
+        {{-- Verification Consents & Audit Trail --}}
+        <div class="mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Terms &amp; Conditions</span>
+                <span class="font-extrabold {{ $driver->terms_accepted_at ? 'text-emerald-700' : 'text-slate-500' }} flex items-center gap-1">
+                    <i class="fa-solid {{ $driver->terms_accepted_at ? 'fa-circle-check text-emerald-600' : 'fa-circle-xmark text-slate-400' }}"></i>
+                    {{ $driver->terms_accepted_at ? 'Accepted' : 'Not Recorded' }}
+                </span>
+            </div>
+
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Privacy Policy</span>
+                <span class="font-extrabold {{ $driver->privacy_accepted_at ? 'text-emerald-700' : 'text-slate-500' }} flex items-center gap-1">
+                    <i class="fa-solid {{ $driver->privacy_accepted_at ? 'fa-circle-check text-emerald-600' : 'fa-circle-xmark text-slate-400' }}"></i>
+                    {{ $driver->privacy_accepted_at ? 'Consented' : 'Not Recorded' }}
+                </span>
+            </div>
+
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Accuracy Declaration</span>
+                <span class="font-extrabold {{ $driver->declaration_confirmed_at ? 'text-emerald-700' : 'text-slate-500' }} flex items-center gap-1">
+                    <i class="fa-solid {{ $driver->declaration_confirmed_at ? 'fa-circle-check text-emerald-600' : 'fa-circle-xmark text-slate-400' }}"></i>
+                    {{ $driver->declaration_confirmed_at ? 'Confirmed' : 'Not Recorded' }}
+                </span>
+            </div>
+
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Official Verification</span>
+                <span class="font-extrabold {{ $driver->verification_consent_at ? 'text-emerald-700' : 'text-slate-500' }} flex items-center gap-1">
+                    <i class="fa-solid {{ $driver->verification_consent_at ? 'fa-circle-check text-emerald-600' : 'fa-circle-xmark text-slate-400' }}"></i>
+                    {{ $driver->verification_consent_at ? 'Authorized' : 'Not Recorded' }}
+                </span>
+            </div>
         </div>
     </div>
 

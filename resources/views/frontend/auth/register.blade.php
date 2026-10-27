@@ -232,33 +232,42 @@
                         </div>
                     </div>
 
-                    <!-- EXTRA DRIVER APPLICATION FIELDS (CNIC, Gender, DOB, Bio/About) -->
+                    <input type="hidden" name="driver_submission" id="driverSubmissionInput" value="{{ ($selectedRole ?? '') === 'driver' ? '1' : '0' }}">
+
+                    <!-- EXTRA DRIVER APPLICATION FIELDS -->
                     <!-- Shown ONLY when Register as a Driver tab is selected -->
-                    <div id="driverExtraFields" class="{{ ($selectedRole ?? '') === 'driver' ? '' : 'hidden' }} space-y-4 pt-2 border-t border-slate-100">
-                        <div class="text-xs font-extrabold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg inline-block border border-indigo-100 mb-1">
-                            <i class="fa-solid fa-id-card"></i> Driver Profile Attributes
+                    <div id="driverExtraFields" class="{{ ($selectedRole ?? '') === 'driver' ? '' : 'hidden' }} space-y-5 pt-3 border-t border-slate-200/80 dark:border-slate-800">
+                        
+                        <!-- Header badge -->
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-3 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800 inline-flex items-center gap-1.5">
+                                <i class="fa-solid fa-id-card"></i> Driver Verification & Credentials
+                            </span>
+                            <span class="text-[11px] font-semibold text-slate-400">Step 1 of 2: Driver Approval</span>
                         </div>
 
+                        <!-- 1. Identity & Driving License Credentials Grid -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <!-- CNIC Number -->
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5">CNIC Number <span class="text-rose-500">*</span></label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">CNIC Number <span class="text-rose-500">*</span></label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
                                         <i class="fa-solid fa-id-card"></i>
                                     </span>
-                                    <input type="text" name="cnic" value="{{ old('cnic') }}" placeholder="71501-1234567-1" class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
+                                    <input type="text" id="inputCnic" name="cnic" value="{{ old('cnic') }}" placeholder="71501-1234567-1" pattern="^[0-9]{5}-[0-9]{7}-[0-9]{1}$|^[0-9]{13}$" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
                                 </div>
+                                <p class="text-[10px] text-slate-400 mt-1">Format: 71501-1234567-1 (13 digits)</p>
                             </div>
 
                             <!-- Gender Selection -->
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Gender</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Gender <span class="text-rose-500">*</span></label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
                                         <i class="fa-solid fa-venus-mars"></i>
                                     </span>
-                                    <select name="gender" class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
+                                    <select id="inputGender" name="gender" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
                                         <option value="">Select Gender</option>
                                         <option value="male" {{ old('gender') === 'male' ? 'selected' : '' }}>Male</option>
                                         <option value="female" {{ old('gender') === 'female' ? 'selected' : '' }}>Female</option>
@@ -269,53 +278,203 @@
 
                             <!-- Date of Birth -->
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Date of Birth (DOB)</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Date of Birth (DOB) <span class="text-rose-500">*</span></label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
                                         <i class="fa-solid fa-calendar"></i>
                                     </span>
-                                    <input type="date" name="dob" value="{{ old('dob') }}" class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
+                                    <input type="date" id="inputDob" name="dob" value="{{ old('dob') }}" max="{{ now()->subYears(18)->format('Y-m-d') }}" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
                                 </div>
+                                <p class="text-[10px] text-slate-400 mt-1">Must be at least 18 years of age</p>
                             </div>
 
                             <!-- Driving License Number -->
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Driving License No. <span class="text-rose-500">*</span></label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Driving Licence No. <span class="text-rose-500">*</span></label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
                                         <i class="fa-solid fa-address-card"></i>
                                     </span>
-                                    <input type="text" name="license_no" value="{{ old('license_no') }}" placeholder="e.g. GLT-DL-12345" class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
+                                    <input type="text" id="inputLicenseNo" name="license_no" value="{{ old('license_no') }}" placeholder="e.g. GLT-DL-12345" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
+                                </div>
+                            </div>
+
+                            <!-- Driving Licence Issue Date -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Licence Issue Date <span class="text-rose-500">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
+                                        <i class="fa-solid fa-calendar-check"></i>
+                                    </span>
+                                    <input type="date" id="inputLicenseIssue" name="license_issue_date" value="{{ old('license_issue_date') }}" max="{{ now()->format('Y-m-d') }}" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
+                                </div>
+                            </div>
+
+                            <!-- Driving Licence Expiry Date -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Licence Expiry Date <span class="text-rose-500">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
+                                        <i class="fa-solid fa-calendar-xmark"></i>
+                                    </span>
+                                    <input type="date" id="inputLicenseExpiry" name="license_expiry_date" value="{{ old('license_expiry_date') }}" min="{{ now()->format('Y-m-d') }}" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Bio / About -->
+                        <!-- 2. Emergency Contact Information -->
+                        <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <h4 class="text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-1.5">
+                                <i class="fa-solid fa-phone-volume text-rose-500"></i> Emergency Contact Information
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Emergency Contact Name <span class="text-rose-500">*</span></label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
+                                            <i class="fa-solid fa-user-shield"></i>
+                                        </span>
+                                        <input type="text" id="inputEmergencyName" name="emergency_contact_name" value="{{ old('emergency_contact_name') }}" placeholder="Full name of next of kin" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Emergency Contact Phone <span class="text-rose-500">*</span></label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
+                                            <i class="fa-solid fa-phone"></i>
+                                        </span>
+                                        <input type="text" id="inputEmergencyPhone" name="emergency_contact_phone" value="{{ old('emergency_contact_phone') }}" placeholder="03XX-XXXXXXX" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Bio / About Experience -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Bio / About Experience</label>
-                            <textarea name="bio" rows="2" placeholder="Briefly describe your commercial driving experience & route knowledge..." class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">{{ old('bio') }}</textarea>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Bio / About Experience</label>
+                            <textarea name="bio" rows="2" placeholder="Briefly describe your commercial driving experience, passenger routes & background..." class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs">{{ old('bio') }}</textarea>
+                        </div>
+
+                        <!-- 4. Identity & Driving Licence Document Uploads (Private Storage) -->
+                        <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <h4 class="text-xs font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-file-shield text-indigo-600 dark:text-indigo-400"></i> Verification Documents Upload
+                                    </h4>
+                                    <p class="text-[10px] text-slate-500 dark:text-slate-400">Accepted formats: JPG, PNG, WebP or PDF • Safe maximum limit: 5MB per document</p>
+                                </div>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-[10px] font-extrabold border border-emerald-200 dark:border-emerald-800">
+                                    <i class="fa-solid fa-lock text-[9px]"></i> Private Storage
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                <!-- CNIC Front Image -->
+                                <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/90 dark:border-slate-700">
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <label class="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-id-card-clip text-indigo-600"></i> CNIC Front Image <span class="text-rose-500">*</span>
+                                        </label>
+                                        <span id="labelCnicFront" class="text-[10px] text-slate-400 truncate max-w-[140px]">No file chosen</span>
+                                    </div>
+                                    <input type="file" id="fileCnicFront" name="cnic_front_image" accept="image/jpeg,image/png,image/jpg,image/webp,application/pdf" onchange="updateFileLabel(this, 'labelCnicFront')" class="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer">
+                                </div>
+
+                                <!-- CNIC Back Image -->
+                                <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/90 dark:border-slate-700">
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <label class="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-id-card-clip text-indigo-600"></i> CNIC Back Image <span class="text-rose-500">*</span>
+                                        </label>
+                                        <span id="labelCnicBack" class="text-[10px] text-slate-400 truncate max-w-[140px]">No file chosen</span>
+                                    </div>
+                                    <input type="file" id="fileCnicBack" name="cnic_back_image" accept="image/jpeg,image/png,image/jpg,image/webp,application/pdf" onchange="updateFileLabel(this, 'labelCnicBack')" class="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer">
+                                </div>
+
+                                <!-- Driving Licence Front Image -->
+                                <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/90 dark:border-slate-700">
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <label class="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-address-card text-emerald-600"></i> Licence Front Image <span class="text-rose-500">*</span>
+                                        </label>
+                                        <span id="labelLicFront" class="text-[10px] text-slate-400 truncate max-w-[140px]">No file chosen</span>
+                                    </div>
+                                    <input type="file" id="fileLicFront" name="license_front_image" accept="image/jpeg,image/png,image/jpg,image/webp,application/pdf" onchange="updateFileLabel(this, 'labelLicFront')" class="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer">
+                                </div>
+
+                                <!-- Driving Licence Back Image -->
+                                <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/90 dark:border-slate-700">
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <label class="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-address-card text-emerald-600"></i> Licence Back Image <span class="text-rose-500">*</span>
+                                        </label>
+                                        <span id="labelLicBack" class="text-[10px] text-slate-400 truncate max-w-[140px]">No file chosen</span>
+                                    </div>
+                                    <input type="file" id="fileLicBack" name="license_back_image" accept="image/jpeg,image/png,image/jpg,image/webp,application/pdf" onchange="updateFileLabel(this, 'labelLicBack')" class="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. Legal Terms, Privacy Consents & Declarations -->
+                        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2.5 bg-slate-50/70 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/60">
+                            <h4 class="text-xs font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mb-1">
+                                <i class="fa-solid fa-square-check text-indigo-600"></i> Driver Declarations & Consents
+                            </h4>
+
+                            <!-- Checkbox 1: Terms & Conditions -->
+                            <label class="flex items-start gap-2.5 cursor-pointer">
+                                <input type="checkbox" id="checkTerms" name="terms_accepted" value="1" {{ old('terms_accepted') ? 'checked' : '' }} class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+                                <span class="text-xs text-slate-700 dark:text-slate-300 font-medium">
+                                    I agree to the <a href="javascript:void(0)" onclick="openLegalModal('termsModal')" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">Terms &amp; Conditions</a> governing commercial transport on RouteConnect. <span class="text-rose-500">*</span>
+                                </span>
+                            </label>
+
+                            <!-- Checkbox 2: Privacy Policy -->
+                            <label class="flex items-start gap-2.5 cursor-pointer">
+                                <input type="checkbox" id="checkPrivacy" name="privacy_accepted" value="1" {{ old('privacy_accepted') ? 'checked' : '' }} class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+                                <span class="text-xs text-slate-700 dark:text-slate-300 font-medium">
+                                    I have read and consent to the <a href="javascript:void(0)" onclick="openLegalModal('privacyModal')" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">Privacy Policy</a> regarding private storage and administrative verification of my credentials. <span class="text-rose-500">*</span>
+                                </span>
+                            </label>
+
+                            <!-- Checkbox 3: Accuracy Declaration -->
+                            <label class="flex items-start gap-2.5 cursor-pointer">
+                                <input type="checkbox" id="checkDeclaration" name="declaration_confirmed" value="1" {{ old('declaration_confirmed') ? 'checked' : '' }} class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+                                <span class="text-xs text-slate-700 dark:text-slate-300 font-medium">
+                                    I confirm that all information and documents provided are accurate. <span class="text-rose-500">*</span>
+                                </span>
+                            </label>
+
+                            <!-- Checkbox 4: Identity Verification Consent -->
+                            <label class="flex items-start gap-2.5 cursor-pointer">
+                                <input type="checkbox" id="checkConsent" name="verification_consent" value="1" {{ old('verification_consent') ? 'checked' : '' }} class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+                                <span class="text-xs text-slate-700 dark:text-slate-300 font-medium">
+                                    I consent to identity and driving licence verification with official authorities. <span class="text-rose-500">*</span>
+                                </span>
+                            </label>
                         </div>
                     </div>
 
-                    <!-- Password & Confirm Password -->
+                    <!-- Password & Confirm Password (8+ chars) -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Password <span class="text-rose-500">*</span></label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Password (Min. 8 characters) <span class="text-rose-500">*</span></label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
                                     <i class="fa-solid fa-lock"></i>
                                 </span>
-                                <input type="password" name="password" required placeholder="Enter your password" class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-xs">
+                                <input type="password" name="password" minlength="8" required placeholder="Enter strong password (8+ chars)" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-xs">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Confirm Password <span class="text-rose-500">*</span></label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Confirm Password <span class="text-rose-500">*</span></label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs">
                                     <i class="fa-solid fa-shield-halved"></i>
                                 </span>
-                                <input type="password" name="password_confirmation" required placeholder="Confirm your password" class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-xs">
+                                <input type="password" name="password_confirmation" minlength="8" required placeholder="Confirm your password" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3.5 py-3 text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-xs">
                             </div>
                         </div>
                     </div>
@@ -354,7 +513,69 @@
 
     </div>
 
-    <!-- Script for Tab Switching & Image Preview -->
+    <!-- Terms & Conditions Modal -->
+    <div id="termsModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-file-contract"></i>
+                    </div>
+                    <h3 class="text-base font-extrabold text-slate-900 dark:text-white">RouteConnect Terms &amp; Conditions</h3>
+                </div>
+                <button type="button" onclick="closeLegalModal('termsModal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <div class="overflow-y-auto py-4 space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                <p><strong>1. Driver Certification &amp; Integrity:</strong> All drivers on RouteConnect must hold valid, authentic national and commercial driving licenses. You certify that all documents submitted are authentic, unaltered originals or certified true copies.</p>
+                <p><strong>2. Independent Review Process:</strong> Submission of this registration does not automatically grant driver privileges. All driver profiles are set to "Pending" status and undergo administrative review. Only approved drivers may register vehicles.</p>
+                <p><strong>3. Vehicle Separation:</strong> Vehicle registration and verification is an independent secondary step. Only verified vehicles belonging to approved drivers may be scheduled for trips.</p>
+                <p><strong>4. Passenger Safety &amp; Legal Compliance:</strong> Drivers must maintain passenger safety, adhere strictly to speed limits and intermediate stop schedules, and maintain courteous conduct throughout journeys.</p>
+            </div>
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <a href="{{ route('terms') }}" target="_blank" class="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1">
+                    <span>Open Full Page</span> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                </a>
+                <button type="button" onclick="acceptAndCloseLegal('termsModal', 'checkTerms')" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all">
+                    I Agree &amp; Accept
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div id="privacyModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3 class="text-base font-extrabold text-slate-900 dark:text-white">RouteConnect Privacy &amp; Data Protection</h3>
+                </div>
+                <button type="button" onclick="closeLegalModal('privacyModal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <div class="overflow-y-auto py-4 space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                <p><strong>1. Confidential Identity Storage:</strong> All CNIC and Driving Licence document uploads are stored in restricted private storage outside the public web root. Documents are never made publicly accessible on the web.</p>
+                <p><strong>2. Restricted Administrative Access:</strong> Access to identity files is strictly authorized for verified system administrators for official credential verification purposes only.</p>
+                <p><strong>3. Emergency Contact Data:</strong> Emergency contact names and phone numbers are kept confidential and used solely for urgent notifications or roadside breakdown safety.</p>
+                <p><strong>4. Verification Consent:</strong> By proceeding, you consent to RouteConnect verifying provided identity and license details with competent authorities.</p>
+            </div>
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <a href="{{ route('privacy') }}" target="_blank" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1">
+                    <span>Open Full Page</span> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                </a>
+                <button type="button" onclick="acceptAndCloseLegal('privacyModal', 'checkPrivacy')" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition-all">
+                    I Consent &amp; Accept
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script for Tab Switching, Verification Validation & Modals -->
     <script>
         function toggleRoleSelection(role) {
             const tabUser = document.getElementById('tabUser');
@@ -362,21 +583,60 @@
             const notice = document.getElementById('driverNoticeText');
             const extraDriverFields = document.getElementById('driverExtraFields');
             const btn = document.getElementById('btnSubmit');
+            const driverSubmissionInput = document.getElementById('driverSubmissionInput');
+
+            // Driver specific inputs that need conditional HTML5 required attribute
+            const driverFields = [
+                'inputCnic', 'inputGender', 'inputDob', 'inputLicenseNo',
+                'inputLicenseIssue', 'inputLicenseExpiry', 'inputEmergencyName', 'inputEmergencyPhone',
+                'fileCnicFront', 'fileCnicBack', 'fileLicFront', 'fileLicBack',
+                'checkTerms', 'checkPrivacy', 'checkDeclaration', 'checkConsent'
+            ];
 
             if (role === 'passenger') {
                 tabUser.className = 'relative flex items-center justify-center gap-2 py-3 px-4 rounded-xl cursor-pointer font-bold text-xs transition-all bg-emerald-700 text-white shadow-md shadow-emerald-700/20';
                 tabDriver.className = 'relative flex items-center justify-center gap-2 py-3 px-4 rounded-xl cursor-pointer font-bold text-xs transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60';
                 notice.classList.add('hidden');
                 extraDriverFields.classList.add('hidden');
+                driverSubmissionInput.value = '0';
                 btn.className = 'w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-emerald-600/25 text-xs tracking-wide transition-all hover:scale-[1.005] flex items-center justify-center gap-2';
                 btn.innerHTML = '<i class="fa-solid fa-user-plus"></i><span>Create Account</span>';
+
+                // Deactivate required on driver verification fields
+                driverFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.required = false;
+                });
             } else {
                 tabDriver.className = 'relative flex items-center justify-center gap-2 py-3 px-4 rounded-xl cursor-pointer font-bold text-xs transition-all bg-indigo-700 text-white shadow-md shadow-indigo-700/20';
                 tabUser.className = 'relative flex items-center justify-center gap-2 py-3 px-4 rounded-xl cursor-pointer font-bold text-xs transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60';
                 notice.classList.remove('hidden');
                 extraDriverFields.classList.remove('hidden');
+                driverSubmissionInput.value = '1';
                 btn.className = 'w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-indigo-600/25 text-xs tracking-wide transition-all hover:scale-[1.005] flex items-center justify-center gap-2';
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i><span>Submit Driver Application</span>';
+
+                // Activate required on driver verification fields
+                driverFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.required = true;
+                });
+            }
+        }
+
+        function updateFileLabel(input, labelId) {
+            const label = document.getElementById(labelId);
+            if (!label) return;
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const sizeKb = Math.round(file.size / 1024);
+                label.textContent = file.name + ' (' + sizeKb + ' KB)';
+                label.classList.remove('text-slate-400');
+                label.classList.add('text-emerald-600', 'dark:text-emerald-400', 'font-bold');
+            } else {
+                label.textContent = 'No file chosen';
+                label.classList.remove('text-emerald-600', 'dark:text-emerald-400', 'font-bold');
+                label.classList.add('text-slate-400');
             }
         }
 
@@ -394,8 +654,24 @@
             }
         }
 
+        function openLegalModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeLegalModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function acceptAndCloseLegal(modalId, checkboxId) {
+            const cb = document.getElementById(checkboxId);
+            if (cb) cb.checked = true;
+            closeLegalModal(modalId);
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            const initialRole = "{{ $selectedRole ?? 'passenger' }}";
+            const initialRole = "{{ $selectedRole ?? (old('role') ?? 'passenger') }}";
             toggleRoleSelection(initialRole);
         });
     </script>
