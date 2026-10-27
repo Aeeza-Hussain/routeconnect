@@ -138,12 +138,216 @@
                 <div class="space-y-1">
                     <strong class="text-white block font-bold">Verified & Active</strong>
                     <p class="text-emerald-200/80 leading-relaxed">
-                        This vehicle is verified by RouteConnect administrators and eligible for scheduling public passenger trips.
+                        This vehicle is verified by RouteConnect administrators and eligible for scheduling public passenger trips and receiving private vehicle rentals.
                     </p>
                 </div>
             </div>
         @endif
     </div>
+
+    @if ($vehicle->isApproved())
+        {{-- Flash Messages --}}
+        @if (session('success'))
+            <div class="p-4 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-teal-300 text-xs flex items-center gap-3">
+                <i class="fa-solid fa-circle-check text-teal-400 text-base"></i>
+                <span class="font-bold">{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-3">
+                <i class="fa-solid fa-triangle-exclamation text-rose-400 text-base"></i>
+                <span class="font-bold">{{ session('error') }}</span>
+            </div>
+        @endif
+
+        {{-- ─── 1. Private Rental Configuration ─── --}}
+        <div class="bg-slate-950/60 rounded-3xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800/80">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-car-side text-teal-400"></i>
+                        <span>Private Rental Settings</span>
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        Configure daily rental pricing and private reservation availability for passengers.
+                    </p>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ route('driver.vehicles.rental_settings', $vehicle->id) }}" class="space-y-5 text-xs">
+                @csrf
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="block font-bold text-slate-300">Daily Rental Rate (PKR) *</label>
+                        <input type="number"
+                               name="rental_rate_per_day"
+                               value="{{ old('rental_rate_per_day', $vehicle->rental_rate_per_day ?: 4000) }}"
+                               step="50"
+                               min="500"
+                               required
+                               class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        <span class="text-[10px] text-slate-500">Charged per 24-hour rental window.</span>
+                    </div>
+
+                    <div class="space-y-1.5 flex flex-col justify-center">
+                        <label class="block font-bold text-slate-300 mb-2">Private Rental Availability</label>
+                        <label class="inline-flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox"
+                                   name="is_available_for_rental"
+                                   value="1"
+                                   {{ old('is_available_for_rental', $vehicle->is_available_for_rental) ? 'checked' : '' }}
+                                   class="w-4 h-4 rounded text-teal-500 bg-slate-900 border-slate-700 focus:ring-teal-500">
+                            <span class="text-xs text-slate-200 font-bold">Accept Private Passenger Bookings</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block font-bold text-slate-300">Vehicle Description / Amenities (Optional)</label>
+                    <textarea name="description"
+                              rows="2"
+                              placeholder="AC, luxury seats, luggage capacity, sound system..."
+                              class="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">{{ old('description', $vehicle->description) }}</textarea>
+                </div>
+
+                <div class="text-right">
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-xs transition-all shadow-md shadow-teal-500/20">
+                        Save Rental Configuration
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {{-- ─── 2. Availability Schedule & Blocked Dates ─── --}}
+        <div class="bg-slate-950/60 rounded-3xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800/80">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-xmark text-amber-400"></i>
+                        <span>Manage Unavailable / Blocked Dates</span>
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        Block maintenance periods or personal time off to prevent passenger bookings.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Form to Add Blocked Period --}}
+            <form method="POST" action="{{ route('driver.vehicles.unavailabilities.store', $vehicle->id) }}" class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4 text-xs">
+                @csrf
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="space-y-1">
+                        <label class="block font-bold text-slate-300">From Date *</label>
+                        <input type="datetime-local" name="start_date" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block font-bold text-slate-300">To Date *</label>
+                        <input type="datetime-local" name="end_date" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block font-bold text-slate-300">Reason (Optional)</label>
+                        <input type="text" name="reason" placeholder="e.g. Scheduled Service / Routine Check" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    </div>
+                </div>
+                <div class="text-right">
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:bg-amber-500/30 font-bold text-xs transition-colors">
+                        <i class="fa-solid fa-ban mr-1"></i> Block Selected Schedule
+                    </button>
+                </div>
+            </form>
+
+            {{-- List of Current Blocked Periods --}}
+            <div>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Current Blocked Periods ({{ $vehicle->unavailabilities->count() }})</h4>
+                @if($vehicle->unavailabilities->isEmpty())
+                    <p class="text-xs text-slate-500 italic">No unavailable dates currently recorded. Vehicle is open for rental reservations.</p>
+                @else
+                    <div class="divide-y divide-slate-800 border border-slate-800 rounded-2xl overflow-hidden text-xs">
+                        @foreach($vehicle->unavailabilities as $blocked)
+                            <div class="p-3.5 bg-slate-900/60 flex items-center justify-between gap-3">
+                                <div>
+                                    <span class="font-mono font-bold text-white">
+                                        {{ $blocked->start_date ? $blocked->start_date->format('d M Y h:i A') : '' }}
+                                        to
+                                        {{ $blocked->end_date ? $blocked->end_date->format('d M Y h:i A') : '' }}
+                                    </span>
+                                    <span class="text-slate-400 block text-[11px] mt-0.5">{{ $blocked->reason ?: 'Driver blocked period' }}</span>
+                                </div>
+                                <form method="POST" action="{{ route('driver.vehicles.unavailabilities.destroy', [$vehicle->id, $blocked->id]) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="p-1.5 text-rose-400 hover:text-rose-300 text-xs font-bold" title="Remove Block">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- ─── 3. Upcoming Private Reservations ─── --}}
+        <div class="bg-slate-950/60 rounded-3xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-4">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800/80">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-receipt text-teal-400"></i>
+                        <span>Recent Private Passenger Reservations</span>
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        Private vehicle bookings requested by passengers for this vehicle.
+                    </p>
+                </div>
+            </div>
+
+            @if($vehicle->bookings->isEmpty())
+                <p class="text-xs text-slate-500 italic py-2">No private reservations created for this vehicle yet.</p>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="text-[10px] text-slate-400 uppercase font-mono border-b border-slate-800">
+                            <tr>
+                                <th class="pb-2">Reference</th>
+                                <th class="pb-2">Passenger</th>
+                                <th class="pb-2">Routing</th>
+                                <th class="pb-2">Rental Period</th>
+                                <th class="pb-2">Total Fare</th>
+                                <th class="pb-2">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800 text-slate-300">
+                            @foreach($vehicle->bookings as $res)
+                                <tr>
+                                    <td class="py-3 font-mono font-bold text-teal-400">{{ $res->booking_reference }}</td>
+                                    <td class="py-3 font-bold text-white">{{ $res->user?->name ?? 'Passenger' }}</td>
+                                    <td class="py-3">
+                                        {{ $res->pickup_location ?: 'Pickup' }}
+                                        <i class="fa-solid fa-arrow-right text-[9px] text-slate-500 mx-1"></i>
+                                        {{ $res->destination_location ?: 'Destination' }}
+                                    </td>
+                                    <td class="py-3 font-mono text-[11px]">
+                                        {{ $res->start_datetime ? $res->start_datetime->format('d M') : '' }}
+                                        -
+                                        {{ $res->end_datetime ? $res->end_datetime->format('d M Y') : '' }}
+                                        ({{ $res->days ?: 1 }}d)
+                                    </td>
+                                    <td class="py-3 font-mono font-bold text-white">Rs. {{ number_format($res->total_fare ?? 0, 2) }}</td>
+                                    <td class="py-3">
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase {{ $res->isCancelled() ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400' }}">
+                                            {{ $res->booking_status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    @endif
 
 </div>
 

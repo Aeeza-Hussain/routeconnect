@@ -20,45 +20,56 @@
                 $currentRoute = request()->route()?->getName() ?? '';
                 $currentPath  = request()->path();
 
-                $isHome     = ($currentRoute === 'home'        || $currentPath === '/');
-                $isTrips    = ($currentRoute === 'trips.index' || str_starts_with($currentPath, 'trips'));
-                $isBookings = ($currentRoute === 'booking.index' || str_starts_with($currentPath, 'booking') || str_starts_with($currentPath, 'my-bookings'));
+                $isHome        = ($currentRoute === 'home'        || $currentPath === '/');
+                $isTrips       = ($currentRoute === 'trips.index' || str_starts_with($currentPath, 'trips'));
+                $isBookVehicle = ($currentRoute === 'vehicles.book' || str_starts_with($currentPath, 'book-vehicle'));
+                $isBookings    = ($currentRoute === 'booking.index' || str_starts_with($currentPath, 'booking') || str_starts_with($currentPath, 'my-bookings'));
             @endphp
 
             <nav class="hidden md:flex items-center gap-8 text-sm font-bold text-slate-600 dark:text-slate-300">
 
                 {{-- HOME --}}
                 @if($isHome)
-                    <a href="{{ url('/') }}" class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors">
+                    <a href="{{ url('/') }}" class="relative py-2 text-emerald-600 transition-colors">
                         Home
-                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 rounded-full"></span>
                     </a>
                 @else
-                    <a href="{{ url('/') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Home</a>
+                    <a href="{{ url('/') }}" class="py-2 hover:text-emerald-600 transition-colors">Home</a>
                 @endif
 
                 {{-- SEARCH TRIPS --}}
                 @if($isTrips)
-                    <a href="{{ url('/trips') }}" class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors">
+                    <a href="{{ url('/trips') }}" class="relative py-2 text-emerald-600 transition-colors">
                         Search Trips
-                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 rounded-full"></span>
                     </a>
                 @else
-                    <a href="{{ url('/trips') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Search Trips</a>
+                    <a href="{{ url('/trips') }}" class="py-2 hover:text-emerald-600 transition-colors">Search Trips</a>
+                @endif
+
+                {{-- BOOK A VEHICLE --}}
+                @if($isBookVehicle)
+                    <a href="{{ url('/book-vehicle') }}" class="relative py-2 text-emerald-600 transition-colors">
+                        Book a Vehicle
+                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 rounded-full"></span>
+                    </a>
+                @else
+                    <a href="{{ url('/book-vehicle') }}" class="py-2 hover:text-emerald-600 transition-colors">Book a Vehicle</a>
                 @endif
 
                 {{-- MY BOOKINGS --}}
                 @if($isBookings)
-                    <a href="{{ url('/booking') }}" class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors">
+                    <a href="{{ url('/booking') }}" class="relative py-2 text-emerald-600 transition-colors">
                         My Bookings
-                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 rounded-full"></span>
                     </a>
                 @else
-                    <a href="{{ url('/booking') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">My Bookings</a>
+                    <a href="{{ url('/booking') }}" class="py-2 hover:text-emerald-600 transition-colors">My Bookings</a>
                 @endif
 
                 {{-- ABOUT --}}
-                <a href="{{ url('/#about') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">About</a>
+                <a href="{{ url('/#about') }}" class="py-2 hover:text-emerald-600 transition-colors">About</a>
 
             </nav>
 
@@ -152,6 +163,12 @@
             <a href="{{ url('/trips') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40">Search Trips</a>
         @else
             <a href="{{ url('/trips') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Search Trips</a>
+        @endif
+
+        @if($isBookVehicle)
+            <a href="{{ url('/book-vehicle') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40">Book a Vehicle</a>
+        @else
+            <a href="{{ url('/book-vehicle') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Book a Vehicle</a>
         @endif
 
         @if($isBookings)

@@ -20,6 +20,7 @@ use App\Http\Controllers\Driver\DriverMessageController;
 use App\Http\Controllers\Driver\DriverProfileController;
 
 use App\Http\Controllers\Frontend\BookingController;
+use App\Http\Controllers\Frontend\VehicleBookingController;
 use App\Http\Controllers\NotificationController;
 
 /*
@@ -30,6 +31,11 @@ use App\Http\Controllers\NotificationController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/trips', [HomeController::class, 'trips'])->name('trips.index');
 Route::get('/trips/{trip}', [HomeController::class, 'showTrip'])->name('trips.show')->whereNumber('trip');
+
+// Dedicated Book a Vehicle Routes (Shared Trips & Private Vehicle Rentals)
+Route::get('/book-vehicle', [VehicleBookingController::class, 'index'])->name('vehicles.book');
+Route::get('/book-vehicle/{vehicle}', [VehicleBookingController::class, 'show'])->name('vehicles.book.show')->whereNumber('vehicle');
+Route::post('/book-vehicle/{vehicle}/reserve', [VehicleBookingController::class, 'store'])->name('vehicles.book.reserve')->whereNumber('vehicle');
 
 /*
 |--------------------------------------------------------------------------
@@ -190,6 +196,9 @@ Route::middleware(['driver.approved'])->prefix('driver')->group(function () {
     Route::get('/vehicles/create', [DriverVehicleController::class, 'create'])->name('driver.vehicles.create');
     Route::post('/vehicles', [DriverVehicleController::class, 'store'])->name('driver.vehicles.store');
     Route::get('/vehicles/{id}', [DriverVehicleController::class, 'show'])->name('driver.vehicles.show');
+    Route::post('/vehicles/{id}/rental-settings', [DriverVehicleController::class, 'updateRentalSettings'])->name('driver.vehicles.rental_settings');
+    Route::post('/vehicles/{id}/unavailabilities', [DriverVehicleController::class, 'storeUnavailability'])->name('driver.vehicles.unavailabilities.store');
+    Route::delete('/vehicles/{id}/unavailabilities/{unavailability}', [DriverVehicleController::class, 'destroyUnavailability'])->name('driver.vehicles.unavailabilities.destroy');
     Route::get('/vehicle', [DriverDashboardController::class, 'vehicle'])->name('driver.vehicle'); // legacy alias
 
     // Schedule Trips & Manage Trips

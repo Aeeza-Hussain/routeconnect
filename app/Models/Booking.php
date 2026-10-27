@@ -13,8 +13,17 @@ class Booking extends Model
     protected $fillable = [
         'user_id',
         'trip_id',
+        'vehicle_id',
+        'booking_type',
         'from_stop_id',
         'to_stop_id',
+        'pickup_location',
+        'destination_location',
+        'start_datetime',
+        'end_datetime',
+        'days',
+        'daily_rate',
+        'passenger_notes',
         'seats',
         'seat_numbers',
         'total_fare',
@@ -22,6 +31,18 @@ class Booking extends Model
         'status',
         'booking_status',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'start_datetime' => 'datetime',
+            'end_datetime'   => 'datetime',
+            'days'           => 'integer',
+            'seats'          => 'integer',
+            'daily_rate'     => 'decimal:2',
+            'total_fare'     => 'decimal:2',
+        ];
+    }
 
     public function getBookingStatusAttribute(): ?string
     {
@@ -44,6 +65,16 @@ class Booking extends Model
         return strtolower($this->booking_status ?? $this->status) === 'cancelled';
     }
 
+    public function isPrivate(): bool
+    {
+        return strtolower($this->booking_type ?? 'shared') === 'private';
+    }
+
+    public function isShared(): bool
+    {
+        return !$this->isPrivate();
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -52,6 +83,11 @@ class Booking extends Model
     public function trip(): BelongsTo
     {
         return $this->belongsTo(Trip::class);
+    }
+
+    public function vehicle(): BelongsTo
+    {
+        return $this->belongsTo(Vehicle::class);
     }
 
     public function fromStop(): BelongsTo

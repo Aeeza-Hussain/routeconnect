@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
 
 class BookingController extends Controller
 {
@@ -168,6 +169,7 @@ class BookingController extends Controller
             'trip.route',
             'trip.driver',
             'trip.vehicle',
+            'vehicle.driver',
             'fromStop',
             'toStop',
             'user',
@@ -185,6 +187,7 @@ class BookingController extends Controller
             'trip.route',
             'trip.driver',
             'trip.vehicle',
+            'vehicle.driver',
             'fromStop',
             'toStop',
         ])
@@ -209,6 +212,7 @@ class BookingController extends Controller
             'trip.route.endStop',
             'trip.driver',
             'trip.vehicle',
+            'vehicle.driver',
             'fromStop',
             'toStop',
             'user',
@@ -218,7 +222,8 @@ class BookingController extends Controller
     }
 
     /**
-     * Cancel a booking and restore seats to the trip.
+     * Cancel a booking and restore seats to the trip (for shared trips)
+     * or free up the vehicle schedule (for private rentals).
      */
     public function cancel(Request $request, Booking $booking)
     {
@@ -240,28 +245,50 @@ class BookingController extends Controller
         // 3. Atomically restore seats and update booking status
         try {
             DB::transaction(function () use ($booking) {
-                $lockedBooking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
+                $lockedBooking = Booking::with('vehicle')->where('id', $booking->id)->lockForUpdate()->firstOrFail();
 
                 if ($lockedBooking->isCancelled()) {
                     throw new \DomainException('This booking has already been cancelled.');
                 }
 
-                // Lock the trip to prevent race conditions & overbooking
-                $lockedTrip = Trip::with('vehicle')->where('id', $lockedBooking->trip_id)->lockForUpdate()->first();
+                // If this is a shared trip booking, restore seats
+                if ($lockedBooking->trip_id) {
+                    $lockedTrip = Trip::with('vehicle')->where('id', $lockedBooking->trip_id)->lockForUpdate()->first();
 
-                if ($lockedTrip) {
-                    $seatsToRestore = max(0, (int) $lockedBooking->seats);
-                    $maxCapacity    = $lockedTrip->vehicle?->total_seats;
+                    if ($lockedTrip) {
+                        $seatsToRestore = max(0, (int) $lockedBooking->seats);
+                        $maxCapacity    = $lockedTrip->vehicle?->total_seats;
 
-                    $newAvailableSeats = $lockedTrip->available_seats + $seatsToRestore;
+                        $newAvailableSeats = $lockedTrip->available_seats + $seatsToRestore;
 
-                    // Prevent invalid / overcapacity restoration
-                    if ($maxCapacity && $newAvailableSeats > $maxCapacity) {
-                        $newAvailableSeats = $maxCapacity;
+                        // Prevent invalid / overcapacity restoration
+                        if ($maxCapacity && $newAvailableSeats > $maxCapacity) {
+                            $newAvailableSeats = $maxCapacity;
+                        }
+
+                        $lockedTrip->available_seats = $newAvailableSeats;
+                        $lockedTrip->save();
                     }
 
-                    $lockedTrip->available_seats = $newAvailableSeats;
-                    $lockedTrip->save();
+                    // Notification for trip driver
+                    if ($lockedTrip && $lockedTrip->user_id && $lockedTrip->user_id !== $lockedBooking->user_id) {
+                        Notification::create([
+                            'user_id' => $lockedTrip->user_id,
+                            'trip_id' => $lockedBooking->trip_id,
+                            'message' => "Booking cancellation: #{$lockedBooking->booking_reference} ({$lockedBooking->seats} seats) on trip #{$lockedTrip->id} was cancelled by passenger.",
+                            'is_read' => false,
+                        ]);
+                    }
+                } else {
+                    // For private vehicle bookings, notify vehicle owner
+                    $vehicleOwnerId = $lockedBooking->vehicle?->user_id;
+                    if ($vehicleOwnerId && $vehicleOwnerId !== $lockedBooking->user_id) {
+                        Notification::create([
+                            'user_id' => $vehicleOwnerId,
+                            'message' => "Private vehicle reservation #{$lockedBooking->booking_reference} for {$lockedBooking->vehicle?->registration_no} was cancelled by passenger.",
+                            'is_read' => false,
+                        ]);
+                    }
                 }
 
                 // Update booking status
@@ -273,30 +300,22 @@ class BookingController extends Controller
                 Notification::create([
                     'user_id' => $lockedBooking->user_id,
                     'trip_id' => $lockedBooking->trip_id,
-                    'message' => "Your booking #{$lockedBooking->booking_reference} for {$lockedBooking->seats} seat(s) has been cancelled.",
+                    'message' => "Your booking #{$lockedBooking->booking_reference} has been cancelled successfully.",
                     'is_read' => false,
                 ]);
-
-                // Notification for driver (if distinct)
-                if ($lockedTrip && $lockedTrip->user_id && $lockedTrip->user_id !== $lockedBooking->user_id) {
-                    Notification::create([
-                        'user_id' => $lockedTrip->user_id,
-                        'trip_id' => $lockedBooking->trip_id,
-                        'message' => "Booking cancellation: #{$lockedBooking->booking_reference} ({$lockedBooking->seats} seats) on trip #{$lockedTrip->id} was cancelled by passenger.",
-                        'is_read' => false,
-                    ]);
-                }
             });
         } catch (\DomainException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
 
-        return redirect()->route('passenger.bookings.index')
-            ->with('success', 'Booking #' . $booking->booking_reference . ' has been cancelled successfully. Your reserved seats have been returned.');
+        $redirectRoute = route('passenger.bookings.index');
+        return redirect($redirectRoute)
+            ->with('success', 'Booking #' . $booking->booking_reference . ' has been cancelled successfully.');
     }
 
     /**
-     * Index or redirect helper for generic /booking route
+     * Display passenger's booking history at /booking
+     * Includes tabs for Upcoming, Completed, and Cancelled bookings.
      */
     public function index(Request $request)
     {
@@ -304,11 +323,88 @@ class BookingController extends Controller
             return redirect()->route('booking.create', ['trip' => $request->trip_id]);
         }
 
-        if (auth()->check() && (int) auth()->user()->user_type === 0) {
-            return redirect()->route('passenger.bookings.index');
+        $tab = $request->query('tab', 'all');
+        $counts = ['all' => 0, 'upcoming' => 0, 'completed' => 0, 'cancelled' => 0];
+        $bookings = collect();
+
+        if (auth()->check()) {
+            $baseQuery = Booking::with([
+                'trip.route',
+                'trip.driver',
+                'trip.vehicle',
+                'vehicle.driver',
+                'fromStop',
+                'toStop',
+            ])
+            ->where('user_id', auth()->id())
+            ->latest();
+
+            $all = (clone $baseQuery)->get();
+            $now = now();
+
+            $counts['all'] = $all->count();
+            $counts['cancelled'] = $all->filter(fn($b) => $b->isCancelled())->count();
+            $counts['upcoming'] = $all->filter(function ($b) use ($now) {
+                if ($b->isCancelled()) return false;
+                if ($b->isPrivate()) {
+                    return $b->end_datetime ? $b->end_datetime->greaterThanOrEqualTo($now) : true;
+                }
+                return $b->trip && $b->trip->trip_date ? Carbon::parse($b->trip->trip_date)->endOfDay()->greaterThanOrEqualTo($now) : true;
+            })->count();
+
+            $counts['completed'] = $all->filter(function ($b) use ($now) {
+                if ($b->isCancelled()) return false;
+                if (strtolower($b->booking_status) === 'completed') return true;
+                if ($b->isPrivate()) {
+                    return $b->end_datetime && $b->end_datetime->lessThan($now);
+                }
+                return $b->trip && $b->trip->trip_date && Carbon::parse($b->trip->trip_date)->endOfDay()->lessThan($now);
+            })->count();
+
+            $query = (clone $baseQuery);
+
+            if ($tab === 'upcoming') {
+                $query->whereNotIn(DB::raw('LOWER(booking_status)'), ['cancelled'])
+                      ->where(function ($q) use ($now) {
+                          $q->where(function ($q2) use ($now) {
+                              $q2->where('booking_type', 'private')
+                                 ->where(function ($q3) use ($now) {
+                                     $q3->whereNull('end_datetime')->orWhere('end_datetime', '>=', $now);
+                                 });
+                          })->orWhere(function ($q2) use ($now) {
+                              $q2->where(function ($q3) {
+                                  $q3->whereNull('booking_type')->orWhere('booking_type', 'shared');
+                              })->whereHas('trip', function ($qt) use ($now) {
+                                  $qt->where('trip_date', '>=', $now->toDateString());
+                              });
+                          });
+                      });
+            } elseif ($tab === 'completed') {
+                $query->where(function ($q) use ($now) {
+                    $q->where(DB::raw('LOWER(booking_status)'), 'completed')
+                      ->orWhere(function ($q2) use ($now) {
+                          $q2->whereNotIn(DB::raw('LOWER(booking_status)'), ['cancelled'])
+                             ->where(function ($q3) use ($now) {
+                                 $q3->where(function ($qp) use ($now) {
+                                     $qp->where('booking_type', 'private')
+                                        ->where('end_datetime', '<', $now);
+                                 })->orWhere(function ($qs) use ($now) {
+                                     $qs->where(function ($q4) {
+                                         $q4->whereNull('booking_type')->orWhere('booking_type', 'shared');
+                                     })->whereHas('trip', function ($qt) use ($now) {
+                                         $qt->where('trip_date', '<', $now->toDateString());
+                                     });
+                                 });
+                             });
+                      });
+                });
+            } elseif ($tab === 'cancelled') {
+                $query->where(DB::raw('LOWER(booking_status)'), 'cancelled');
+            }
+
+            $bookings = $query->paginate(10)->withQueryString();
         }
 
-        $bookings = collect();
-        return view('frontend.booking', compact('bookings'));
+        return view('frontend.booking', compact('bookings', 'counts', 'tab'));
     }
 }
