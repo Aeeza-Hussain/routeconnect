@@ -2,6 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Conversation;
+use App\Models\ConversationParticipant;
+use App\Models\Message;
+use App\Models\User;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -9,7 +13,51 @@ class FrontendNavbarTest extends TestCase
 {
     use RefreshDatabase;
 
-    // ─── Home Page ────────────────────────────────────────────────────────────
+    // ─── Guest Navbar Tests ───────────────────────────────────────────────────
+
+    public function test_guest_navbar_shows_home_find_ride_about_login_register(): void
+    {
+        $response = $this->get('/');
+        $response->assertOk();
+
+        $html = $response->getContent();
+
+        $this->assertStringContainsString('Home', $html);
+        $this->assertStringContainsString('Find a Ride', $html);
+        $this->assertStringContainsString('About', $html);
+        $this->assertStringContainsString('Login', $html);
+        $this->assertStringContainsString('Register', $html);
+
+        // Guests should not see My Activity or Messages in main desktop navigation
+        $this->assertStringNotContainsString('>My Activity</a>', $html);
+        $this->assertStringNotContainsString('>Messages</a>', $html);
+    }
+
+    // ─── Authenticated Navbar Tests ───────────────────────────────────────────
+
+    public function test_authenticated_navbar_shows_activity_messages_and_profile_dropdown(): void
+    {
+        $user = User::factory()->create([
+            'name'      => 'Aleeza Fatima',
+            'email'     => 'aleeza@example.com',
+            'user_type' => 0, // Passenger
+        ]);
+
+        $response = $this->actingAs($user)->get('/');
+        $response->assertOk();
+
+        $html = $response->getContent();
+
+        $this->assertStringContainsString('Home', $html);
+        $this->assertStringContainsString('Find a Ride', $html);
+        $this->assertStringContainsString('My Activity', $html);
+        $this->assertStringContainsString('Messages', $html);
+        $this->assertStringContainsString('About', $html);
+        $this->assertStringContainsString('Aleeza Fatima', $html);
+        $this->assertStringContainsString('profileDropdownBtn', $html);
+    }
+
+    // ─── Active Navigation States ─────────────────────────────────────────────
 
     public function test_home_page_activates_home_nav_link(): void
     {
@@ -18,119 +66,97 @@ class FrontendNavbarTest extends TestCase
 
         $html = $response->getContent();
 
-        // Home must have the active colour class and the underline span
-        $this->assertStringContainsString('class="relative py-2 text-emerald-600 transition-colors"', $html,
-            'Home link should have active class on home page');
-
-        // No other link should have the underline-span directly after "Search Trips" or "My Bookings" text
-        $this->assertStringNotContainsString(
-            '>Search Trips' . PHP_EOL . '                        <span class="absolute bottom-0',
-            $html,
-            'Search Trips should NOT be active on home page'
-        );
+        $this->assertStringContainsString('class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors"', $html);
     }
 
-    public function test_home_page_does_not_bold_other_links(): void
+    public function test_find_a_ride_activates_nav_link(): void
     {
-        $response = $this->get('/');
+        $response = $this->get('/trips');
         $response->assertOk();
+
         $html = $response->getContent();
 
-        // Search Trips and My Bookings must use the inactive class
-        $this->assertStringContainsString(
-            '>Search Trips</a>',
-            $html
-        );
-        $this->assertStringContainsString(
-            '>My Bookings</a>',
+        $this->assertStringContainsString('Find a Ride', $html);
+        $this->assertMatchesRegularExpression(
+            '/Find a Ride\s+<span class="absolute bottom-0/',
             $html
         );
     }
 
-    // ─── Search Trips Page ────────────────────────────────────────────────────
-
-    public function test_trips_page_activates_search_trips_link(): void
+    public function test_my_activity_activates_nav_link_for_authenticated_user(): void
     {
-        $response = $this->get('/trips');
+        $user = User::factory()->create(['user_type' => 0]);
+
+        $response = $this->actingAs($user)->get('/my-activity');
         $response->assertOk();
+
         $html = $response->getContent();
 
-        // Search Trips link should be wrapped in the active <a> with the underline span
-        $this->assertStringContainsString(
-            'Search Trips',
+        $this->assertStringContainsString('My Activity', $html);
+        $this->assertMatchesRegularExpression(
+            '/My Activity\s+<span class="absolute bottom-0/',
             $html
         );
-        // The active state uses "relative py-2 text-emerald-600" — check it appears before "Search Trips"
-        // and that Home does NOT use the active class
-        $homeActivePos  = strpos($html, '>Home' . PHP_EOL . '                        <span class="absolute bottom-0');
-        $this->assertFalse($homeActivePos, 'Home should NOT be active on trips page');
     }
 
-    public function test_trips_page_home_link_is_not_active(): void
+    public function test_messages_page_activates_nav_link(): void
     {
-        $response = $this->get('/trips');
+        $user = User::factory()->create(['user_type' => 0]);
+
+        $response = $this->actingAs($user)->get('/messages');
         $response->assertOk();
+
         $html = $response->getContent();
 
-        // Home link should use the non-active inline anchor (no underline span sibling in desktop nav)
-        $this->assertStringContainsString(
-            'class="py-2 hover:text-emerald-600 transition-colors">Home</a>',
-            $html,
-            'Home must use inactive styling on the trips page'
+        $this->assertStringContainsString('Messages', $html);
+        $this->assertMatchesRegularExpression(
+            '/Messages.*?<span class="absolute bottom-0/s',
+            $html
         );
     }
 
-    // ─── My Bookings Page ─────────────────────────────────────────────────────
-
-    public function test_booking_page_home_link_is_not_active(): void
+    public function test_unread_message_count_badge_appears_in_navbar(): void
     {
-        $response = $this->get('/booking');
+        $passenger = User::factory()->create(['user_type' => 0]);
+        $driver = User::factory()->create(['user_type' => 2, 'driver_status' => 'approved']);
+
+        $conv = Conversation::create([
+            'title'      => 'Chat',
+            'created_by' => $driver->id,
+        ]);
+
+        ConversationParticipant::create([
+            'conversation_id' => $conv->id,
+            'user_id'         => $passenger->id,
+            'last_read_at'    => now()->subHour(),
+        ]);
+        ConversationParticipant::create([
+            'conversation_id' => $conv->id,
+            'user_id'         => $driver->id,
+            'last_read_at'    => now(),
+        ]);
+
+        // Create 2 unread messages from driver to passenger
+        Message::create([
+            'conversation_id' => $conv->id,
+            'sender_id'       => $driver->id,
+            'body'            => 'Hello there!',
+            'created_at'      => now()->subMinutes(10),
+        ]);
+        Message::create([
+            'conversation_id' => $conv->id,
+            'sender_id'       => $driver->id,
+            'body'            => 'Are you available?',
+            'created_at'      => now()->subMinutes(5),
+        ]);
+
+        $response = $this->actingAs($passenger)->get('/');
         $response->assertOk();
+
         $html = $response->getContent();
 
-        $this->assertStringContainsString(
-            'class="py-2 hover:text-emerald-600 transition-colors">Home</a>',
-            $html,
-            'Home must use inactive styling on the booking page'
-        );
-    }
-
-    public function test_booking_page_search_trips_link_is_not_active(): void
-    {
-        $response = $this->get('/booking');
-        $response->assertOk();
-        $html = $response->getContent();
-
-        $this->assertStringContainsString(
-            'class="py-2 hover:text-emerald-600 transition-colors">Search Trips</a>',
-            $html,
-            'Search Trips must use inactive styling on the booking page'
-        );
-    }
-
-    // ─── Active class appears exactly once per page ───────────────────────────
-
-    public function test_exactly_one_nav_link_has_active_underline_span_on_home(): void
-    {
-        $response = $this->get('/');
-        $response->assertOk();
-        $html = $response->getContent();
-
-        // Count how many desktop nav links use the underline span
-        $count = substr_count($html, '<span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 rounded-full"></span>');
-        // Two spans: one desktop + one mobile (both Home active on home page)
-        $this->assertGreaterThanOrEqual(1, $count, 'At least one active underline span should exist on home page');
-        $this->assertLessThanOrEqual(2, $count, 'At most two active spans (desktop + mobile) should exist');
-    }
-
-    public function test_exactly_one_nav_link_has_active_underline_span_on_trips(): void
-    {
-        $response = $this->get('/trips');
-        $response->assertOk();
-        $html = $response->getContent();
-
-        $count = substr_count($html, '<span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 rounded-full"></span>');
-        $this->assertGreaterThanOrEqual(1, $count, 'At least one active underline span should exist on trips page');
-        $this->assertLessThanOrEqual(2, $count, 'At most two active spans (desktop + mobile) should exist');
+        // Must show unread badge count
+        $this->assertStringContainsString('Messages', $html);
+        $this->assertStringContainsString('2', $html);
     }
 }

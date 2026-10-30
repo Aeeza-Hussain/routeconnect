@@ -31,7 +31,9 @@ class VehicleBookingController extends Controller
         $vehicleTypes = ['Car', 'Van', 'Daba', 'Bus', 'Other'];
 
         // Existing Stops for search suggestions / dropdowns
-        $stops = Stop::orderBy('city')->orderBy('name')->get();
+        $stops = Stop::where(function ($q) {
+            $q->whereNull('status')->orWhereRaw('LOWER(status) = ?', ['active']);
+        })->orderBy('name')->get();
 
         // Search inputs
         $pickup      = trim((string) $request->query('pickup', ''));
@@ -90,15 +92,15 @@ class VehicleBookingController extends Controller
                 $tripQuery->where(function ($q) use ($pickup) {
                     $q->where('pickup_point', 'like', "%{$pickup}%")
                       ->orWhereHas('route', function ($rq) use ($pickup) {
-                          $rq->where('origin', 'like', "%{$pickup}%")
-                             ->orWhere('name', 'like', "%{$pickup}%")
+                          $rq->where('name', 'like', "%{$pickup}%")
+                             ->orWhere('start_location', 'like', "%{$pickup}%")
                              ->orWhereHas('startStop', function ($sq) use ($pickup) {
                                  $sq->where('name', 'like', "%{$pickup}%")
-                                    ->orWhere('city', 'like', "%{$pickup}%");
+                                    ->orWhere('location', 'like', "%{$pickup}%");
                              })
                              ->orWhereHas('routeStops.stop', function ($sq) use ($pickup) {
                                  $sq->where('name', 'like', "%{$pickup}%")
-                                    ->orWhere('city', 'like', "%{$pickup}%");
+                                    ->orWhere('location', 'like', "%{$pickup}%");
                              });
                       });
                 });
@@ -107,15 +109,15 @@ class VehicleBookingController extends Controller
             if ($destination) {
                 $tripQuery->where(function ($q) use ($destination) {
                     $q->whereHas('route', function ($rq) use ($destination) {
-                        $rq->where('destination', 'like', "%{$destination}%")
-                           ->orWhere('name', 'like', "%{$destination}%")
+                        $rq->where('name', 'like', "%{$destination}%")
+                           ->orWhere('end_location', 'like', "%{$destination}%")
                            ->orWhereHas('endStop', function ($sq) use ($destination) {
                                $sq->where('name', 'like', "%{$destination}%")
-                                  ->orWhere('city', 'like', "%{$destination}%");
+                                  ->orWhere('location', 'like', "%{$destination}%");
                            })
                            ->orWhereHas('routeStops.stop', function ($sq) use ($destination) {
                                $sq->where('name', 'like', "%{$destination}%")
-                                  ->orWhere('city', 'like', "%{$destination}%");
+                                  ->orWhere('location', 'like', "%{$destination}%");
                            });
                     });
                 });

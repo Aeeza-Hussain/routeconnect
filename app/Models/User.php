@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -104,6 +105,57 @@ class User extends Authenticatable
     public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class);
+    }
+
+    public function travelRequests(): HasMany
+    {
+        return $this->hasMany(TravelRequest::class);
+    }
+
+    public function driverApplications(): HasMany
+    {
+        return $this->hasMany(DriverApplication::class, 'driver_id');
+    }
+
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_participants')
+            ->withPivot(['last_read_at', 'is_blocked', 'blocked_by'])
+            ->withTimestamps();
+    }
+
+    public function conversationParticipants(): HasMany
+    {
+        return $this->hasMany(ConversationParticipant::class);
+    }
+
+    public function sentMessages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    /**
+     * Total unread messages across all active conversations.
+     */
+    public function unreadMessagesCount(): int
+    {
+        $participants = $this->conversationParticipants()
+            ->with('conversation')
+            ->get();
+
+        $count = 0;
+        foreach ($participants as $p) {
+            $query = Message::where('conversation_id', $p->conversation_id)
+                ->where('sender_id', '!=', $this->id);
+
+            if ($p->last_read_at) {
+                $query->where('created_at', '>', $p->last_read_at);
+            }
+
+            $count += $query->count();
+        }
+
+        return $count;
     }
 
     /**

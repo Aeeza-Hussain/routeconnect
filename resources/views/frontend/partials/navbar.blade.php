@@ -20,60 +20,76 @@
                 $currentRoute = request()->route()?->getName() ?? '';
                 $currentPath  = request()->path();
 
-                $isHome        = ($currentRoute === 'home'        || $currentPath === '/');
-                $isTrips       = ($currentRoute === 'trips.index' || str_starts_with($currentPath, 'trips'));
-                $isBookVehicle = ($currentRoute === 'vehicles.book' || str_starts_with($currentPath, 'book-vehicle'));
-                $isBookings    = ($currentRoute === 'booking.index' || str_starts_with($currentPath, 'booking') || str_starts_with($currentPath, 'my-bookings'));
+                $isHome     = ($currentRoute === 'home' || $currentPath === '/');
+                $isFindRide = ($currentRoute === 'find-a-ride' || $currentRoute === 'trips.index' || $currentRoute === 'vehicles.book' || str_starts_with($currentPath, 'trips') || str_starts_with($currentPath, 'find-a-ride') || str_starts_with($currentPath, 'book-vehicle'));
+                $isActivity = ($currentRoute === 'activity.index' || str_starts_with($currentPath, 'my-activity') || str_starts_with($currentPath, 'booking') || str_starts_with($currentPath, 'my-bookings'));
+                $isMessages = ($currentRoute === 'messages.index' || $currentRoute === 'messages.show' || str_starts_with($currentPath, 'messages'));
+
+                $unreadMessageCount = auth()->check() ? auth()->user()->unreadMessagesCount() : 0;
             @endphp
 
             <nav class="hidden md:flex items-center gap-8 text-sm font-bold text-slate-600 dark:text-slate-300">
 
                 {{-- HOME --}}
                 @if($isHome)
-                    <a href="{{ url('/') }}" class="relative py-2 text-emerald-600 transition-colors">
+                    <a href="{{ url('/') }}" class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors">
                         Home
-                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 rounded-full"></span>
+                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
                     </a>
                 @else
-                    <a href="{{ url('/') }}" class="py-2 hover:text-emerald-600 transition-colors">Home</a>
+                    <a href="{{ url('/') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Home</a>
                 @endif
 
-                {{-- SEARCH TRIPS --}}
-                @if($isTrips)
-                    <a href="{{ url('/trips') }}" class="relative py-2 text-emerald-600 transition-colors">
-                        Search Trips
-                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 rounded-full"></span>
+                {{-- FIND A RIDE --}}
+                @if($isFindRide)
+                    <a href="{{ url('/trips') }}" class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors">
+                        Find a Ride
+                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
                     </a>
                 @else
-                    <a href="{{ url('/trips') }}" class="py-2 hover:text-emerald-600 transition-colors">Search Trips</a>
+                    <a href="{{ url('/trips') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Find a Ride</a>
                 @endif
 
-                {{-- BOOK A VEHICLE --}}
-                @if($isBookVehicle)
-                    <a href="{{ url('/book-vehicle') }}" class="relative py-2 text-emerald-600 transition-colors">
-                        Book a Vehicle
-                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 rounded-full"></span>
-                    </a>
-                @else
-                    <a href="{{ url('/book-vehicle') }}" class="py-2 hover:text-emerald-600 transition-colors">Book a Vehicle</a>
-                @endif
+                @auth
+                    {{-- MY ACTIVITY --}}
+                    @if($isActivity)
+                        <a href="{{ route('activity.index') }}" class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors">
+                            My Activity
+                            <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                        </a>
+                    @else
+                        <a href="{{ route('activity.index') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">My Activity</a>
+                    @endif
 
-                {{-- MY BOOKINGS --}}
-                @if($isBookings)
-                    <a href="{{ url('/booking') }}" class="relative py-2 text-emerald-600 transition-colors">
-                        My Bookings
-                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 rounded-full"></span>
-                    </a>
-                @else
-                    <a href="{{ url('/booking') }}" class="py-2 hover:text-emerald-600 transition-colors">My Bookings</a>
-                @endif
+                    {{-- MESSAGES --}}
+                    @if($isMessages)
+                        <a href="{{ route('messages.index') }}" class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors flex items-center gap-1.5">
+                            <span>Messages</span>
+                            @if($unreadMessageCount > 0)
+                                <span class="px-1.5 py-0.2 rounded-full bg-emerald-600 text-white text-[10px] font-black leading-tight shadow-xs">
+                                    {{ $unreadMessageCount > 9 ? '9+' : $unreadMessageCount }}
+                                </span>
+                            @endif
+                            <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                        </a>
+                    @else
+                        <a href="{{ route('messages.index') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center gap-1.5">
+                            <span>Messages</span>
+                            @if($unreadMessageCount > 0)
+                                <span class="px-1.5 py-0.2 rounded-full bg-emerald-600 text-white text-[10px] font-black leading-tight shadow-xs">
+                                    {{ $unreadMessageCount > 9 ? '9+' : $unreadMessageCount }}
+                                </span>
+                            @endif
+                        </a>
+                    @endif
+                @endauth
 
                 {{-- ABOUT --}}
-                <a href="{{ url('/#about') }}" class="py-2 hover:text-emerald-600 transition-colors">About</a>
+                <a href="{{ url('/#about') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">About</a>
 
             </nav>
 
-            <!-- RIGHT SIDE: Theme Switcher & Auth Buttons -->
+            <!-- RIGHT SIDE: Theme Switcher & Auth Buttons / Profile Dropdown -->
             <div class="hidden md:flex items-center gap-3">
                 
                 <!-- Quick Theme Switcher -->
@@ -81,47 +97,123 @@
 
                 @auth
                     @php
-                        $userUnreadCount = auth()->user()->notifications()->where('is_read', false)->count();
+                        $userUnreadNotifCount = auth()->user()->notifications()->where('is_read', false)->count();
                     @endphp
+
+                    {{-- Notifications --}}
                     <a href="{{ route('notifications.index') }}"
-                       class="relative p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                       class="relative p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                        title="Notifications">
                         <i class="fa-solid fa-bell text-base"></i>
-                        @if($userUnreadCount > 0)
-                            <span class="absolute -top-0.5 -right-0.5 px-1.5 py-0.2 rounded-full bg-emerald-600 text-white text-[9px] font-black leading-tight">
-                                {{ $userUnreadCount > 9 ? '9+' : $userUnreadCount }}
+                        @if($userUnreadNotifCount > 0)
+                            <span class="absolute 1 top-1 right-1 px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-black leading-tight">
+                                {{ $userUnreadNotifCount > 9 ? '9+' : $userUnreadNotifCount }}
                             </span>
                         @endif
                     </a>
 
-                    <div class="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-slate-700">
-                        <div class="text-right leading-tight">
-                            <div class="text-xs font-extrabold text-slate-800 dark:text-slate-100">{{ auth()->user()->name }}</div>
-                            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">
-                                @if(auth()->user()->user_type == 1) Admin
-                                @elseif(auth()->user()->user_type == 2) Driver
-                                @else Passenger
+                    {{-- Profile Dropdown --}}
+                    <div class="relative pl-2 border-l border-slate-200 dark:border-slate-800" id="profileDropdownContainer">
+                        <button type="button"
+                                id="profileDropdownBtn"
+                                onclick="toggleProfileDropdown()"
+                                class="flex items-center gap-2.5 p-1.5 pr-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors focus:outline-none">
+                            <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center text-xs font-black shadow-sm shrink-0">
+                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            </div>
+                            <div class="text-left leading-tight hidden lg:block">
+                                <div class="text-xs font-extrabold text-slate-800 dark:text-slate-100 max-w-[110px] truncate">
+                                    {{ auth()->user()->name }}
+                                </div>
+                                <div class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                                    @if(auth()->user()->user_type == 1) Admin
+                                    @elseif(auth()->user()->user_type == 2) Driver
+                                    @else Passenger
+                                    @endif
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200" id="profileDropdownChevron"></i>
+                        </button>
+
+                        {{-- Dropdown Menu --}}
+                        <div id="profileDropdownMenu"
+                             class="hidden absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-xl py-2 z-50 transition-all text-xs">
+                            
+                            {{-- Header Info --}}
+                            <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+                                <p class="text-xs font-extrabold text-slate-900 dark:text-white truncate">{{ auth()->user()->name }}</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ auth()->user()->email }}</p>
+                                <span class="inline-block mt-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider {{ auth()->user()->user_type == 1 ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' : (auth()->user()->user_type == 2 ? 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300') }}">
+                                    @if(auth()->user()->user_type == 1) Platform Admin
+                                    @elseif(auth()->user()->user_type == 2) Verified Driver
+                                    @else Passenger Account
+                                    @endif
+                                </span>
+                            </div>
+
+                            {{-- Role-specific Dashboard shortcut --}}
+                            <div class="py-1">
+                                @if(auth()->user()->user_type == 1)
+                                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80">
+                                        <i class="fa-solid fa-gauge text-slate-400 w-4 text-center"></i>
+                                        <span>Admin Dashboard</span>
+                                    </a>
+                                @elseif(auth()->user()->user_type == 2)
+                                    <a href="{{ route('driver.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80">
+                                        <i class="fa-solid fa-gauge text-slate-400 w-4 text-center"></i>
+                                        <span>Driver Dashboard</span>
+                                    </a>
+                                    <a href="{{ route('driver.vehicles.index') }}" class="flex items-center gap-2.5 px-4 py-2 font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80">
+                                        <i class="fa-solid fa-van-shuttle text-slate-400 w-4 text-center"></i>
+                                        <span>My Vehicles</span>
+                                    </a>
+                                    <a href="{{ route('driver.trips') }}" class="flex items-center gap-2.5 px-4 py-2 font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80">
+                                        <i class="fa-solid fa-route text-slate-400 w-4 text-center"></i>
+                                        <span>My Scheduled Trips</span>
+                                    </a>
                                 @endif
+
+                                <a href="{{ route('activity.index') }}" class="flex items-center gap-2.5 px-4 py-2 font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80">
+                                    <i class="fa-solid fa-clock-rotate-left text-slate-400 w-4 text-center"></i>
+                                    <span>My Activity</span>
+                                </a>
+
+                                <a href="{{ route('messages.index') }}" class="flex items-center justify-between px-4 py-2 font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-comments text-slate-400 w-4 text-center"></i>
+                                        <span>Messages</span>
+                                    </div>
+                                    @if($unreadMessageCount > 0)
+                                        <span class="px-1.5 py-0.2 rounded-full bg-emerald-600 text-white text-[10px] font-black">
+                                            {{ $unreadMessageCount }}
+                                        </span>
+                                    @endif
+                                </a>
+
+                                <a href="{{ route('notifications.index') }}" class="flex items-center justify-between px-4 py-2 font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-bell text-slate-400 w-4 text-center"></i>
+                                        <span>Notifications</span>
+                                    </div>
+                                    @if($userUnreadNotifCount > 0)
+                                        <span class="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px] font-black">
+                                            {{ $userUnreadNotifCount }}
+                                        </span>
+                                    @endif
+                                </a>
+                            </div>
+
+                            {{-- Logout Item --}}
+                            <div class="pt-1 border-t border-slate-100 dark:border-slate-800">
+                                <form action="{{ route('logout') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2 font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-left transition-colors">
+                                        <i class="fa-solid fa-right-from-bracket w-4 text-center"></i>
+                                        <span>Logout</span>
+                                    </button>
+                                </form>
                             </div>
                         </div>
-
-                        <!-- Dashboard Shortcut for Admin/Driver -->
-                        @if(auth()->user()->user_type == 1)
-                            <a href="{{ route('admin.dashboard') }}" class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors">
-                                Dashboard
-                            </a>
-                        @elseif(auth()->user()->user_type == 2)
-                            <a href="{{ route('driver.dashboard') }}" class="px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200 dark:border-teal-800 hover:bg-teal-100 dark:hover:bg-teal-900/60 transition-colors">
-                                Dashboard
-                            </a>
-                        @endif
-
-                        <form action="{{ route('logout') }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors">
-                                Logout
-                            </button>
-                        </form>
                     </div>
                 @else
                     <a href="{{ route('login') }}" class="px-5 py-2 rounded-full border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-600 dark:hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 text-xs font-bold transition-colors">
@@ -159,23 +251,35 @@
             <a href="{{ url('/') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Home</a>
         @endif
 
-        @if($isTrips)
-            <a href="{{ url('/trips') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40">Search Trips</a>
+        @if($isFindRide)
+            <a href="{{ url('/trips') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40">Find a Ride</a>
         @else
-            <a href="{{ url('/trips') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Search Trips</a>
+            <a href="{{ url('/trips') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Find a Ride</a>
         @endif
 
-        @if($isBookVehicle)
-            <a href="{{ url('/book-vehicle') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40">Book a Vehicle</a>
-        @else
-            <a href="{{ url('/book-vehicle') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Book a Vehicle</a>
-        @endif
+        @auth
+            @if($isActivity)
+                <a href="{{ route('activity.index') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40">My Activity</a>
+            @else
+                <a href="{{ route('activity.index') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">My Activity</a>
+            @endif
 
-        @if($isBookings)
-            <a href="{{ url('/booking') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40">My Bookings</a>
-        @else
-            <a href="{{ url('/booking') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">My Bookings</a>
-        @endif
+            @if($isMessages)
+                <a href="{{ route('messages.index') }}" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40">
+                    <span>Messages</span>
+                    @if($unreadMessageCount > 0)
+                        <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-xs font-black">{{ $unreadMessageCount }}</span>
+                    @endif
+                </a>
+            @else
+                <a href="{{ route('messages.index') }}" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <span>Messages</span>
+                    @if($unreadMessageCount > 0)
+                        <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-xs font-black">{{ $unreadMessageCount }}</span>
+                    @endif
+                </a>
+            @endif
+        @endauth
 
         <a href="{{ url('/#about') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">About</a>
         
@@ -197,7 +301,21 @@
 
         <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
             @auth
-                <div class="px-3 py-1 text-xs text-slate-500 dark:text-slate-400 font-bold">Logged in as: {{ auth()->user()->name }}</div>
+                <div class="px-3 py-1 text-xs text-slate-500 dark:text-slate-400 font-bold flex items-center justify-between">
+                    <span>Logged in: {{ auth()->user()->name }}</span>
+                    <span class="text-emerald-600 dark:text-emerald-400 uppercase font-black text-[10px]">
+                        @if(auth()->user()->user_type == 1) Admin @elseif(auth()->user()->user_type == 2) Driver @else Passenger @endif
+                    </span>
+                </div>
+                @if(auth()->user()->user_type == 1)
+                    <a href="{{ route('admin.dashboard') }}" class="w-full text-center px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs">
+                        Admin Dashboard
+                    </a>
+                @elseif(auth()->user()->user_type == 2)
+                    <a href="{{ route('driver.dashboard') }}" class="w-full text-center px-4 py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold text-xs">
+                        Driver Dashboard
+                    </a>
+                @endif
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
                     <button type="submit" class="w-full text-center px-4 py-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-sm">
@@ -215,3 +333,30 @@
         </div>
     </div>
 </header>
+
+<script>
+function toggleProfileDropdown() {
+    const menu = document.getElementById('profileDropdownMenu');
+    const chevron = document.getElementById('profileDropdownChevron');
+    if (!menu) return;
+
+    if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        if (chevron) chevron.classList.add('rotate-180');
+    } else {
+        menu.classList.add('hidden');
+        if (chevron) chevron.classList.remove('rotate-180');
+    }
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+    const container = document.getElementById('profileDropdownContainer');
+    const menu = document.getElementById('profileDropdownMenu');
+    const chevron = document.getElementById('profileDropdownChevron');
+    if (container && menu && !container.contains(e.target)) {
+        menu.classList.add('hidden');
+        if (chevron) chevron.classList.remove('rotate-180');
+    }
+});
+</script>

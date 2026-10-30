@@ -276,7 +276,7 @@
             {{-- Stop Autocomplete Datalist --}}
             <datalist id="stopSuggestions">
                 @foreach($stops as $st)
-                    <option value="{{ $st->city }} — {{ $st->name }}"></option>
+                    <option value="{{ $st->name }}">{{ $st->name }}{{ $st->location ? ' (' . $st->location . ')' : '' }}</option>
                 @endforeach
             </datalist>
 
@@ -411,7 +411,14 @@
                                 </div>
 
                                 {{-- Card Footer Actions --}}
-                                <div class="p-5 pt-0 flex items-center gap-2">
+                                <div class="p-5 pt-0 flex items-center gap-2 flex-wrap">
+                                    <a href="{{ route('messages.start') }}?vehicle_id={{ $vehicle->id }}"
+                                       class="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold text-center transition-colors flex items-center justify-center gap-1.5"
+                                       title="Message Driver">
+                                        <i class="fa-solid fa-comments text-emerald-600 dark:text-emerald-400"></i>
+                                        <span>Message</span>
+                                    </a>
+
                                     <a href="{{ route('vehicles.book.show', $vehicle->id) }}?pickup_date={{ $pickupDate }}&pickup_time={{ $pickupTime }}&return_date={{ $returnDate }}&return_time={{ $returnTime }}&pickup={{ urlencode($pickup) }}&destination={{ urlencode($destination) }}"
                                        class="flex-1 py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold text-center transition-colors">
                                         View Details

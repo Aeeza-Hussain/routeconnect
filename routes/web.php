@@ -21,6 +21,8 @@ use App\Http\Controllers\Driver\DriverProfileController;
 
 use App\Http\Controllers\Frontend\BookingController;
 use App\Http\Controllers\Frontend\VehicleBookingController;
+use App\Http\Controllers\Frontend\ActivityController;
+use App\Http\Controllers\Frontend\MessageController;
 use App\Http\Controllers\NotificationController;
 
 /*
@@ -30,12 +32,41 @@ use App\Http\Controllers\NotificationController;
 */
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/trips', [HomeController::class, 'trips'])->name('trips.index');
+Route::get('/find-a-ride', [HomeController::class, 'trips'])->name('find-a-ride');
 Route::get('/trips/{trip}', [HomeController::class, 'showTrip'])->name('trips.show')->whereNumber('trip');
 
 // Dedicated Book a Vehicle Routes (Shared Trips & Private Vehicle Rentals)
 Route::get('/book-vehicle', [VehicleBookingController::class, 'index'])->name('vehicles.book');
 Route::get('/book-vehicle/{vehicle}', [VehicleBookingController::class, 'show'])->name('vehicles.book.show')->whereNumber('vehicle');
 Route::post('/book-vehicle/{vehicle}/reserve', [VehicleBookingController::class, 'store'])->name('vehicles.book.reserve')->whereNumber('vehicle');
+
+/*
+|--------------------------------------------------------------------------
+| My Activity Routes (Role-based for Passengers & Drivers)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])->group(function () {
+    Route::get('/my-activity', [ActivityController::class, 'index'])->name('activity.index');
+    Route::post('/my-activity/requests', [ActivityController::class, 'storeRequest'])->name('activity.requests.store');
+    Route::delete('/my-activity/requests/{travelRequest}', [ActivityController::class, 'destroyRequest'])->name('activity.requests.destroy')->whereNumber('travelRequest');
+    Route::post('/my-activity/requests/{travelRequest}/apply', [ActivityController::class, 'applyToRequest'])->name('activity.requests.apply')->whereNumber('travelRequest');
+
+    /*
+    |--------------------------------------------------------------------------
+    | In-App Messaging & Arrangement Confirmation Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::get('/messages/start', [MessageController::class, 'start'])->name('messages.start');
+    Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show')->whereNumber('conversation');
+    Route::post('/messages/{conversation}', [MessageController::class, 'store'])->name('messages.store')->whereNumber('conversation');
+    Route::get('/messages/{conversation}/fetch', [MessageController::class, 'fetchMessages'])->name('messages.fetch')->whereNumber('conversation');
+    Route::post('/messages/{conversation}/propose', [MessageController::class, 'proposeArrangement'])->name('messages.propose')->whereNumber('conversation');
+    Route::post('/messages/{conversation}/confirm', [MessageController::class, 'confirmArrangement'])->name('messages.confirm')->whereNumber('conversation');
+    Route::post('/messages/{conversation}/cancel', [MessageController::class, 'cancelArrangement'])->name('messages.cancel')->whereNumber('conversation');
+    Route::post('/messages/{conversation}/block', [MessageController::class, 'toggleBlock'])->name('messages.block')->whereNumber('conversation');
+    Route::post('/messages/{conversation}/report', [MessageController::class, 'report'])->name('messages.report')->whereNumber('conversation');
+});
 
 /*
 |--------------------------------------------------------------------------

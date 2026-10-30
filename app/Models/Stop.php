@@ -38,4 +38,12 @@ class Stop extends Model
     {
         return strtolower($this->status) === 'active';
     }
+
+    /**
+     * Backward-compatible accessor for city
+     */
+    public function getCityAttribute(): ?string
+    {
+        return $this->location ?? $this->name;
+    }
 }

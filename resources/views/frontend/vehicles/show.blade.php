@@ -54,12 +54,19 @@
                     </div>
                 </div>
 
-                <div class="text-right">
-                    <span class="text-[10px] text-slate-400 font-bold uppercase block">Standard Daily Rate</span>
-                    <span class="text-2xl font-black font-mono text-emerald-400">
-                        Rs. {{ number_format($vehicle->rental_rate_per_day ?: 4000, 2) }}
-                    </span>
-                    <span class="text-[10px] text-slate-400 block">per 24-hour cycle</span>
+                <div class="text-right flex flex-col items-end gap-2">
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block">Standard Daily Rate</span>
+                        <span class="text-2xl font-black font-mono text-emerald-400">
+                            Rs. {{ number_format($vehicle->rental_rate_per_day ?: 4000, 2) }}
+                        </span>
+                        <span class="text-[10px] text-slate-400 block">per 24-hour cycle</span>
+                    </div>
+                    <a href="{{ route('messages.start') }}?vehicle_id={{ $vehicle->id }}"
+                       class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all">
+                        <i class="fa-solid fa-comments"></i>
+                        <span>Message Driver</span>
+                    </a>
                 </div>
             </div>
 
@@ -213,17 +220,25 @@
                             </div>
                         @endguest
 
-                        <div class="pt-4 flex items-center justify-between gap-4 border-t border-slate-100 dark:border-slate-800">
+                        <div class="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-slate-100 dark:border-slate-800">
                             <div class="text-xs text-slate-500">
                                 <span>No payment required right now. Booking locks vehicle immediately.</span>
                             </div>
 
-                            <button type="submit"
-                                    id="submit-reserve-btn"
-                                    class="px-8 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2">
-                                <i class="fa-solid fa-lock"></i>
-                                <span>Complete Private Booking</span>
-                            </button>
+                            <div class="flex items-center gap-3">
+                                <a href="{{ route('messages.start') }}?vehicle_id={{ $vehicle->id }}"
+                                   class="px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-colors">
+                                    <i class="fa-solid fa-comments text-emerald-600"></i>
+                                    <span>Chat with Driver First</span>
+                                </a>
+
+                                <button type="submit"
+                                        id="submit-reserve-btn"
+                                        class="px-8 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2">
+                                    <i class="fa-solid fa-lock"></i>
+                                    <span>Complete Private Booking</span>
+                                </button>
+                            </div>
                         </div>
 
                     </form>

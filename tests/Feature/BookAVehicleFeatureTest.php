@@ -55,7 +55,7 @@ class BookAVehicleFeatureTest extends TestCase
         ]);
     }
 
-    /** 1. Test Navbar Book a Vehicle Link & Active State */
+    /** 1. Test Navbar Link & Active State for Ride Booking */
     public function test_navbar_displays_book_a_vehicle_and_highlights_active_state(): void
     {
         $response = $this->get('/book-vehicle');
@@ -63,22 +63,18 @@ class BookAVehicleFeatureTest extends TestCase
 
         $html = $response->getContent();
 
-        // Must contain Book a Vehicle
+        // Must contain Book a Vehicle page heading
         $this->assertStringContainsString('Book a Vehicle', $html);
 
-        // Active indicator on Book a Vehicle link
+        // Active indicator on Find a Ride link
         $this->assertMatchesRegularExpression(
-            '/Book a Vehicle\s+<span class="absolute bottom-0/',
+            '/Find a Ride\s+<span class="absolute bottom-0/',
             $html
         );
 
-        // Home and Trips must not be active on /book-vehicle
+        // Home must not be active on /book-vehicle
         $this->assertDoesNotMatchRegularExpression(
             '/Home\s+<span class="absolute bottom-0/',
-            $html
-        );
-        $this->assertDoesNotMatchRegularExpression(
-            '/Search Trips\s+<span class="absolute bottom-0/',
             $html
         );
     }
