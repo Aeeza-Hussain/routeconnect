@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Trip;
 use App\Models\Stop;
+use App\Models\Vehicle;
+use App\Models\TravelRequest;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class HomeController extends Controller
@@ -156,10 +159,91 @@ class HomeController extends Controller
             ? Stop::where('status', 'Active')->orderBy('name')->get()
             : collect();
 
-        // Flag if a search was performed
+        // Flag if a search was performed for seats
         $hasSearched = $request->has('from') || $request->has('to') || $request->has('date') || $request->has('time');
 
+        // ─── Unified Find a Ride Option Mode ───
+        $tab = $request->query('tab', $request->query('mode') === 'private' ? 'vehicle' : 'seat');
+        if (!in_array($tab, ['seat', 'vehicle', 'request'])) {
+            $tab = 'seat';
+        }
+
+        // ─── Option 2 Data: Book Entire Vehicle (Private Rentals) ───
+        $vehicleTypes = ['Car', 'Van', 'Daba', 'Bus', 'Other'];
+        $pickup       = trim((string) $request->query('pickup', ''));
+        $destination  = trim((string) $request->query('destination', ''));
+        $pickupDate   = $request->query('pickup_date', Carbon::today()->format('Y-m-d'));
+        $pickupTime   = $request->query('pickup_time', '09:00');
+        $returnDate   = $request->query('return_date', Carbon::today()->addDays(1)->format('Y-m-d'));
+        $returnTime   = $request->query('return_time', '18:00');
+        $vehicleType  = trim((string) $request->query('vehicle_type', ''));
+        $passengers   = max(1, (int) $request->query('passengers', 1));
+
+        $todayStr = Carbon::today()->format('Y-m-d');
+        if ($pickupDate && $pickupDate < $todayStr) {
+            $pickupDate = $todayStr;
+        }
+        if ($returnDate && $returnDate < $pickupDate) {
+            $returnDate = $pickupDate;
+        }
+
+        try {
+            $startDatetime = Carbon::parse("{$pickupDate} {$pickupTime}");
+            $endDatetime   = Carbon::parse("{$returnDate} {$returnTime}");
+            if ($endDatetime->lessThanOrEqualTo($startDatetime)) {
+                $endDatetime = (clone $startDatetime)->addDay();
+            }
+        } catch (\Exception $e) {
+            $startDatetime = Carbon::today()->setTime(9, 0);
+            $endDatetime   = Carbon::today()->addDay()->setTime(18, 0);
+        }
+
+        $vehicleQuery = Vehicle::with(['driver', 'unavailabilities'])
+            ->whereIn(DB::raw('LOWER(status)'), ['approved', 'active'])
+            ->where('is_available_for_rental', true)
+            ->whereNotNull('rental_rate_per_day')
+            ->where('rental_rate_per_day', '>', 0)
+            ->whereHas('driver', function ($q) {
+                $q->where('driver_status', 'approved');
+            });
+
+        if ($vehicleType && $vehicleType !== 'all') {
+            $vehicleQuery->where('type', $vehicleType);
+        }
+
+        if ($passengers > 1) {
+            $vehicleQuery->where('total_seats', '>=', $passengers);
+        }
+
+        if ($pickup) {
+            $vehicleQuery->where(function ($q) use ($pickup) {
+                $q->where('model', 'like', "%{$pickup}%")
+                  ->orWhere('description', 'like', "%{$pickup}%");
+            });
+        }
+
+        $candidateVehicles = $vehicleQuery->latest()->get();
+
+        $privateVehicles = $candidateVehicles->filter(function (Vehicle $v) use ($startDatetime, $endDatetime) {
+            return $v->isAvailableForRange($startDatetime, $endDatetime);
+        })->values();
+
+        foreach ($privateVehicles as $v) {
+            $v->pricing = $v->calculateRentalPrice($startDatetime, $endDatetime);
+        }
+
+        $diffHours = $startDatetime->diffInHours($endDatetime);
+        $calculatedDays = (int) ceil(max(1, $diffHours / 24));
+
+        // ─── Option 3 Data: Post a Travel Request / Marketplace Activity ───
+        $openTravelRequests = TravelRequest::with('user')
+            ->where('status', 'open')
+            ->latest()
+            ->take(8)
+            ->get();
+
         return view('frontend.trips', compact(
+            'tab',
             'trips',
             'allStops',
             'from',
@@ -167,7 +251,19 @@ class HomeController extends Controller
             'date',
             'time',
             'hasSearched',
-            'errorMessage'
+            'errorMessage',
+            'privateVehicles',
+            'vehicleTypes',
+            'pickup',
+            'destination',
+            'pickupDate',
+            'pickupTime',
+            'returnDate',
+            'returnTime',
+            'vehicleType',
+            'passengers',
+            'calculatedDays',
+            'openTravelRequests'
         ));
     }
 

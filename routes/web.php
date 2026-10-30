@@ -48,6 +48,7 @@ Route::post('/book-vehicle/{vehicle}/reserve', [VehicleBookingController::class,
 Route::middleware(['auth'])->group(function () {
     Route::get('/my-activity', [ActivityController::class, 'index'])->name('activity.index');
     Route::post('/my-activity/requests', [ActivityController::class, 'storeRequest'])->name('activity.requests.store');
+    Route::post('/travel-requests', [ActivityController::class, 'storeRequest'])->name('travel-requests.store');
     Route::delete('/my-activity/requests/{travelRequest}', [ActivityController::class, 'destroyRequest'])->name('activity.requests.destroy')->whereNumber('travelRequest');
     Route::post('/my-activity/requests/{travelRequest}/apply', [ActivityController::class, 'applyToRequest'])->name('activity.requests.apply')->whereNumber('travelRequest');
 
