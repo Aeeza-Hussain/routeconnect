@@ -23,9 +23,9 @@
                 <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Quick Links</h4>
                 <ul class="space-y-2 text-xs">
                     <li><a href="{{ url('/') }}" class="text-slate-400 hover:text-white transition-colors">Home</a></li>
-                    <li><a href="{{ url('/trips') }}" class="text-slate-400 hover:text-white transition-colors">Search Trips</a></li>
+                    <li><a href="{{ url('/trips') }}" class="text-slate-400 hover:text-white transition-colors">Find a Ride</a></li>
+                    <li><a href="{{ route('activity.index') }}" class="text-slate-400 hover:text-white transition-colors"><span>My Activity</span></a></li>
                     <li><a href="{{ url('/#about') }}" class="text-slate-400 hover:text-white transition-colors">About</a></li>
-                    <li><a href="{{ route('register', ['role' => 'driver']) }}" class="text-slate-400 hover:text-white transition-colors">Become a Driver</a></li>
                 </ul>
             </div>
 
@@ -40,7 +40,16 @@
                 </ul>
             </div>
 
-            <!-- Col 4: Contact Info -->
+            <!-- Col 4: For Drivers -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">For Drivers</h4>
+                <ul class="space-y-2 text-xs">
+                    <li><a href="{{ route('register', ['role' => 'driver']) }}" class="text-slate-400 hover:text-white transition-colors">Become a Driver</a></li>
+                    <li><a href="{{ route('register', ['role' => 'driver']) }}" class="text-slate-400 hover:text-white transition-colors">Vehicle Registration</a></li>
+                </ul>
+            </div>
+
+            <!-- Col 5: Contact Info -->
             <div class="space-y-3">
                 <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Contact</h4>
                 <ul class="space-y-2 text-xs text-slate-400">

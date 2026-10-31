@@ -28,8 +28,12 @@
 
     <!-- RouteConnect Theme Engine (Zero FOUC) -->
     @include('partials.theme_init')
+    @stack('styles')
 </head>
-<body class="bg-slate-50 dark:bg-[#090e17] text-slate-900 dark:text-slate-100 font-sans antialiased flex flex-col min-h-screen transition-colors duration-200">
+@php
+    $isMarketplacePage = request()->is('trips*') || request()->is('find-a-ride*');
+@endphp
+<body class="{{ $isMarketplacePage ? 'bg-[#070e1b]' : 'bg-slate-50 dark:bg-[#090e17]' }} text-slate-900 dark:text-slate-100 font-sans antialiased flex flex-col min-h-screen transition-colors duration-200" style="{{ $isMarketplacePage ? 'background-color: #070e1b !important;' : '' }}">
 
     <!-- Navigation Header -->
     @include('frontend.partials.navbar')

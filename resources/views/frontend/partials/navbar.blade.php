@@ -53,33 +53,33 @@
                 @auth
                     {{-- MY ACTIVITY --}}
                     @if($isActivity)
-                        <a href="{{ route('activity.index') }}" class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors">
+                        <a href="{{ route('activity.index') }}" class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors inline-flex items-center gap-1.5">
                             My Activity
                             <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-black inline-flex items-center justify-center">2</span>
                         </a>
                     @else
-                        <a href="{{ route('activity.index') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">My Activity</a>
+                        <a href="{{ route('activity.index') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors inline-flex items-center gap-1.5">
+                            <span>My Activity</span>
+                            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-black inline-flex items-center justify-center">2</span>
+                        </a>
                     @endif
 
                     {{-- MESSAGES --}}
                     @if($isMessages)
-                        <a href="{{ route('messages.index') }}" class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors flex items-center gap-1.5">
-                            <span>Messages</span>
-                            @if($unreadMessageCount > 0)
-                                <span class="px-1.5 py-0.2 rounded-full bg-emerald-600 text-white text-[10px] font-black leading-tight shadow-xs">
-                                    {{ $unreadMessageCount > 9 ? '9+' : $unreadMessageCount }}
-                                </span>
-                            @endif
+                        <a href="{{ route('messages.index') }}" class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors inline-flex items-center gap-1.5">
+                            Messages
                             <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-black inline-flex items-center justify-center">
+                                {{ $unreadMessageCount > 0 ? ($unreadMessageCount > 9 ? '9+' : $unreadMessageCount) : 1 }}
+                            </span>
                         </a>
                     @else
-                        <a href="{{ route('messages.index') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center gap-1.5">
+                        <a href="{{ route('messages.index') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors inline-flex items-center gap-1.5">
                             <span>Messages</span>
-                            @if($unreadMessageCount > 0)
-                                <span class="px-1.5 py-0.2 rounded-full bg-emerald-600 text-white text-[10px] font-black leading-tight shadow-xs">
-                                    {{ $unreadMessageCount > 9 ? '9+' : $unreadMessageCount }}
-                                </span>
-                            @endif
+                            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-black inline-flex items-center justify-center">
+                                {{ $unreadMessageCount > 0 ? ($unreadMessageCount > 9 ? '9+' : $unreadMessageCount) : 1 }}
+                            </span>
                         </a>
                     @endif
                 @endauth
@@ -118,18 +118,12 @@
                                 id="profileDropdownBtn"
                                 onclick="toggleProfileDropdown()"
                                 class="flex items-center gap-2.5 p-1.5 pr-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors focus:outline-none">
-                            <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center text-xs font-black shadow-sm shrink-0">
-                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            <div class="w-8 h-8 rounded-full bg-[#1e293b] text-white flex items-center justify-center text-xs font-black shadow-sm shrink-0 border border-slate-700/60">
+                                {{ collect(explode(' ', auth()->user()->name))->map(fn($w) => strtoupper(substr($w, 0, 1)))->take(2)->join('') ?: 'AF' }}
                             </div>
                             <div class="text-left leading-tight hidden lg:block">
-                                <div class="text-xs font-extrabold text-slate-800 dark:text-slate-100 max-w-[110px] truncate">
+                                <div class="text-xs font-extrabold text-slate-800 dark:text-slate-100 max-w-[120px] truncate">
                                     {{ auth()->user()->name }}
-                                </div>
-                                <div class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                                    @if(auth()->user()->user_type == 1) Admin
-                                    @elseif(auth()->user()->user_type == 2) Driver
-                                    @else Passenger
-                                    @endif
                                 </div>
                             </div>
                             <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200" id="profileDropdownChevron"></i>

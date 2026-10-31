@@ -163,9 +163,9 @@ class HomeController extends Controller
         $hasSearched = $request->has('from') || $request->has('to') || $request->has('date') || $request->has('time');
 
         // ─── Unified Find a Ride Option Mode ───
-        $tab = $request->query('tab', $request->query('mode') === 'private' ? 'vehicle' : 'seat');
-        if (!in_array($tab, ['seat', 'vehicle', 'request'])) {
-            $tab = 'seat';
+        $tab = $request->query('tab', $request->query('mode') === 'private' ? 'vehicle' : 'all');
+        if (!in_array($tab, ['all', 'seat', 'vehicle', 'request'])) {
+            $tab = 'all';
         }
 
         // ─── Option 2 Data: Book Entire Vehicle (Private Rentals) ───
