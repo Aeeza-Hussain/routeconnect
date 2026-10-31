@@ -1,16 +1,18 @@
+@php
+    $isOnMarketplace = request()->is('trips*') || request()->is('find-a-ride*');
+@endphp
 <!-- Quick Theme Switcher Dropdown Component -->
 <div class="relative inline-block text-left" id="themeSwitcherDropdownWrapper">
     <button type="button"
             id="themeSwitcherBtn"
             onclick="toggleThemeDropdown(event)"
             class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border transition-all duration-200
-                   bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-xs
-                   dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 dark:shadow-none"
+                   {{ $isOnMarketplace ? 'bg-[#0c1626] hover:bg-[#14233a] text-slate-200 border-[#1e2d44]' : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-xs dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 dark:shadow-none' }}"
             aria-expanded="false"
             aria-haspopup="true"
             title="Switch Theme (Light / Dark / System)">
-        <i data-theme-current-icon class="fa-solid fa-circle-half-stroke text-emerald-500 text-sm"></i>
-        <span data-theme-current-label class="hidden sm:inline">Theme</span>
+        <i data-theme-current-icon class="fa-solid fa-sun {{ $isOnMarketplace ? 'text-amber-400' : 'text-emerald-500' }} text-sm"></i>
+        <span data-theme-current-label class="hidden sm:inline">Light</span>
         <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dark:text-slate-500 transition-transform duration-200" id="themeChevron"></i>
     </button>
 

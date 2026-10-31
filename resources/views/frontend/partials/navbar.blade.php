@@ -1,5 +1,16 @@
 <!-- Public Navigation Bar -->
-<header id="siteNavbar" class="sticky top-0 z-50 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs transition-colors duration-200">
+@php
+    $currentRoute = request()->route()?->getName() ?? '';
+    $currentPath  = request()->path();
+
+    $isHome     = ($currentRoute === 'home' || $currentPath === '/');
+    $isFindRide = ($currentRoute === 'find-a-ride' || $currentRoute === 'trips.index' || $currentRoute === 'vehicles.book' || str_starts_with($currentPath, 'trips') || str_starts_with($currentPath, 'find-a-ride') || str_starts_with($currentPath, 'book-vehicle'));
+    $isActivity = ($currentRoute === 'activity.index' || str_starts_with($currentPath, 'my-activity') || str_starts_with($currentPath, 'booking') || str_starts_with($currentPath, 'my-bookings'));
+    $isMessages = ($currentRoute === 'messages.index' || $currentRoute === 'messages.show' || str_starts_with($currentPath, 'messages'));
+
+    $unreadMessageCount = auth()->check() ? auth()->user()->unreadMessagesCount() : 0;
+@endphp
+<header id="siteNavbar" class="sticky top-0 z-50 {{ $isFindRide ? 'bg-[#070e1b] border-slate-800 text-white' : 'bg-white/95 dark:bg-[#0f172a]/95 border-slate-200/80 dark:border-slate-800/80 text-slate-900 dark:text-white' }} backdrop-blur-md border-b shadow-xs transition-colors duration-200" style="{{ $isFindRide ? 'background-color: #070e1b !important; border-bottom: 1px solid rgba(30, 41, 59, 0.8) !important;' : '' }}">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-20">
             
@@ -9,42 +20,30 @@
                     <div class="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform">
                         <i class="fa-solid fa-location-dot text-lg"></i>
                     </div>
-                    <span class="font-extrabold text-2xl tracking-tight text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                        Route<span class="text-emerald-600 dark:text-emerald-400">Connect</span>
+                    <span class="font-extrabold text-2xl tracking-tight {{ $isFindRide ? 'text-white' : 'text-slate-900 dark:text-white' }} group-hover:text-emerald-400 transition-colors">
+                        Route<span class="text-emerald-400">Connect</span>
                     </span>
                 </a>
             </div>
 
             <!-- CENTER: Navigation Links -->
-            @php
-                $currentRoute = request()->route()?->getName() ?? '';
-                $currentPath  = request()->path();
-
-                $isHome     = ($currentRoute === 'home' || $currentPath === '/');
-                $isFindRide = ($currentRoute === 'find-a-ride' || $currentRoute === 'trips.index' || $currentRoute === 'vehicles.book' || str_starts_with($currentPath, 'trips') || str_starts_with($currentPath, 'find-a-ride') || str_starts_with($currentPath, 'book-vehicle'));
-                $isActivity = ($currentRoute === 'activity.index' || str_starts_with($currentPath, 'my-activity') || str_starts_with($currentPath, 'booking') || str_starts_with($currentPath, 'my-bookings'));
-                $isMessages = ($currentRoute === 'messages.index' || $currentRoute === 'messages.show' || str_starts_with($currentPath, 'messages'));
-
-                $unreadMessageCount = auth()->check() ? auth()->user()->unreadMessagesCount() : 0;
-            @endphp
-
-            <nav class="hidden md:flex items-center gap-8 text-sm font-bold text-slate-600 dark:text-slate-300">
+            <nav class="hidden md:flex items-center gap-8 text-sm font-bold {{ $isFindRide ? 'text-slate-300' : 'text-slate-600 dark:text-slate-300' }}">
 
                 {{-- HOME --}}
                 @if($isHome)
-                    <a href="{{ url('/') }}" class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors">
+                    <a href="{{ url('/') }}" class="relative py-2 {{ $isFindRide ? 'text-emerald-400' : 'text-emerald-600 dark:text-emerald-400' }} transition-colors">
                         Home
-                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                        <span class="absolute bottom-0 left-0 right-0 h-0.5 {{ $isFindRide ? 'bg-emerald-400' : 'bg-emerald-600 dark:bg-emerald-400' }} rounded-full"></span>
                     </a>
                 @else
-                    <a href="{{ url('/') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Home</a>
+                    <a href="{{ url('/') }}" class="py-2 {{ $isFindRide ? 'text-slate-300 hover:text-white' : 'hover:text-emerald-600 dark:hover:text-emerald-400' }} transition-colors">Home</a>
                 @endif
 
                 {{-- FIND A RIDE --}}
                 @if($isFindRide)
-                    <a href="{{ url('/trips') }}" class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors">
+                    <a href="{{ url('/trips') }}" class="relative py-2 text-emerald-400 transition-colors">
                         Find a Ride
-                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400 rounded-full"></span>
                     </a>
                 @else
                     <a href="{{ url('/trips') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Find a Ride</a>
@@ -53,39 +52,39 @@
                 @auth
                     {{-- MY ACTIVITY --}}
                     @if($isActivity)
-                        <a href="{{ route('activity.index') }}" class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors inline-flex items-center gap-1.5">
+                        <a href="{{ route('activity.index') }}" class="relative py-2 {{ $isFindRide ? 'text-emerald-400' : 'text-emerald-600 dark:text-emerald-400' }} transition-colors inline-flex items-center gap-1.5">
                             My Activity
-                            <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
-                            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-black inline-flex items-center justify-center">2</span>
+                            <span class="absolute bottom-0 left-0 right-0 h-0.5 {{ $isFindRide ? 'bg-emerald-400' : 'bg-emerald-600 dark:bg-emerald-400' }} rounded-full"></span>
+                            <span class="w-4 h-4 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black inline-flex items-center justify-center">2</span>
                         </a>
                     @else
-                        <a href="{{ route('activity.index') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors inline-flex items-center gap-1.5">
+                        <a href="{{ route('activity.index') }}" class="py-2 {{ $isFindRide ? 'text-slate-300 hover:text-white' : 'hover:text-emerald-600 dark:hover:text-emerald-400' }} transition-colors inline-flex items-center gap-1.5">
                             <span>My Activity</span>
-                            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-black inline-flex items-center justify-center">2</span>
+                            <span class="w-4 h-4 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black inline-flex items-center justify-center">2</span>
                         </a>
                     @endif
 
                     {{-- MESSAGES --}}
                     @if($isMessages)
-                        <a href="{{ route('messages.index') }}" class="relative py-2 text-emerald-600 dark:text-emerald-400 transition-colors inline-flex items-center gap-1.5">
+                        <a href="{{ route('messages.index') }}" class="relative py-2 {{ $isFindRide ? 'text-emerald-400' : 'text-emerald-600 dark:text-emerald-400' }} transition-colors inline-flex items-center gap-1.5">
                             Messages
-                            <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
-                            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-black inline-flex items-center justify-center">
-                                {{ $unreadMessageCount > 0 ? ($unreadMessageCount > 9 ? '9+' : $unreadMessageCount) : 1 }}
+                            <span class="absolute bottom-0 left-0 right-0 h-0.5 {{ $isFindRide ? 'bg-emerald-400' : 'bg-emerald-600 dark:bg-emerald-400' }} rounded-full"></span>
+                            <span class="w-4 h-4 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black inline-flex items-center justify-center">
+                                {{ $unreadMessageCount > 0 ? ($unreadMessageCount > 9 ? '9+' : $unreadMessageCount) : 3 }}
                             </span>
                         </a>
                     @else
-                        <a href="{{ route('messages.index') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors inline-flex items-center gap-1.5">
+                        <a href="{{ route('messages.index') }}" class="py-2 {{ $isFindRide ? 'text-slate-300 hover:text-white' : 'hover:text-emerald-600 dark:hover:text-emerald-400' }} transition-colors inline-flex items-center gap-1.5">
                             <span>Messages</span>
-                            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-black inline-flex items-center justify-center">
-                                {{ $unreadMessageCount > 0 ? ($unreadMessageCount > 9 ? '9+' : $unreadMessageCount) : 1 }}
+                            <span class="w-4 h-4 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black inline-flex items-center justify-center">
+                                {{ $unreadMessageCount > 0 ? ($unreadMessageCount > 9 ? '9+' : $unreadMessageCount) : 3 }}
                             </span>
                         </a>
                     @endif
                 @endauth
 
                 {{-- ABOUT --}}
-                <a href="{{ url('/#about') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">About</a>
+                <a href="{{ url('/#about') }}" class="py-2 {{ $isFindRide ? 'text-slate-300 hover:text-white' : 'hover:text-emerald-600 dark:hover:text-emerald-400' }} transition-colors">About</a>
 
             </nav>
 
@@ -102,7 +101,7 @@
 
                     {{-- Notifications --}}
                     <a href="{{ route('notifications.index') }}"
-                       class="relative p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                       class="relative p-2.5 rounded-xl {{ $isFindRide ? 'text-slate-300 hover:text-white hover:bg-slate-800/80' : 'text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800' }} transition-colors"
                        title="Notifications">
                         <i class="fa-solid fa-bell text-base"></i>
                         @if($userUnreadNotifCount > 0)
@@ -113,16 +112,16 @@
                     </a>
 
                     {{-- Profile Dropdown --}}
-                    <div class="relative pl-2 border-l border-slate-200 dark:border-slate-800" id="profileDropdownContainer">
+                    <div class="relative pl-2 border-l {{ $isFindRide ? 'border-slate-800' : 'border-slate-200 dark:border-slate-800' }}" id="profileDropdownContainer">
                         <button type="button"
                                 id="profileDropdownBtn"
                                 onclick="toggleProfileDropdown()"
-                                class="flex items-center gap-2.5 p-1.5 pr-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors focus:outline-none">
+                                class="flex items-center gap-2.5 p-1.5 pr-3 rounded-full {{ $isFindRide ? 'hover:bg-slate-800/80 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-800 dark:text-slate-100' }} transition-colors focus:outline-none">
                             <div class="w-8 h-8 rounded-full bg-[#1e293b] text-white flex items-center justify-center text-xs font-black shadow-sm shrink-0 border border-slate-700/60">
                                 {{ collect(explode(' ', auth()->user()->name))->map(fn($w) => strtoupper(substr($w, 0, 1)))->take(2)->join('') ?: 'AF' }}
                             </div>
                             <div class="text-left leading-tight hidden lg:block">
-                                <div class="text-xs font-extrabold text-slate-800 dark:text-slate-100 max-w-[120px] truncate">
+                                <div class="text-xs font-extrabold {{ $isFindRide ? 'text-white' : 'text-slate-800 dark:text-slate-100' }} max-w-[120px] truncate">
                                     {{ auth()->user()->name }}
                                 </div>
                             </div>
@@ -210,10 +209,10 @@
                         </div>
                     </div>
                 @else
-                    <a href="{{ route('login') }}" class="px-5 py-2 rounded-full border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-600 dark:hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 text-xs font-bold transition-colors">
+                    <a href="{{ route('login') }}" class="px-5 py-2 rounded-full border {{ $isFindRide ? 'border-[#1e2d44] bg-[#0c1626] text-slate-200 hover:border-emerald-500 hover:text-white' : 'border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-600 dark:hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400' }} text-xs font-bold transition-colors">
                         Login
                     </a>
-                    <a href="{{ route('register') }}" class="px-6 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all hover:shadow-lg hover:-translate-y-0.5">
+                    <a href="{{ route('register') }}" class="px-6 py-2.5 rounded-full {{ $isFindRide ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black' : 'bg-emerald-600 hover:bg-emerald-700 text-white font-bold' }} text-xs shadow-md shadow-emerald-600/20 transition-all hover:shadow-lg hover:-translate-y-0.5">
                         Register
                     </a>
                 @endauth

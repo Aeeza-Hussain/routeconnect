@@ -18,6 +18,9 @@
         }
 
         function resolveIsDark(theme) {
+            if (window.location.pathname.startsWith('/trips') || window.location.pathname.startsWith('/find-a-ride')) {
+                return true;
+            }
             if (theme === 'dark') return true;
             if (theme === 'light') return false;
             return prefersDark();

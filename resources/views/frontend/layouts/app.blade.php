@@ -1,5 +1,8 @@
+@php
+    $isMarketplacePage = request()->is('trips*') || request()->is('find-a-ride*');
+@endphp
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="scroll-smooth {{ $isMarketplacePage ? 'dark' : '' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,7 +11,7 @@
 
     <!-- PWA Manifest & App Theme -->
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#059669">
+    <meta name="theme-color" content="{{ $isMarketplacePage ? '#070e1b' : '#059669' }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -28,11 +31,13 @@
 
     <!-- RouteConnect Theme Engine (Zero FOUC) -->
     @include('partials.theme_init')
+    @if ($isMarketplacePage)
+        <script>
+            document.documentElement.classList.add('dark');
+        </script>
+    @endif
     @stack('styles')
 </head>
-@php
-    $isMarketplacePage = request()->is('trips*') || request()->is('find-a-ride*');
-@endphp
 <body class="{{ $isMarketplacePage ? 'bg-[#070e1b]' : 'bg-slate-50 dark:bg-[#090e17]' }} text-slate-900 dark:text-slate-100 font-sans antialiased flex flex-col min-h-screen transition-colors duration-200" style="{{ $isMarketplacePage ? 'background-color: #070e1b !important;' : '' }}">
 
     <!-- Navigation Header -->

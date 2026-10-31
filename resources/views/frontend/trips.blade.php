@@ -231,82 +231,145 @@ body, main {
                 </div>
             </div>
 
-            {{-- Right Side: Continuous Horizontal Search Bar Pill --}}
-            <form action="{{ url('/trips') }}" method="GET" id="tripSearchForm" class="bg-[#0c1626] border border-[#1e2d44] rounded-2xl p-1.5 flex flex-wrap sm:flex-nowrap items-center gap-1.5 shadow-xl">
-                <input type="hidden" name="tab" id="formTabInput" value="{{ $tab }}">
+            {{-- Right Side: Continuous Horizontal Search Bar Pills --}}
+            <div class="flex items-center">
+                {{-- Form A: Seat Search Bar --}}
+                <form action="{{ url('/trips') }}" method="GET" id="tripSearchForm" class="{{ ($tab === 'vehicle') ? 'hidden' : 'flex' }} bg-[#0c1626] border border-[#1e2d44] rounded-2xl p-1.5 flex-wrap sm:flex-nowrap items-center gap-1.5 shadow-xl">
+                    <input type="hidden" name="tab" id="formTabInput" value="{{ $tab }}">
 
-                {{-- 1. From Input --}}
-                <div class="relative flex items-center min-w-0">
-                    <i class="fa-solid fa-magnifying-glass text-slate-500 text-xs pl-3 pointer-events-none"></i>
-                    <input type="text"
-                           name="from"
-                           id="fromInput"
-                           list="fromStopsList"
-                           value="{{ request('from', $from) }}"
-                           placeholder="From..."
-                           class="bg-transparent border-0 text-xs font-semibold text-white pl-2 pr-1 py-2 focus:outline-none focus:ring-0 w-28 sm:w-32 placeholder-slate-500">
-                    <datalist id="fromStopsList">
-                        @foreach ($allStops as $s)
-                            <option value="{{ $s->name }}">{{ $s->name }} ({{ $s->location ?? 'Stop' }})</option>
-                        @endforeach
-                    </datalist>
-                </div>
+                    {{-- 1. From Input --}}
+                    <div class="relative flex items-center min-w-0">
+                        <i class="fa-solid fa-magnifying-glass text-slate-500 text-xs pl-3 pointer-events-none"></i>
+                        <input type="text"
+                               name="from"
+                               id="fromInput"
+                               list="fromStopsList"
+                               value="{{ request('from', $from) }}"
+                               placeholder="From..."
+                               class="bg-transparent border-0 text-xs font-semibold text-white pl-2 pr-1 py-2 focus:outline-none focus:ring-0 w-28 sm:w-32 placeholder-slate-500">
+                        <datalist id="fromStopsList">
+                            @foreach ($allStops as $s)
+                                <option value="{{ $s->name }}">{{ $s->name }} ({{ $s->location ?? 'Stop' }})</option>
+                            @endforeach
+                        </datalist>
+                    </div>
 
-                {{-- Stop Swap Icon --}}
-                <button type="button" onclick="swapStops()" class="text-slate-400 hover:text-emerald-400 px-1 text-xs transition-colors shrink-0" title="Swap From and To">
-                    <i class="fa-solid fa-arrow-right-arrow-left"></i>
-                </button>
+                    {{-- Stop Swap Icon --}}
+                    <button type="button" onclick="swapStops()" class="text-slate-400 hover:text-emerald-400 px-1 text-xs transition-colors shrink-0" title="Swap From and To">
+                        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                    </button>
 
-                {{-- 2. To Input --}}
-                <div class="relative flex items-center min-w-0">
-                    <i class="fa-solid fa-location-dot text-slate-500 text-xs pl-1 pointer-events-none"></i>
-                    <input type="text"
-                           name="to"
-                           id="toInput"
-                           list="toStopsList"
-                           value="{{ request('to', $to) }}"
-                           placeholder="To..."
-                           class="bg-transparent border-0 text-xs font-semibold text-white pl-2 pr-1 py-2 focus:outline-none focus:ring-0 w-28 sm:w-32 placeholder-slate-500">
-                    <datalist id="toStopsList">
-                        @foreach ($allStops as $s)
-                            <option value="{{ $s->name }}">{{ $s->name }} ({{ $s->location ?? 'Stop' }})</option>
-                        @endforeach
-                    </datalist>
-                </div>
+                    {{-- 2. To Input --}}
+                    <div class="relative flex items-center min-w-0">
+                        <i class="fa-solid fa-location-dot text-slate-500 text-xs pl-1 pointer-events-none"></i>
+                        <input type="text"
+                               name="to"
+                               id="toInput"
+                               list="toStopsList"
+                               value="{{ request('to', $to) }}"
+                               placeholder="To..."
+                               class="bg-transparent border-0 text-xs font-semibold text-white pl-2 pr-1 py-2 focus:outline-none focus:ring-0 w-28 sm:w-32 placeholder-slate-500">
+                        <datalist id="toStopsList">
+                            @foreach ($allStops as $s)
+                                <option value="{{ $s->name }}">{{ $s->name }} ({{ $s->location ?? 'Stop' }})</option>
+                            @endforeach
+                        </datalist>
+                    </div>
 
-                <div class="hidden sm:block h-5 w-px bg-slate-800 shrink-0"></div>
+                    <div class="hidden sm:block h-5 w-px bg-slate-800 shrink-0"></div>
 
-                {{-- 3. Date Input --}}
-                <div class="relative flex items-center min-w-0">
-                    <i class="fa-regular fa-calendar text-slate-500 text-xs pl-2 pointer-events-none"></i>
-                    <input type="date"
-                           name="date"
-                           id="dateInput"
-                           value="{{ request('date', $date) }}"
-                           class="bg-transparent border-0 text-xs font-semibold text-white pl-2 pr-1 py-2 focus:outline-none focus:ring-0 w-32 placeholder-slate-500 cursor-pointer">
-                </div>
+                    {{-- 3. Date Input --}}
+                    <div class="relative flex items-center min-w-0">
+                        <i class="fa-regular fa-calendar text-slate-500 text-xs pl-2 pointer-events-none"></i>
+                        <input type="date"
+                               name="date"
+                               id="dateInput"
+                               value="{{ request('date', $date) }}"
+                               class="bg-transparent border-0 text-xs font-semibold text-white pl-2 pr-1 py-2 focus:outline-none focus:ring-0 w-32 placeholder-slate-500 cursor-pointer">
+                    </div>
 
-                <div class="hidden sm:block h-5 w-px bg-slate-800 shrink-0"></div>
+                    <div class="hidden sm:block h-5 w-px bg-slate-800 shrink-0"></div>
 
-                {{-- 4. Vehicle Type Dropdown --}}
-                <div class="relative flex items-center min-w-0">
-                    <i class="fa-solid fa-car text-slate-500 text-xs pl-2 pointer-events-none"></i>
-                    <select name="vehicle_type" id="vehicleTypeSelect" class="bg-transparent border-0 text-xs font-semibold text-white pl-2 pr-6 py-2 focus:outline-none focus:ring-0 cursor-pointer">
-                        <option value="" class="bg-[#0c1626] text-white">All Vehicles</option>
-                        <option value="Van" {{ request('vehicle_type', $vehicleType) === 'Van' ? 'selected' : '' }} class="bg-[#0c1626] text-white">Van</option>
-                        <option value="Car" {{ request('vehicle_type', $vehicleType) === 'Car' ? 'selected' : '' }} class="bg-[#0c1626] text-white">Car</option>
-                        <option value="Daba" {{ request('vehicle_type', $vehicleType) === 'Daba' ? 'selected' : '' }} class="bg-[#0c1626] text-white">Daba</option>
-                        <option value="Bus" {{ request('vehicle_type', $vehicleType) === 'Bus' ? 'selected' : '' }} class="bg-[#0c1626] text-white">Bus</option>
-                    </select>
-                </div>
+                    {{-- 4. Vehicle Type Dropdown --}}
+                    <div class="relative flex items-center min-w-0">
+                        <i class="fa-solid fa-car text-slate-500 text-xs pl-2 pointer-events-none"></i>
+                        <select name="vehicle_type" id="vehicleTypeSelect" class="bg-transparent border-0 text-xs font-semibold text-white pl-2 pr-6 py-2 focus:outline-none focus:ring-0 cursor-pointer">
+                            <option value="" class="bg-[#0c1626] text-white">All Vehicles</option>
+                            <option value="Van" {{ request('vehicle_type', $vehicleType) === 'Van' ? 'selected' : '' }} class="bg-[#0c1626] text-white">Van</option>
+                            <option value="Car" {{ request('vehicle_type', $vehicleType) === 'Car' ? 'selected' : '' }} class="bg-[#0c1626] text-white">Car</option>
+                            <option value="Daba" {{ request('vehicle_type', $vehicleType) === 'Daba' ? 'selected' : '' }} class="bg-[#0c1626] text-white">Daba</option>
+                            <option value="Bus" {{ request('vehicle_type', $vehicleType) === 'Bus' ? 'selected' : '' }} class="bg-[#0c1626] text-white">Bus</option>
+                        </select>
+                    </div>
 
-                {{-- 5. Search Action Button --}}
-                <button type="submit" id="searchTripsBtn" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-4 sm:px-5 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md shadow-emerald-500/20 shrink-0">
-                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                    <span>Search</span>
-                    <span class="sr-only">Search Trips</span>
-                </button>
-            </form>
+                    {{-- 5. Search Action Button --}}
+                    <button type="submit" id="searchTripsBtn" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-4 sm:px-5 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md shadow-emerald-500/20 shrink-0 cursor-pointer">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        <span>Search</span>
+                        <span class="sr-only">Search Trips</span>
+                    </button>
+                </form>
+
+                {{-- Form B: Private Vehicle Rental Search Bar --}}
+                <form action="{{ url('/trips') }}" method="GET" id="vehicleRentalSearchForm" class="{{ ($tab === 'vehicle') ? 'flex' : 'hidden' }} bg-[#0c1626] border border-[#1e2d44] rounded-2xl p-1.5 flex-wrap sm:flex-nowrap items-center gap-1.5 shadow-xl">
+                    <input type="hidden" name="tab" value="vehicle">
+
+                    {{-- Pickup --}}
+                    <div class="relative flex items-center min-w-0">
+                        <i class="fa-solid fa-location-arrow text-blue-400 text-xs pl-3 pointer-events-none"></i>
+                        <input type="text"
+                               name="pickup"
+                               id="vehiclePickupInput"
+                               value="{{ request('pickup', $pickup) }}"
+                               placeholder="Pickup Location..."
+                               class="bg-transparent border-0 text-xs font-semibold text-white pl-2 pr-1 py-2 focus:outline-none focus:ring-0 w-28 sm:w-32 placeholder-slate-500">
+                    </div>
+
+                    <div class="hidden sm:block h-5 w-px bg-slate-800 shrink-0"></div>
+
+                    {{-- Destination --}}
+                    <div class="relative flex items-center min-w-0">
+                        <i class="fa-solid fa-map-pin text-blue-400 text-xs pl-2 pointer-events-none"></i>
+                        <input type="text"
+                               name="destination"
+                               id="vehicleDestInput"
+                               value="{{ request('destination', $destination) }}"
+                               placeholder="Destination..."
+                               class="bg-transparent border-0 text-xs font-semibold text-white pl-2 pr-1 py-2 focus:outline-none focus:ring-0 w-28 sm:w-32 placeholder-slate-500">
+                    </div>
+
+                    <div class="hidden sm:block h-5 w-px bg-slate-800 shrink-0"></div>
+
+                    {{-- Pickup Date --}}
+                    <div class="relative flex items-center min-w-0">
+                        <i class="fa-regular fa-calendar text-slate-500 text-xs pl-2 pointer-events-none"></i>
+                        <input type="date"
+                               name="pickup_date"
+                               value="{{ request('pickup_date', $pickupDate) }}"
+                               class="bg-transparent border-0 text-xs font-semibold text-white pl-2 pr-1 py-2 focus:outline-none focus:ring-0 w-32 placeholder-slate-500 cursor-pointer">
+                    </div>
+
+                    <div class="hidden sm:block h-5 w-px bg-slate-800 shrink-0"></div>
+
+                    {{-- Vehicle Type --}}
+                    <div class="relative flex items-center min-w-0">
+                        <i class="fa-solid fa-car text-slate-500 text-xs pl-2 pointer-events-none"></i>
+                        <select name="vehicle_type" class="bg-transparent border-0 text-xs font-semibold text-white pl-2 pr-6 py-2 focus:outline-none focus:ring-0 cursor-pointer">
+                            <option value="" class="bg-[#0c1626] text-white">All Fleets</option>
+                            <option value="Van" {{ request('vehicle_type', $vehicleType) === 'Van' ? 'selected' : '' }} class="bg-[#0c1626] text-white">Van</option>
+                            <option value="Car" {{ request('vehicle_type', $vehicleType) === 'Car' ? 'selected' : '' }} class="bg-[#0c1626] text-white">Car</option>
+                            <option value="Daba" {{ request('vehicle_type', $vehicleType) === 'Daba' ? 'selected' : '' }} class="bg-[#0c1626] text-white">Daba</option>
+                            <option value="Bus" {{ request('vehicle_type', $vehicleType) === 'Bus' ? 'selected' : '' }} class="bg-[#0c1626] text-white">Bus</option>
+                        </select>
+                    </div>
+
+                    {{-- Search Fleets Button --}}
+                    <button type="submit" id="searchVehiclesBtn" class="bg-blue-600 hover:bg-blue-500 text-white font-black px-4 sm:px-5 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md shadow-blue-600/20 shrink-0 cursor-pointer">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        <span>Search Fleets</span>
+                    </button>
+                </form>
+            </div>
 
         </div>
 
@@ -502,8 +565,9 @@ body, main {
                                         @else
                                             @if(auth()->user()->isPassenger())
                                                 <a href="{{ route('booking.index', ['trip_id' => $trip->id]) }}"
+                                                   onclick="event.preventDefault(); openBookSeatModal({{ $trip->id }}, '{{ addslashes($trip->route->name ?? 'Trip #' . $trip->id) }}', {{ $trip->fare }}, {{ $trip->available_seats }}, {{ json_encode($trip->search_ordered_stops ?? []) }});"
                                                    data-booking-url="{{ url('/booking/' . $trip->id) }}"
-                                                   class="px-4 py-1.5 rounded-xl text-slate-950 font-black text-[11px] transition-colors shadow-sm"
+                                                   class="px-4 py-1.5 rounded-xl text-slate-950 font-black text-[11px] transition-colors shadow-sm cursor-pointer"
                                                    style="background-color: #00d084 !important; color: #020617 !important;">
                                                     <span class="hidden">Book Seats</span>
                                                     <span>Book Seat</span>
@@ -739,8 +803,22 @@ body, main {
                             <i class="fa-solid fa-users"></i>
                         </div>
                         <div>
-                            <h3 class="text-sm sm:text-base font-extrabold text-white">Travel Requests</h3>
-                            <p class="text-[11px] text-slate-400">Post your journey and get offers from drivers.</p>
+                            @if(auth()->check() && auth()->user()->isPassenger())
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm sm:text-base font-extrabold text-white">My Travel Requests</h3>
+                                    <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[9px] font-bold border border-emerald-500/30">Private to You</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400">Your published travel requests and received driver offers.</p>
+                            @elseif(auth()->check() && auth()->user()->isDriver() && auth()->user()->isApprovedDriver())
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm sm:text-base font-extrabold text-white">Travel Requests</h3>
+                                    <span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-[9px] font-bold border border-blue-500/30">Driver Quoting</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400">Review open passenger journeys and send your custom offers.</p>
+                            @else
+                                <h3 class="text-sm sm:text-base font-extrabold text-white">Travel Requests</h3>
+                                <p class="text-[11px] text-slate-400">Post your journey and get offers from drivers.</p>
+                            @endif
                         </div>
                     </div>
                     <button type="button" onclick="setFilterSubTab('request')" class="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors">
@@ -1000,10 +1078,92 @@ body, main {
 </div>
 
 {{-- ══════════════════════════════════════════════════════════════════════ --}}
-{{-- ─── 4. MODALS (POST REQUEST, RESERVE VEHICLE, GUEST AUTH, DETAILS) ─── --}}
+{{-- ─── 4. MODALS (BOOK SEAT, POST REQUEST, RESERVE VEHICLE, APPLY, AUTH) ── --}}
 {{-- ══════════════════════════════════════════════════════════════════════ --}}
 
-{{-- A. Post a Travel Request Modal --}}
+{{-- A. Book Seat Quick Modal --}}
+<div id="bookSeatModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="bg-[#0d1726] border border-[#1e2d44] rounded-3xl max-w-md w-full p-6 text-white shadow-2xl space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-sm font-bold">
+                    <i class="fa-solid fa-chair"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-extrabold text-white">Book Seats</h3>
+                    <p id="modalTripRoute" class="text-[10px] text-slate-400">Route Name</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeBookSeatModal()" class="text-slate-400 hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+        <form id="bookSeatForm" method="POST" action="" class="space-y-4 text-xs">
+            @csrf
+            
+            {{-- Trip & Fare Summary Box --}}
+            <div class="p-3.5 rounded-2xl bg-[#08101c] border border-slate-800 space-y-2">
+                <div class="flex justify-between text-slate-300">
+                    <span>Fare per seat:</span>
+                    <strong class="text-white font-mono" id="modalFarePerSeat">PKR 0</strong>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                    <span>Available Seats:</span>
+                    <strong class="text-emerald-400" id="modalMaxSeats">0</strong>
+                </div>
+                <div class="flex justify-between text-white font-extrabold text-sm pt-2 border-t border-slate-800">
+                    <span>Total Fare:</span>
+                    <span class="font-mono text-emerald-400" id="modalBookSeatTotal">PKR 0</span>
+                </div>
+            </div>
+
+            {{-- Number of Seats Selector --}}
+            <div>
+                <label class="block font-bold text-slate-300 mb-1.5">Number of Seats to Reserve *</label>
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="adjustModalSeats(-1)" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-black text-base flex items-center justify-center transition-colors">
+                        -
+                    </button>
+                    <input type="number" id="modalSeatsInput" name="seats" min="1" max="14" value="1" readonly class="w-20 text-center py-2 rounded-xl bg-[#08101c] border border-slate-700 text-white font-black text-base focus:outline-none">
+                    <button type="button" onclick="adjustModalSeats(1)" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-black text-base flex items-center justify-center transition-colors">
+                        +
+                    </button>
+                </div>
+            </div>
+
+            {{-- Optional Intermediate Stop Selection --}}
+            <div id="modalStopsContainer" class="hidden space-y-2">
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Boarding Stop</label>
+                    <select name="from_stop_id" id="modalFromStopSelect" class="w-full px-3 py-2 rounded-xl border border-slate-700 bg-[#08101c] text-white focus:outline-none">
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Drop-off Stop</label>
+                    <select name="to_stop_id" id="modalToStopSelect" class="w-full px-3 py-2 rounded-xl border border-slate-700 bg-[#08101c] text-white focus:outline-none">
+                    </select>
+                </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+                <a id="modalFullBookingLink" href="#" class="text-[11px] text-slate-400 hover:text-emerald-400 underline">
+                    Full Booking Form →
+                </a>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeBookSeatModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 hover:text-white font-bold">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black shadow-md transition-all">
+                        Confirm & Book
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- B. Post a Travel Request Modal --}}
 <div id="postRequestModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
     <div class="bg-[#0d1726] border border-[#1e2d44] rounded-3xl max-w-lg w-full p-6 text-white shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -1092,7 +1252,7 @@ body, main {
     </div>
 </div>
 
-{{-- B. Travel Request Detail Modal --}}
+{{-- C. Travel Request Detail Modal --}}
 <div id="requestDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
     <div class="bg-[#0d1726] border border-[#1e2d44] rounded-3xl max-w-md w-full p-6 text-white shadow-2xl space-y-4">
         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -1128,15 +1288,95 @@ body, main {
             </div>
         </div>
 
-        <div class="pt-2 flex items-center justify-end">
-            <button type="button" onclick="closeRequestDetailModal()" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold">
+        <div class="pt-2 flex items-center justify-between border-t border-slate-800">
+            <button type="button" onclick="closeRequestDetailModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold">
                 Close
             </button>
+            @auth
+                @if(auth()->user()->isDriver() && auth()->user()->isApprovedDriver())
+                    <button type="button" onclick="openApplyFromDetail()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-md">
+                        Apply & Send Quote
+                    </button>
+                @endif
+            @else
+                <button type="button" onclick="closeRequestDetailModal(); openGuestAuthModal('Please log in as an approved driver to apply and send quotes.');" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-md">
+                    Apply as Driver
+                </button>
+            @endauth
         </div>
     </div>
 </div>
 
-{{-- C. Reserve Private Vehicle Modal --}}
+{{-- D. Driver Application to Travel Request Modal --}}
+<div id="applyRequestModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="bg-[#0d1726] border border-[#1e2d44] rounded-3xl max-w-md w-full p-6 text-white shadow-2xl space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-sm font-bold">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-extrabold text-white">Send Driver Offer</h3>
+                    <p id="applyModalRoute" class="text-[10px] text-slate-400">Route</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeApplyRequestModal()" class="text-slate-400 hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+        <form id="applyRequestForm" method="POST" action="" class="space-y-3.5 text-xs">
+            @csrf
+            
+            <div class="p-3 rounded-2xl bg-[#08101c] border border-slate-800 space-y-1.5">
+                <div class="flex justify-between text-slate-300">
+                    <span>Passenger:</span>
+                    <strong id="applyPassengerName" class="text-white">—</strong>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                    <span>Seats Requested:</span>
+                    <strong id="applyPassengerSeats" class="text-emerald-400">—</strong>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                    <span>Passenger Budget:</span>
+                    <strong id="applyPassengerBudget" class="text-white font-mono">—</strong>
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-300 mb-1">Your Proposed Total Fare (PKR) *</label>
+                <input type="number" name="offered_fare" id="applyProposedFare" required min="50" placeholder="e.g. 2500" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-[#08101c] text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono font-bold">
+            </div>
+
+            @if(isset($driverVehicles) && $driverVehicles->isNotEmpty())
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Select Your Vehicle</label>
+                    <select name="vehicle_id" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-[#08101c] text-white focus:outline-none">
+                        @foreach($driverVehicles as $dv)
+                            <option value="{{ $dv->id }}">{{ $dv->model }} ({{ $dv->type }} - {{ $dv->registration_no }})</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
+
+            <div>
+                <label class="block font-bold text-slate-300 mb-1">Message to Passenger (Optional)</label>
+                <textarea name="message" rows="2" placeholder="e.g. Comfortable AC ride, pickup from your doorstep" class="w-full px-3.5 py-2 rounded-xl border border-slate-700 bg-[#08101c] text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800 flex items-center justify-end gap-2.5">
+                <button type="button" onclick="closeApplyRequestModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 hover:text-white font-bold">
+                    Cancel
+                </button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black shadow-md cursor-pointer">
+                    Send Offer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- E. Reserve Private Vehicle Modal --}}
 <div id="reserveModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
     <div class="bg-[#0d1726] border border-[#1e2d44] rounded-3xl max-w-lg w-full p-6 text-white shadow-2xl space-y-4">
         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -1193,7 +1433,7 @@ body, main {
     </div>
 </div>
 
-{{-- D. Guest Auth Prompt Modal --}}
+{{-- F. Guest Auth Prompt Modal --}}
 <div id="guestAuthModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
     <div class="bg-[#0d1726] border border-[#1e2d44] rounded-3xl max-w-sm w-full p-6 text-white text-center space-y-4 shadow-2xl">
         <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-xl mx-auto">
@@ -1224,6 +1464,13 @@ body, main {
 {{-- ══════════════════════════════════════════════════════════════════════ --}}
 <script>
 let currentSubTab = '{{ $tab }}';
+let activeTripFare = 0;
+let activeTripMaxSeats = 1;
+let activeDetailRequestId = null;
+let activeDetailRoute = '';
+let activeDetailPassenger = '';
+let activeDetailSeats = 1;
+let activeDetailBudget = 0;
 
 function setFilterSubTab(subtab) {
     currentSubTab = subtab;
@@ -1245,30 +1492,40 @@ function setFilterSubTab(subtab) {
     const colRequest = document.getElementById('col-travel-requests');
     const colPrivate = document.getElementById('col-private-vehicles');
     const grid       = document.getElementById('mainContentGrid');
+    const tripForm   = document.getElementById('tripSearchForm');
+    const vehForm    = document.getElementById('vehicleRentalSearchForm');
 
     if (subtab === 'all') {
         if (colShared)  colShared.classList.remove('hidden');
         if (colRequest) colRequest.classList.remove('hidden');
         if (colPrivate) colPrivate.classList.add('hidden');
         if (grid) grid.className = 'grid grid-cols-1 lg:grid-cols-2 gap-6 items-start';
+        if (tripForm) { tripForm.classList.remove('hidden'); tripForm.classList.add('flex'); }
+        if (vehForm)  { vehForm.classList.add('hidden'); vehForm.classList.remove('flex'); }
         updateOptionCardsHighlight('seat');
     } else if (subtab === 'shared') {
         if (colShared)  colShared.classList.remove('hidden');
         if (colRequest) colRequest.classList.add('hidden');
         if (colPrivate) colPrivate.classList.add('hidden');
         if (grid) grid.className = 'grid grid-cols-1 gap-6 items-start';
+        if (tripForm) { tripForm.classList.remove('hidden'); tripForm.classList.add('flex'); }
+        if (vehForm)  { vehForm.classList.add('hidden'); vehForm.classList.remove('flex'); }
         updateOptionCardsHighlight('seat');
     } else if (subtab === 'private') {
         if (colShared)  colShared.classList.add('hidden');
         if (colRequest) colRequest.classList.add('hidden');
         if (colPrivate) colPrivate.classList.remove('hidden');
         if (grid) grid.className = 'grid grid-cols-1 gap-6 items-start';
+        if (tripForm) { tripForm.classList.add('hidden'); tripForm.classList.remove('flex'); }
+        if (vehForm)  { vehForm.classList.remove('hidden'); vehForm.classList.add('flex'); }
         updateOptionCardsHighlight('vehicle');
     } else if (subtab === 'request') {
         if (colShared)  colShared.classList.add('hidden');
         if (colRequest) colRequest.classList.remove('hidden');
         if (colPrivate) colPrivate.classList.add('hidden');
         if (grid) grid.className = 'grid grid-cols-1 gap-6 items-start';
+        if (tripForm) { tripForm.classList.remove('hidden'); tripForm.classList.add('flex'); }
+        if (vehForm)  { vehForm.classList.add('hidden'); vehForm.classList.remove('flex'); }
         updateOptionCardsHighlight('request');
     }
 
@@ -1287,6 +1544,7 @@ function setRideOption(option) {
     } else if (option === 'vehicle') {
         setFilterSubTab('private');
     } else if (option === 'request') {
+        setFilterSubTab('request');
         openPostRequestModal();
     }
 }
@@ -1335,6 +1593,96 @@ function toggleTripDetails(tripId) {
     }
 }
 
+{{-- ─── Book Seat Modal Controls ─── --}}
+function openBookSeatModal(tripId, routeName, fare, availableSeats, stops) {
+    activeTripFare = Number(fare) || 0;
+    activeTripMaxSeats = Math.max(1, Number(availableSeats) || 1);
+
+    const form = document.getElementById('bookSeatForm');
+    if (form) form.action = `/booking/${tripId}`;
+
+    const routeEl = document.getElementById('modalTripRoute');
+    if (routeEl) routeEl.innerText = routeName;
+
+    const fareEl = document.getElementById('modalFarePerSeat');
+    if (fareEl) fareEl.innerText = 'PKR ' + activeTripFare.toLocaleString();
+
+    const maxSeatsEl = document.getElementById('modalMaxSeats');
+    if (maxSeatsEl) maxSeatsEl.innerText = activeTripMaxSeats + ' Seat(s) Available';
+
+    const input = document.getElementById('modalSeatsInput');
+    if (input) {
+        input.value = 1;
+        input.max = activeTripMaxSeats;
+    }
+
+    const fullLink = document.getElementById('modalFullBookingLink');
+    if (fullLink) fullLink.href = `/booking/${tripId}`;
+
+    // Populate stops if available
+    const stopsContainer = document.getElementById('modalStopsContainer');
+    const fromSelect = document.getElementById('modalFromStopSelect');
+    const toSelect = document.getElementById('modalToStopSelect');
+
+    if (stops && stops.length >= 2 && fromSelect && toSelect) {
+        fromSelect.innerHTML = '';
+        toSelect.innerHTML = '';
+        stops.forEach((s, idx) => {
+            const opt1 = document.createElement('option');
+            opt1.value = s.stop_id || s.id;
+            opt1.text = s.name + (s.location ? ` (${s.location})` : '');
+            if (idx === 0) opt1.selected = true;
+            fromSelect.appendChild(opt1);
+
+            const opt2 = document.createElement('option');
+            opt2.value = s.stop_id || s.id;
+            opt2.text = s.name + (s.location ? ` (${s.location})` : '');
+            if (idx === stops.length - 1) opt2.selected = true;
+            toSelect.appendChild(opt2);
+        });
+        stopsContainer.classList.remove('hidden');
+    } else if (stopsContainer) {
+        stopsContainer.classList.add('hidden');
+    }
+
+    updateModalBookSeatTotal();
+
+    const modal = document.getElementById('bookSeatModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+}
+
+function closeBookSeatModal() {
+    const modal = document.getElementById('bookSeatModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+function adjustModalSeats(delta) {
+    const input = document.getElementById('modalSeatsInput');
+    if (!input) return;
+    let val = parseInt(input.value) || 1;
+    val += delta;
+    if (val < 1) val = 1;
+    if (val > activeTripMaxSeats) val = activeTripMaxSeats;
+    input.value = val;
+    updateModalBookSeatTotal();
+}
+
+function updateModalBookSeatTotal() {
+    const input = document.getElementById('modalSeatsInput');
+    const totalEl = document.getElementById('modalBookSeatTotal');
+    if (input && totalEl) {
+        const seats = parseInt(input.value) || 1;
+        totalEl.innerText = 'PKR ' + (seats * activeTripFare).toLocaleString();
+    }
+}
+
+{{-- ─── Travel Request Modal Controls ─── --}}
 function openPostRequestModal() {
     const m = document.getElementById('postRequestModal');
     if (m) {
@@ -1351,7 +1699,13 @@ function closePostRequestModal() {
 }
 
 function openRequestDetailModal(id, pickup, dest, date, time, seats, budget, notes, passenger) {
-    document.getElementById('detailRoute').innerText = `${pickup} → ${dest}`;
+    activeDetailRequestId = id;
+    activeDetailRoute = `${pickup} → ${dest}`;
+    activeDetailPassenger = passenger;
+    activeDetailSeats = seats;
+    activeDetailBudget = budget;
+
+    document.getElementById('detailRoute').innerText = activeDetailRoute;
     document.getElementById('detailPassenger').innerText = passenger;
     document.getElementById('detailDateTime').innerText = `${date} • ${time}`;
     document.getElementById('detailSeats').innerText = `${seats} Passenger(s)`;
@@ -1363,6 +1717,7 @@ function openRequestDetailModal(id, pickup, dest, date, time, seats, budget, not
         m.classList.add('flex');
     }
 }
+
 function closeRequestDetailModal() {
     const m = document.getElementById('requestDetailModal');
     if (m) {
@@ -1371,6 +1726,48 @@ function closeRequestDetailModal() {
     }
 }
 
+function openApplyFromDetail() {
+    closeRequestDetailModal();
+    openApplyRequestModal(activeDetailRequestId, activeDetailRoute, activeDetailPassenger, activeDetailSeats, activeDetailBudget);
+}
+
+function openApplyRequestModal(id, route, passenger, seats, budget) {
+    const form = document.getElementById('applyRequestForm');
+    if (form) form.action = `/my-activity/requests/${id}/apply`;
+
+    const routeEl = document.getElementById('applyModalRoute');
+    if (routeEl) routeEl.innerText = route;
+
+    const passEl = document.getElementById('applyPassengerName');
+    if (passEl) passEl.innerText = passenger;
+
+    const seatsEl = document.getElementById('applyPassengerSeats');
+    if (seatsEl) seatsEl.innerText = seats + ' Passenger(s)';
+
+    const budgetEl = document.getElementById('applyPassengerBudget');
+    if (budgetEl) budgetEl.innerText = Number(budget) > 0 ? 'PKR ' + Number(budget).toLocaleString() : 'Flexible';
+
+    const fareInput = document.getElementById('applyProposedFare');
+    if (fareInput && Number(budget) > 0) {
+        fareInput.value = Number(budget);
+    }
+
+    const modal = document.getElementById('applyRequestModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+}
+
+function closeApplyRequestModal() {
+    const modal = document.getElementById('applyRequestModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+{{-- ─── Reserve Private Vehicle Modal Controls ─── --}}
 function openReserveModal(vehicleId, model, regNo, days, dailyRate, totalFare) {
     const modal = document.getElementById('reserveModal');
     const form = document.getElementById('reserveForm');

@@ -236,11 +236,37 @@ class HomeController extends Controller
         $calculatedDays = (int) ceil(max(1, $diffHours / 24));
 
         // ─── Option 3 Data: Post a Travel Request / Marketplace Activity ───
-        $openTravelRequests = TravelRequest::with('user')
-            ->where('status', 'open')
-            ->latest()
-            ->take(8)
-            ->get();
+        $authUser = auth()->user();
+        $isPassenger = $authUser && $authUser->isPassenger();
+        $isApprovedDriver = $authUser && $authUser->isDriver() && $authUser->isApprovedDriver();
+
+        if ($isPassenger) {
+            // Requirement 5: Passengers must only see their own requests and received applications.
+            // Never show one passenger's private travel request to other passengers.
+            $openTravelRequests = $authUser->travelRequests()
+                ->with(['user', 'applications.driver', 'applications.vehicle'])
+                ->latest()
+                ->take(12)
+                ->get();
+        } elseif ($isApprovedDriver) {
+            // Only approved drivers can view open requests to apply and quote
+            $openTravelRequests = TravelRequest::with(['user', 'applications.driver'])
+                ->where('status', 'open')
+                ->latest()
+                ->take(12)
+                ->get();
+        } else {
+            // Guests / community preview feed
+            $openTravelRequests = TravelRequest::with(['user', 'applications'])
+                ->where('status', 'open')
+                ->latest()
+                ->take(8)
+                ->get();
+        }
+
+        $driverVehicles = $isApprovedDriver
+            ? $authUser->vehicles()->whereIn(DB::raw('LOWER(status)'), ['approved', 'active'])->get()
+            : collect();
 
         return view('frontend.trips', compact(
             'tab',
@@ -263,7 +289,10 @@ class HomeController extends Controller
             'vehicleType',
             'passengers',
             'calculatedDays',
-            'openTravelRequests'
+            'openTravelRequests',
+            'driverVehicles',
+            'isPassenger',
+            'isApprovedDriver'
         ));
     }
 
