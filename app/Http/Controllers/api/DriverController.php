@@ -28,4 +28,25 @@ class DriverController extends Controller
             'driver' => $driver,
         ]);
     }
+
+    public function show($id)
+    {
+        $driver = User::where('user_type', 2)
+            ->with(['vehicles' => function ($q) {
+                $q->latest();
+            }])
+            ->find($id);
+
+        if (!$driver) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Driver not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => true,
+            'driver' => $driver,
+        ]);
+    }
 }

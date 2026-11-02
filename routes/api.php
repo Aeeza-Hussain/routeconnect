@@ -18,3 +18,4 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::get('get/user', [UserContoller::class, 'index']);
 Route::get('get/driver', [DriverController::class, 'index']);
+Route::get('get/driver/{id}', [DriverController::class, 'show']);
