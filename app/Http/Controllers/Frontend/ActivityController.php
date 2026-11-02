@@ -179,25 +179,38 @@ class ActivityController extends Controller
         }
 
         $validated = $request->validate([
-            'pickup_location'      => ['required', 'string', 'max:255'],
-            'destination_location' => ['required', 'string', 'max:255'],
-            'travel_date'          => ['required', 'date', 'after_or_equal:today'],
-            'travel_time'          => ['nullable', 'string', 'max:50'],
-            'seats_needed'         => ['required', 'integer', 'min:1', 'max:50'],
-            'budget'               => ['nullable', 'numeric', 'min:0'],
-            'notes'                => ['nullable', 'string', 'max:1000'],
+            'pickup_location'        => ['required', 'string', 'max:255'],
+            'destination_location'   => ['required', 'string', 'max:255'],
+            'travel_date'            => ['required', 'date', 'after_or_equal:today'],
+            'travel_time'            => ['nullable', 'string', 'max:50'],
+            'seats_needed'           => ['required', 'integer', 'min:1', 'max:50'],
+            'preferred_vehicle_type' => ['nullable', 'string', 'max:50'],
+            'intermediate_stops'     => ['nullable'],
+            'budget'                 => ['nullable', 'numeric', 'min:0'],
+            'notes'                  => ['nullable', 'string', 'max:1000'],
+            'expires_at'             => ['nullable', 'date'],
         ]);
 
+        $stops = null;
+        if (!empty($validated['intermediate_stops'])) {
+            $stops = is_array($validated['intermediate_stops']) 
+                ? $validated['intermediate_stops'] 
+                : array_filter(array_map('trim', explode(',', (string) $validated['intermediate_stops'])));
+        }
+
         $travelRequest = TravelRequest::create([
-            'user_id'              => $user->id,
-            'pickup_location'      => trim($validated['pickup_location']),
-            'destination_location' => trim($validated['destination_location']),
-            'travel_date'          => $validated['travel_date'],
-            'travel_time'          => $validated['travel_time'] ?? null,
-            'seats_needed'         => (int) $validated['seats_needed'],
-            'budget'               => $validated['budget'] ?? null,
-            'notes'                => $validated['notes'] ? trim($validated['notes']) : null,
-            'status'               => 'open',
+            'user_id'                => $user->id,
+            'pickup_location'        => trim($validated['pickup_location']),
+            'destination_location'   => trim($validated['destination_location']),
+            'intermediate_stops'     => $stops,
+            'travel_date'            => $validated['travel_date'],
+            'travel_time'            => $validated['travel_time'] ?? null,
+            'seats_needed'           => (int) $validated['seats_needed'],
+            'preferred_vehicle_type' => $validated['preferred_vehicle_type'] ?? null,
+            'budget'                 => $validated['budget'] ?? null,
+            'notes'                  => $validated['notes'] ? trim($validated['notes']) : null,
+            'status'                 => 'open',
+            'expires_at'             => !empty($validated['expires_at']) ? \Carbon\Carbon::parse($validated['expires_at']) : null,
         ]);
 
         // Notify active drivers
@@ -253,16 +266,24 @@ class ActivityController extends Controller
         }
 
         $validated = $request->validate([
-            'offered_fare'  => ['required', 'numeric', 'min:50'],
-            'proposed_time' => ['nullable', 'string', 'max:50'],
-            'vehicle_id'    => ['nullable', 'exists:vehicles,id'],
-            'message'       => ['nullable', 'string', 'max:1000'],
+            'offered_fare'    => ['required', 'numeric', 'min:50'],
+            'proposed_time'   => ['nullable', 'string', 'max:50'],
+            'vehicle_id'      => ['nullable', 'exists:vehicles,id'],
+            'available_seats' => ['nullable', 'integer', 'min:1', 'max:50'],
+            'message'         => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $availableSeats = $validated['available_seats'] ?? null;
+        if (!$availableSeats && !empty($validated['vehicle_id'])) {
+            $chosenVehicle = Vehicle::find($validated['vehicle_id']);
+            $availableSeats = $chosenVehicle?->total_seats;
+        }
 
         $application = DriverApplication::create([
             'travel_request_id' => $travelRequest->id,
             'driver_id'         => $driver->id,
             'vehicle_id'        => $validated['vehicle_id'] ?? null,
+            'available_seats'   => $availableSeats,
             'offered_fare'      => $validated['offered_fare'],
             'proposed_time'     => $validated['proposed_time'] ?? null,
             'message'           => $validated['message'] ? trim($validated['message']) : null,
@@ -286,12 +307,14 @@ class ActivityController extends Controller
         if (!$conversation) {
             $conversation = DB::transaction(function () use ($driver, $travelRequest, $application, $validated) {
                 $conv = Conversation::create([
-                    'title'               => "Ride: {$travelRequest->pickup_location} → {$travelRequest->destination_location}",
-                    'subject_type'        => 'travel_request',
-                    'subject_id'          => $travelRequest->id,
-                    'status'              => 'active',
-                    'arrangement_status'  => 'negotiating',
-                    'arrangement_details' => [
+                    'title'                 => "Ride: {$travelRequest->pickup_location} → {$travelRequest->destination_location}",
+                    'subject_type'          => 'travel_request',
+                    'subject_id'            => $travelRequest->id,
+                    'travel_request_id'     => $travelRequest->id,
+                    'driver_application_id' => $application->id,
+                    'status'                => 'active',
+                    'arrangement_status'    => 'negotiating',
+                    'arrangement_details'   => [
                         'route' => "{$travelRequest->pickup_location} → {$travelRequest->destination_location}",
                         'date'  => $travelRequest->travel_date->format('Y-m-d'),
                         'time'  => $validated['proposed_time'] ?? $travelRequest->travel_time ?? 'Flexible',
@@ -331,6 +354,38 @@ class ActivityController extends Controller
 
         return redirect()->route('messages.show', $conversation->id)
             ->with('success', 'Your offer has been submitted and a direct chat opened with the passenger!');
+    }
+
+    /**
+     * Passenger accepts a single driver application for a travel request.
+     * Enforces single-driver selection constraint.
+     */
+    public function selectApplication(Request $request, TravelRequest $travelRequest, DriverApplication $application)
+    {
+        $user = auth()->user();
+        if ($travelRequest->user_id !== $user->id && !$user->isAdmin()) {
+            abort(403, 'Unauthorized. You can only select drivers for your own travel requests.');
+        }
+
+        if ($application->travel_request_id !== $travelRequest->id) {
+            abort(404, 'Driver offer does not belong to this travel request.');
+        }
+
+        if ($travelRequest->selected_application_id) {
+            return redirect()->back()->with('error', 'A driver has already been selected for this travel request.');
+        }
+
+        $travelRequest->selectApplication($application);
+
+        // Notify selected driver
+        Notification::create([
+            'user_id' => $application->driver_id,
+            'message' => "Congratulations! {$user->name} accepted your offer for the journey from {$travelRequest->pickup_location} to {$travelRequest->destination_location}.",
+            'is_read' => false,
+        ]);
+
+        return redirect()->route('activity.index', ['tab' => 'travel-requests'])
+            ->with('success', 'Driver offer selected successfully!');
     }
 }
 

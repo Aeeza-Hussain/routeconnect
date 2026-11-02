@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DriverApplication extends Model
 {
@@ -14,6 +15,7 @@ class DriverApplication extends Model
         'travel_request_id',
         'driver_id',
         'vehicle_id',
+        'available_seats',
         'offered_fare',
         'proposed_time',
         'message',
@@ -23,7 +25,8 @@ class DriverApplication extends Model
     protected function casts(): array
     {
         return [
-            'offered_fare' => 'decimal:2',
+            'available_seats' => 'integer',
+            'offered_fare'    => 'decimal:2',
         ];
     }
 
@@ -40,6 +43,11 @@ class DriverApplication extends Model
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'driver_application_id');
     }
 
     public function isPending(): bool
@@ -62,4 +70,3 @@ class DriverApplication extends Model
         return strtolower($this->status) === 'rejected';
     }
 }
-

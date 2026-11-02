@@ -120,7 +120,9 @@ class BookingController extends Controller
             // 7. Create booking record with confirmed status
             $newBooking = Booking::create([
                 'user_id'           => auth()->id(),
+                'driver_id'         => $lockedTrip->user_id,
                 'trip_id'           => $lockedTrip->id,
+                'vehicle_id'        => $lockedTrip->vehicle_id,
                 'from_stop_id'      => $fromStopId,
                 'to_stop_id'        => $toStopId,
                 'seats'             => $seatsToBook,

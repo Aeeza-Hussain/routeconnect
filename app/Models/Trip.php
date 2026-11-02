@@ -18,6 +18,7 @@ class Trip extends Model
         'trip_date',
         'departure_time',
         'expected_arrival_time',
+        'total_seats',
         'available_seats',
         'fare',
         'pickup_point',
@@ -29,6 +30,7 @@ class Trip extends Model
     {
         return [
             'trip_date'       => 'date',
+            'total_seats'     => 'integer',
             'available_seats' => 'integer',
             'fare'            => 'decimal:2',
         ];
@@ -122,6 +124,11 @@ class Trip extends Model
     public function tripMessages(): HasMany
     {
         return $this->hasMany(TripMessage::class)->latest();
+    }
+
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class);
     }
 
     /**

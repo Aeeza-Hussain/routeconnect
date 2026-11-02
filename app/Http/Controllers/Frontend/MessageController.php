@@ -205,6 +205,7 @@ class MessageController extends Controller
                         'title'               => "Ride: {$travelRequest->pickup_location} → {$travelRequest->destination_location}",
                         'subject_type'        => 'travel_request',
                         'subject_id'          => $travelRequest->id,
+                        'travel_request_id'   => $travelRequest->id,
                         'status'              => 'active',
                         'arrangement_status'  => 'negotiating',
                         'arrangement_details' => [
@@ -259,11 +260,13 @@ class MessageController extends Controller
             if (!$conversation) {
                 $conversation = DB::transaction(function () use ($user, $targetUserId, $application) {
                     $conv = Conversation::create([
-                        'title'               => "Offer: {$application->travelRequest?->pickup_location} → {$application->travelRequest?->destination_location}",
-                        'subject_type'        => 'driver_application',
-                        'subject_id'          => $application->id,
-                        'status'              => 'active',
-                        'arrangement_status'  => 'negotiating',
+                        'title'                 => "Offer: {$application->travelRequest?->pickup_location} → {$application->travelRequest?->destination_location}",
+                        'subject_type'          => 'driver_application',
+                        'subject_id'            => $application->id,
+                        'travel_request_id'     => $application->travel_request_id,
+                        'driver_application_id' => $application->id,
+                        'status'                => 'active',
+                        'arrangement_status'    => 'negotiating',
                         'arrangement_details' => [
                             'fare'  => (float) $application->offered_fare,
                             'time'  => $application->proposed_time,
@@ -281,6 +284,63 @@ class MessageController extends Controller
                         'conversation_id' => $conv->id,
                         'user_id'         => $targetUserId,
                         'last_read_at'    => null,
+                    ]);
+
+                    return $conv;
+                });
+            }
+
+            return redirect()->route('messages.index', ['conversation_id' => $conversation->id]);
+        }
+
+        // Case 4: From Scheduled Trip
+        if ($request->filled('trip_id')) {
+            $trip = \App\Models\Trip::with(['driver', 'route'])->findOrFail($request->trip_id);
+
+            if ($trip->user_id === $user->id) {
+                return redirect()->back()->with('error', 'You cannot message your own trip.');
+            }
+
+            $driver = $trip->driver;
+            if (!$driver) {
+                return redirect()->back()->with('error', 'Trip has no assigned driver.');
+            }
+
+            $conversation = Conversation::where('subject_type', 'trip')
+                ->where('subject_id', $trip->id)
+                ->whereHas('participants', fn($q) => $q->where('user_id', $user->id))
+                ->whereHas('participants', fn($q) => $q->where('user_id', $driver->id))
+                ->first();
+
+            if (!$conversation) {
+                $conversation = DB::transaction(function () use ($user, $driver, $trip) {
+                    $conv = Conversation::create([
+                        'title'               => "Trip: " . ($trip->route?->name ?? "Scheduled Ride #{$trip->id}"),
+                        'subject_type'        => 'trip',
+                        'subject_id'          => $trip->id,
+                        'trip_id'             => $trip->id,
+                        'status'              => 'active',
+                        'arrangement_status'  => 'negotiating',
+                        'created_by'          => $user->id,
+                    ]);
+
+                    ConversationParticipant::create([
+                        'conversation_id' => $conv->id,
+                        'user_id'         => $user->id,
+                        'last_read_at'    => now(),
+                    ]);
+
+                    ConversationParticipant::create([
+                        'conversation_id' => $conv->id,
+                        'user_id'         => $driver->id,
+                        'last_read_at'    => null,
+                    ]);
+
+                    Message::create([
+                        'conversation_id' => $conv->id,
+                        'sender_id'       => $user->id,
+                        'body'            => "Hello {$driver->name}! I have a question regarding your scheduled trip on " . ($trip->trip_date ? $trip->trip_date->format('d M Y') : 'upcoming date') . ".",
+                        'type'            => 'text',
                     ]);
 
                     return $conv;
@@ -497,6 +557,7 @@ class MessageController extends Controller
 
                     $booking = Booking::create([
                         'user_id'              => $passenger->id,
+                        'driver_id'            => $vehicle->user_id,
                         'vehicle_id'           => $vehicle->id,
                         'trip_id'              => null,
                         'booking_type'         => 'private',
@@ -526,6 +587,7 @@ class MessageController extends Controller
                 $conversation->update([
                     'arrangement_status'   => 'confirmed',
                     'confirmed_booking_id' => $booking?->id,
+                    'booking_id'           => $booking?->id,
                 ]);
 
                 // Post confirmed system message

@@ -97,6 +97,16 @@ class User extends Authenticatable
         return $this->hasMany(Booking::class);
     }
 
+    public function passengerBookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'user_id');
+    }
+
+    public function driverBookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'driver_id');
+    }
+
     public function tripMessages(): HasMany
     {
         return $this->hasMany(TripMessage::class);

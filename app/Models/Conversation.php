@@ -22,12 +22,20 @@ class Conversation extends Model
         'arrangement_details',
         'confirmed_booking_id',
         'created_by',
+        'trip_id',
+        'booking_id',
+        'travel_request_id',
+        'driver_application_id',
     ];
 
     protected function casts(): array
     {
         return [
-            'arrangement_details' => 'array',
+            'arrangement_details'   => 'array',
+            'trip_id'               => 'integer',
+            'booking_id'            => 'integer',
+            'travel_request_id'     => 'integer',
+            'driver_application_id' => 'integer',
         ];
     }
 
@@ -61,6 +69,26 @@ class Conversation extends Model
     public function confirmedBooking(): BelongsTo
     {
         return $this->belongsTo(Booking::class, 'confirmed_booking_id');
+    }
+
+    public function trip(): BelongsTo
+    {
+        return $this->belongsTo(Trip::class);
+    }
+
+    public function booking(): BelongsTo
+    {
+        return $this->belongsTo(Booking::class, 'booking_id');
+    }
+
+    public function travelRequest(): BelongsTo
+    {
+        return $this->belongsTo(TravelRequest::class);
+    }
+
+    public function driverApplication(): BelongsTo
+    {
+        return $this->belongsTo(DriverApplication::class);
     }
 
     public function reports(): HasMany
@@ -128,6 +156,9 @@ class Conversation extends Model
         }
         if ($this->subject_type === 'driver_application' && $this->subject_id) {
             return DriverApplication::with(['travelRequest', 'driver', 'vehicle'])->find($this->subject_id);
+        }
+        if ($this->subject_type === 'trip' && $this->subject_id) {
+            return Trip::with(['driver', 'vehicle', 'route'])->find($this->subject_id);
         }
         return null;
     }

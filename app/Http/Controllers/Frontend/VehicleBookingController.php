@@ -320,6 +320,7 @@ class VehicleBookingController extends Controller
             // Create booking record
             $newBooking = Booking::create([
                 'user_id'              => auth()->id(),
+                'driver_id'            => $lockedVehicle->user_id,
                 'vehicle_id'           => $lockedVehicle->id,
                 'trip_id'              => null,
                 'booking_type'         => 'private',

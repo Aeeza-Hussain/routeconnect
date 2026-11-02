@@ -13,6 +13,7 @@ class Booking extends Model
 
     protected $fillable = [
         'user_id',
+        'driver_id',
         'trip_id',
         'vehicle_id',
         'booking_type',
@@ -36,6 +37,7 @@ class Booking extends Model
     protected function casts(): array
     {
         return [
+            'driver_id'      => 'integer',
             'start_datetime' => 'datetime',
             'end_datetime'   => 'datetime',
             'days'           => 'integer',
@@ -81,6 +83,16 @@ class Booking extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function passenger(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function driver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'driver_id');
+    }
+
     public function trip(): BelongsTo
     {
         return $this->belongsTo(Trip::class);
@@ -104,5 +116,10 @@ class Booking extends Model
     public function conversation(): HasOne
     {
         return $this->hasOne(Conversation::class, 'confirmed_booking_id');
+    }
+
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'booking_id');
     }
 }

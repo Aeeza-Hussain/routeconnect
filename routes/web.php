@@ -51,6 +51,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/travel-requests', [ActivityController::class, 'storeRequest'])->name('travel-requests.store');
     Route::delete('/my-activity/requests/{travelRequest}', [ActivityController::class, 'destroyRequest'])->name('activity.requests.destroy')->whereNumber('travelRequest');
     Route::post('/my-activity/requests/{travelRequest}/apply', [ActivityController::class, 'applyToRequest'])->name('activity.requests.apply')->whereNumber('travelRequest');
+    Route::post('/my-activity/requests/{travelRequest}/applications/{application}/select', [ActivityController::class, 'selectApplication'])->name('activity.requests.select-application')->whereNumber('travelRequest')->whereNumber('application');
 
     /*
     |--------------------------------------------------------------------------
