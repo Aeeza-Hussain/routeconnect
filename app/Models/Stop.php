@@ -40,6 +40,14 @@ class Stop extends Model
     }
 
     /**
+     * Scope a query to only include active stops.
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereRaw('LOWER(status) = ?', ['active']);
+    }
+
+    /**
      * Backward-compatible accessor for city
      */
     public function getCityAttribute(): ?string

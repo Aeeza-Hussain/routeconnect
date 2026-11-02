@@ -66,4 +66,12 @@ class Route extends Model
     {
         return strtolower($this->status) === 'active';
     }
+
+    /**
+     * Scope a query to only include active routes.
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereRaw('LOWER(status) = ?', ['active']);
+    }
 }
