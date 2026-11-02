@@ -102,9 +102,9 @@
                             <i class="fa-solid fa-arrow-right text-xs text-slate-400"></i>
                             <span>{{ $booking->destination_location ?: 'Destination Point' }}</span>
                         @else
-                            <span>{{ $booking->trip?->route?->origin ?? 'Origin' }}</span>
+                            <span>{{ $booking->pickup_location ?: ($booking->trip?->route?->origin ?? 'Origin') }}</span>
                             <i class="fa-solid fa-arrow-right text-xs text-slate-400"></i>
-                            <span>{{ $booking->trip?->route?->destination ?? 'Destination' }}</span>
+                            <span>{{ $booking->destination_location ?: ($booking->trip?->route?->destination ?? 'Destination') }}</span>
                         @endif
                     </div>
 
@@ -152,6 +152,11 @@
                                 <span class="font-black font-mono text-slate-900 dark:text-white block mt-0.5">
                                     {{ $booking->seats }} {{ \Illuminate\Support\Str::plural('Seat', $booking->seats) }}
                                 </span>
+                                @if($booking->seat_numbers)
+                                    <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5 truncate" title="Assigned Seat Numbers">
+                                        <i class="fa-solid fa-chair text-[10px] mr-1"></i>Seats: {{ $booking->seat_numbers }}
+                                    </span>
+                                @endif
                             </div>
                             <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
                                 <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Total Fare</span>

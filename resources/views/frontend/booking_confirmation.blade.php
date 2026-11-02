@@ -40,9 +40,16 @@
                             Private Vehicle Rental ({{ $booking->days ?: 1 }} {{ \Illuminate\Support\Str::plural('Day', $booking->days ?: 1) }})
                         </span>
                     @else
-                        <span class="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold text-xs font-mono uppercase">
-                            {{ $booking->seats }} {{ \Illuminate\Support\Str::plural('Seat', $booking->seats) }} Reserved
-                        </span>
+                        <div class="text-right">
+                            <span class="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold text-xs font-mono uppercase">
+                                {{ $booking->seats }} {{ \Illuminate\Support\Str::plural('Seat', $booking->seats) }} Reserved
+                            </span>
+                            @if($booking->seat_numbers)
+                                <span class="text-[11px] font-bold text-emerald-400 block mt-1">
+                                    <i class="fa-solid fa-chair text-[10px] mr-1"></i>Seats: {{ $booking->seat_numbers }}
+                                </span>
+                            @endif
+                        </div>
                     @endif
                 </div>
             </div>
@@ -74,9 +81,9 @@
                                 <i class="fa-solid fa-arrow-right text-xs text-slate-400"></i>
                                 <span>{{ $booking->destination_location ?: 'Destination' }}</span>
                             @else
-                                <span>{{ $booking->trip?->route?->origin ?? 'Origin' }}</span>
+                                <span>{{ $booking->pickup_location ?: ($booking->trip?->route?->origin ?? 'Origin') }}</span>
                                 <i class="fa-solid fa-arrow-right text-xs text-slate-400"></i>
-                                <span>{{ $booking->trip?->route?->destination ?? 'Destination' }}</span>
+                                <span>{{ $booking->destination_location ?: ($booking->trip?->route?->destination ?? 'Destination') }}</span>
                             @endif
                         </div>
                     </div>
