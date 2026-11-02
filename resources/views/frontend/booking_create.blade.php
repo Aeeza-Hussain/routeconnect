@@ -9,8 +9,12 @@
     $isVehicleApproved = !$trip->vehicle || $trip->vehicle->isApproved();
     $isTripScheduled = strtolower($trip->status) === 'scheduled';
     $isTripAvailable = $isTripScheduled && $isDriverApproved && $isVehicleApproved;
-    $isFullyBooked = $trip->available_seats <= 0;
+    $availableForSegment = isset($segmentAvailableSeats) ? $segmentAvailableSeats : $trip->available_seats;
+    $isFullyBooked = $availableForSegment <= 0;
     $canBook = $isTripAvailable && !$isFullyBooked;
+    $stopsList = $orderedStops ?? $trip->getOrderedStops();
+    $totalSeats = $totalCapacity ?? (int) ($trip->total_seats ?: ($trip->vehicle?->total_seats ?: 14));
+    $occupiedSeats = $occupiedSeatNumbers ?? [];
 @endphp
 
 {{-- ─── Hero Header ─── --}}
@@ -138,25 +142,127 @@
 
                 <form method="POST" action="{{ url('/booking/' . $trip->id) }}" id="booking-form" class="space-y-6">
                     @csrf
+                    <input type="hidden" name="seat_numbers" id="seat_numbers_input" value="{{ old('seat_numbers') }}">
 
-                    {{-- Card: Number of Seats --}}
-                    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-5">
+                    {{-- Card 1: Route Segment Selection --}}
+                    @if (count($stopsList) >= 2)
+                        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <div>
+                                    <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                                        <i class="fa-solid fa-map-location-dot text-emerald-600"></i>
+                                        <span>Route Segment & Waypoints</span>
+                                    </h2>
+                                    <p class="text-xs text-slate-500 mt-0.5">Select your boarding and drop-off stations along the trip route.</p>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-[11px] font-bold">
+                                    {{ count($stopsList) }} Stations En Route
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="from_stop_id" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                                        Boarding Station <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select id="from_stop_id"
+                                            name="from_stop_id"
+                                            onchange="updateRouteSegmentUrl()"
+                                            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                        @foreach ($stopsList as $idx => $st)
+                                            <option value="{{ $st['stop_id'] ?? $st['name'] }}"
+                                                    data-index="{{ $idx }}"
+                                                    {{ (string) old('from_stop_id', $fromStopId ?? '') === (string) ($st['stop_id'] ?? $st['name']) || ($idx === ($fromIdx ?? 0)) ? 'selected' : '' }}>
+                                                {{ $st['name'] }} {{ !empty($st['expected_time']) ? '(' . \Carbon\Carbon::parse($st['expected_time'])->format('h:i A') . ')' : '' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="to_stop_id" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                                        Drop-off Station <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select id="to_stop_id"
+                                            name="to_stop_id"
+                                            onchange="updateRouteSegmentUrl()"
+                                            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                        @foreach ($stopsList as $idx => $st)
+                                            <option value="{{ $st['stop_id'] ?? $st['name'] }}"
+                                                    data-index="{{ $idx }}"
+                                                    {{ (string) old('to_stop_id', $toStopId ?? '') === (string) ($st['stop_id'] ?? $st['name']) || ($idx === ($toIdx ?? (count($stopsList) - 1))) ? 'selected' : '' }}>
+                                                {{ $st['name'] }} {{ !empty($st['expected_time']) ? '(' . \Carbon\Carbon::parse($st['expected_time'])->format('h:i A') . ')' : '' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
+                                <span class="text-slate-500">Available seats for this route segment:</span>
+                                <span class="font-extrabold text-emerald-600 font-mono text-sm">
+                                    {{ $availableForSegment }} {{ \Illuminate\Support\Str::plural('Seat', $availableForSegment) }} Available
+                                </span>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Card 2: Interactive Seat Selection & Number of Seats --}}
+                    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-6">
                         <div class="flex items-center justify-between pb-4 border-b border-slate-100">
                             <div>
                                 <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
                                     <i class="fa-solid fa-couch text-emerald-600"></i>
-                                    <span>Select Number of Seats</span>
+                                    <span>Select Seats</span>
                                 </h2>
-                                <p class="text-xs text-slate-500 mt-0.5">Choose how many passenger seats you wish to reserve.</p>
+                                <p class="text-xs text-slate-500 mt-0.5">Click individual seats to pick specific numbers, or enter the seat count.</p>
                             </div>
                             <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-mono text-xs font-bold">
                                 Rs. {{ number_format($trip->fare ?? 0, 2) }} / seat
                             </span>
                         </div>
 
+                        {{-- Visual Seat Grid --}}
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-bold text-slate-700 uppercase tracking-wider text-[11px]">Vehicle Seat Map</span>
+                                <div class="flex items-center gap-4 text-[11px]">
+                                    <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span> Selected</span>
+                                    <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-100 border border-slate-300 inline-block"></span> Available</span>
+                                    <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-300 text-slate-500 inline-block"></span> Booked</span>
+                                </div>
+                            </div>
+
+                            <div class="p-4 sm:p-5 rounded-2xl bg-slate-950 text-white border border-slate-800">
+                                <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800 text-[11px] text-slate-400">
+                                    <span class="flex items-center gap-1"><i class="fa-solid fa-steering-wheel"></i> Driver Front</span>
+                                    <span>Cabin View ({{ $trip->vehicle->model ?? 'Fleet Vehicle' }})</span>
+                                </div>
+
+                                <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 gap-2.5" id="seat-map-grid">
+                                    @for ($s = 1; $s <= $totalSeats; $s++)
+                                        @php
+                                            $isOccupied = in_array((string) $s, $occupiedSeats, true);
+                                        @endphp
+                                        <button type="button"
+                                                onclick="toggleSeatSelection({{ $s }})"
+                                                id="seat-btn-{{ $s }}"
+                                                data-seat="{{ $s }}"
+                                                data-occupied="{{ $isOccupied ? 'true' : 'false' }}"
+                                                class="seat-btn py-2.5 px-2 rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center gap-1
+                                                       {{ $isOccupied ? 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-800 opacity-60' : 'bg-slate-900 border border-slate-700 text-slate-200 hover:border-emerald-500 hover:text-white cursor-pointer' }}">
+                                            <i class="fa-solid fa-chair text-sm"></i>
+                                            <span class="font-mono text-[10px]">{{ $s }}</span>
+                                        </button>
+                                    @endfor
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Number of Seats to Book Input --}}
                         <div>
                             <label for="seats" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-                                Number of Seats to Book <span class="text-rose-500">*</span>
+                                Number of Seats <span class="text-rose-500">*</span>
                             </label>
 
                             <div class="relative">
@@ -166,28 +272,41 @@
                                     name="seats" 
                                     value="{{ old('seats', 1) }}" 
                                     min="1" 
-                                    max="{{ $trip->available_seats }}" 
+                                    max="{{ $availableForSegment }}" 
                                     step="1"
                                     {{ !$canBook ? 'disabled' : '' }}
                                     required
                                     class="w-full px-4 py-3.5 rounded-2xl border {{ $errors->has('seats') ? 'border-rose-400 focus:ring-rose-400' : 'border-slate-200 focus:ring-emerald-500' }} text-slate-900 font-mono text-lg font-extrabold focus:outline-none focus:ring-2 bg-slate-50/50"
                                 >
                                 <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
-                                    Max: {{ $trip->available_seats }}
+                                    Segment Max: {{ $availableForSegment }}
                                 </span>
                             </div>
 
                             <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1.5">
                                 <i class="fa-solid fa-circle-info text-slate-400"></i>
-                                <span>Seats must be at least 1 and cannot exceed {{ $trip->available_seats }} available seats.</span>
+                                <span>Seats must be at least 1 and cannot exceed {{ $availableForSegment }} available seats for this segment.</span>
                             </p>
+                        </div>
+
+                        {{-- Optional Passenger Notes --}}
+                        <div>
+                            <label for="passenger_notes" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Special Requests or Luggage Notes (Optional)
+                            </label>
+                            <input type="text"
+                                   id="passenger_notes"
+                                   name="passenger_notes"
+                                   value="{{ old('passenger_notes') }}"
+                                   placeholder="e.g. 2 luggage bags, elderly passenger, pickup near main gate"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         </div>
 
                         {{-- Total Calculation Bar --}}
                         <div class="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex items-center justify-between">
                             <div>
                                 <span class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider block">Estimated Total Fare</span>
-                                <span class="text-xs text-emerald-700">Calculated based on selected seat count</span>
+                                <span class="text-xs text-emerald-700" id="selected-seats-label">1 Seat Selected</span>
                             </div>
                             <div class="text-right">
                                 <span id="calculated-total" class="text-2xl font-black font-mono text-emerald-900 block">
@@ -199,14 +318,14 @@
                         {{-- Submit Booking Button --}}
                         <div>
                             @if ($canBook)
-                                <button type="submit" id="submit-booking-btn" class="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition-all hover:scale-[1.01] active:scale-[0.99]">
+                                <button type="submit" id="submit-booking-btn" class="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer">
                                     <i class="fa-solid fa-shield-check"></i>
                                     <span>Confirm & Book Seats</span>
                                 </button>
                             @else
                                 <button type="button" disabled id="submit-booking-btn" class="w-full py-4 px-6 rounded-2xl bg-slate-200 text-slate-400 font-extrabold text-sm flex items-center justify-center gap-2 cursor-not-allowed">
                                     <i class="fa-solid fa-ban"></i>
-                                    <span>{{ !$isTripScheduled ? 'Trip ' . ucfirst($trip->status) : (!$isTripAvailable ? 'Trip Unavailable' : 'Fully Booked') }}</span>
+                                    <span>{{ !$isTripScheduled ? 'Trip ' . ucfirst($trip->status) : (!$isTripAvailable ? 'Trip Unavailable' : 'Fully Booked for Segment') }}</span>
                                 </button>
                             @endif
                         </div>
@@ -315,23 +434,127 @@
     </div>
 </section>
 
-{{-- Realtime Fare Calculator Script --}}
+{{-- Interactive Seat Selection & Realtime Calculator Script --}}
 <script>
+    const unitFare = {{ (float) ($trip->fare ?? 0) }};
+    const maxSegmentSeats = {{ (int) $availableForSegment }};
+    const occupiedSeatsList = @json(array_map('strval', $occupiedSeats));
+    let selectedSeats = [];
+
+    // Parse pre-selected or old seat_numbers
+    const existingOldVal = document.getElementById('seat_numbers_input')?.value;
+    if (existingOldVal) {
+        selectedSeats = existingOldVal.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    function updateRouteSegmentUrl() {
+        const fromVal = document.getElementById('from_stop_id')?.value;
+        const toVal = document.getElementById('to_stop_id')?.value;
+        if (fromVal && toVal) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('from_stop_id', fromVal);
+            url.searchParams.set('to_stop_id', toVal);
+            window.location.href = url.toString();
+        }
+    }
+
+    function toggleSeatSelection(seatNum) {
+        const strNum = String(seatNum);
+        if (occupiedSeatsList.includes(strNum)) return;
+
+        const idx = selectedSeats.indexOf(strNum);
+        if (idx > -1) {
+            selectedSeats.splice(idx, 1);
+        } else {
+            if (selectedSeats.length >= maxSegmentSeats) {
+                alert(`You cannot select more than ${maxSegmentSeats} available seats for this segment.`);
+                return;
+            }
+            selectedSeats.push(strNum);
+        }
+
+        renderSeatMap();
+        syncInputs();
+    }
+
+    function renderSeatMap() {
+        document.querySelectorAll('.seat-btn').forEach(btn => {
+            const sNum = String(btn.getAttribute('data-seat'));
+            const isOccupied = btn.getAttribute('data-occupied') === 'true';
+
+            if (isOccupied) return;
+
+            if (selectedSeats.includes(sNum)) {
+                btn.classList.remove('bg-slate-900', 'border-slate-700', 'text-slate-200');
+                btn.classList.add('bg-emerald-500', 'border-emerald-400', 'text-slate-950', 'shadow-md', 'shadow-emerald-500/30', 'scale-105');
+            } else {
+                btn.classList.add('bg-slate-900', 'border-slate-700', 'text-slate-200');
+                btn.classList.remove('bg-emerald-500', 'border-emerald-400', 'text-slate-950', 'shadow-md', 'shadow-emerald-500/30', 'scale-105');
+            }
+        });
+    }
+
+    function syncInputs() {
+        const seatsInput = document.getElementById('seats');
+        const hiddenInput = document.getElementById('seat_numbers_input');
+        const totalSpan = document.getElementById('calculated-total');
+        const label = document.getElementById('selected-seats-label');
+
+        const count = selectedSeats.length > 0 ? selectedSeats.length : (parseInt(seatsInput?.value, 10) || 1);
+        
+        if (seatsInput && selectedSeats.length > 0) {
+            seatsInput.value = count;
+        }
+
+        if (hiddenInput) {
+            hiddenInput.value = selectedSeats.join(', ');
+        }
+
+        if (label) {
+            if (selectedSeats.length > 0) {
+                label.textContent = `Seats: ${selectedSeats.join(', ')} (${selectedSeats.length} Selected)`;
+            } else {
+                label.textContent = `${count} Seat(s) Selected`;
+            }
+        }
+
+        if (totalSpan) {
+            const total = (count * unitFare).toFixed(2);
+            totalSpan.textContent = 'Rs. ' + Number(total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         const seatsInput = document.getElementById('seats');
-        const totalSpan = document.getElementById('calculated-total');
-        const unitFare = {{ (float) ($trip->fare ?? 0) }};
+        if (seatsInput) {
+            seatsInput.addEventListener('input', function () {
+                let count = parseInt(seatsInput.value, 10) || 1;
+                if (count > maxSegmentSeats) {
+                    count = maxSegmentSeats;
+                    seatsInput.value = count;
+                }
+                if (count < 1) count = 1;
 
-        if (seatsInput && totalSpan) {
-            function updateTotal() {
-                const count = parseInt(seatsInput.value, 10) || 0;
-                const total = (count * unitFare).toFixed(2);
-                totalSpan.textContent = 'Rs. ' + Number(total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            }
-
-            seatsInput.addEventListener('input', updateTotal);
-            seatsInput.addEventListener('change', updateTotal);
+                // Auto allocate seats if map has fewer selected
+                if (selectedSeats.length !== count) {
+                    selectedSeats = [];
+                    const allButtons = document.querySelectorAll('.seat-btn');
+                    for (let b of allButtons) {
+                        if (selectedSeats.length >= count) break;
+                        const sNum = String(b.getAttribute('data-seat'));
+                        const isOccupied = b.getAttribute('data-occupied') === 'true';
+                        if (!isOccupied) {
+                            selectedSeats.push(sNum);
+                        }
+                    }
+                }
+                renderSeatMap();
+                syncInputs();
+            });
         }
+
+        renderSeatMap();
+        syncInputs();
     });
 </script>
 

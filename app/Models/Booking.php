@@ -68,6 +68,21 @@ class Booking extends Model
         return strtolower($this->booking_status ?? $this->status) === 'cancelled';
     }
 
+    public function isPending(): bool
+    {
+        return strtolower($this->booking_status ?? $this->status) === 'pending';
+    }
+
+    public function isCompleted(): bool
+    {
+        return strtolower($this->booking_status ?? $this->status) === 'completed';
+    }
+
+    public function isRejected(): bool
+    {
+        return strtolower($this->booking_status ?? $this->status) === 'rejected';
+    }
+
     public function isPrivate(): bool
     {
         return strtolower($this->booking_type ?? 'shared') === 'private';

@@ -2,7 +2,7 @@
     $isMarketplacePage = request()->is('trips*') || request()->is('find-a-ride*');
 @endphp
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth {{ $isMarketplacePage ? 'dark' : '' }}">
+<html lang="en" class="scroll-smooth {{ $isMarketplacePage ? 'dark' : '' }}" style="{{ $isMarketplacePage ? 'background-color: #070e1b !important;' : '' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -44,7 +44,7 @@
     @include('frontend.partials.navbar')
 
     <!-- Main View Content -->
-    <main class="flex-1">
+    <main class="flex-1 {{ $isMarketplacePage ? 'bg-[#070e1b]' : '' }}" style="{{ $isMarketplacePage ? 'background-color: #070e1b !important;' : '' }}">
         @yield('content')
     </main>
 

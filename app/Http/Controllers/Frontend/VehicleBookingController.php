@@ -160,6 +160,23 @@ class VehicleBookingController extends Controller
                 $vehicleQuery->where('total_seats', '>=', $passengers);
             }
 
+            if ($pickup) {
+                $vehicleQuery->where(function ($q) use ($pickup) {
+                    $q->where('model', 'like', "%{$pickup}%")
+                      ->orWhere('description', 'like', "%{$pickup}%")
+                      ->orWhere('pickup_location', 'like', "%{$pickup}%")
+                      ->orWhere('service_area', 'like', "%{$pickup}%");
+                });
+            }
+
+            if ($destination) {
+                $vehicleQuery->where(function ($q) use ($destination) {
+                    $q->where('service_area', 'like', "%{$destination}%")
+                      ->orWhere('description', 'like', "%{$destination}%")
+                      ->orWhere('model', 'like', "%{$destination}%");
+                });
+            }
+
             $candidates = $vehicleQuery->latest()->get();
 
             // Filter vehicles based on overlap conflict engine

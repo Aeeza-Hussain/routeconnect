@@ -100,10 +100,11 @@ class HomeController extends Controller
             $candidateTrips = $query->orderBy('trip_date')->orderBy('departure_time')->get();
         }
 
-        // 4. Route Stop Order Filter:
-        // Filter candidate trips ensuring From stop occurs before To stop in route order.
-        $trips = $candidateTrips->filter(function ($trip) use ($from, $to) {
-            $orderedStops = $this->getTripOrderedStops($trip);
+        // 4. Route Stop Order & Segment Seat Availability Filter:
+        $requestedSeats = max(1, (int) ($request->input('seats') ?: $request->input('passengers') ?: 1));
+
+        $trips = $candidateTrips->filter(function ($trip) use ($from, $to, $requestedSeats) {
+            $orderedStops = $trip->getOrderedStops();
             $trip->search_ordered_stops = $orderedStops;
 
             // Compute intermediate stops (all stops strictly between origin and destination)
@@ -111,47 +112,55 @@ class HomeController extends Controller
                 ? array_values(array_slice($orderedStops, 1, -1))
                 : [];
 
+            $isMatch = false;
+
             // If neither 'from' nor 'to' is specified, include trip
             if ($from === '' && $to === '') {
-                return true;
-            }
-
-            // If only 'from' is provided
-            if ($from !== '' && $to === '') {
+                $isMatch = true;
+                $trip->segment_available_seats = $trip->available_seats;
+            } elseif ($from !== '' && $to === '') {
                 $fromMatch = $this->findStopInList($orderedStops, $from);
                 if ($fromMatch) {
                     $trip->search_from_stop = $fromMatch;
-                    return true;
+                    $trip->segment_available_seats = $trip->getSegmentAvailableSeats(
+                        $fromMatch['stop_id'] ?? $fromMatch['name'],
+                        null
+                    );
+                    $isMatch = true;
                 }
-                return false;
-            }
-
-            // If only 'to' is provided
-            if ($from === '' && $to !== '') {
+            } elseif ($from === '' && $to !== '') {
                 $toMatch = $this->findStopInList($orderedStops, $to);
                 if ($toMatch) {
                     $trip->search_to_stop = $toMatch;
-                    return true;
+                    $trip->segment_available_seats = $trip->getSegmentAvailableSeats(
+                        null,
+                        $toMatch['stop_id'] ?? $toMatch['name']
+                    );
+                    $isMatch = true;
                 }
+            } else {
+                // Both 'from' and 'to' are provided
+                $fromMatch = $this->findStopInList($orderedStops, $from);
+                $toMatch   = $this->findStopInList($orderedStops, $to);
+
+                if ($fromMatch && $toMatch && $fromMatch['order'] < $toMatch['order']) {
+                    $trip->search_from_stop = $fromMatch;
+                    $trip->search_to_stop   = $toMatch;
+                    $trip->segment_available_seats = $trip->getSegmentAvailableSeats(
+                        $fromMatch['stop_id'] ?? $fromMatch['name'],
+                        $toMatch['stop_id'] ?? $toMatch['name']
+                    );
+                    $isMatch = true;
+                }
+            }
+
+            if (!$isMatch) {
                 return false;
             }
 
-            // Both 'from' and 'to' are provided
-            $fromMatch = $this->findStopInList($orderedStops, $from);
-            $toMatch   = $this->findStopInList($orderedStops, $to);
-
-            if (!$fromMatch || !$toMatch) {
-                return false;
-            }
-
-            // CRITICAL REQUIREMENT: From stop must occur before To stop in the route order
-            if ($fromMatch['order'] < $toMatch['order']) {
-                $trip->search_from_stop = $fromMatch;
-                $trip->search_to_stop   = $toMatch;
-                return true;
-            }
-
-            return false;
+            // Segment seats check
+            $trip->display_available_seats = $trip->segment_available_seats ?? $trip->available_seats;
+            return $trip->display_available_seats >= $requestedSeats;
         })->values();
 
         // Load active stops for dropdowns
@@ -218,7 +227,17 @@ class HomeController extends Controller
         if ($pickup) {
             $vehicleQuery->where(function ($q) use ($pickup) {
                 $q->where('model', 'like', "%{$pickup}%")
-                  ->orWhere('description', 'like', "%{$pickup}%");
+                  ->orWhere('description', 'like', "%{$pickup}%")
+                  ->orWhere('pickup_location', 'like', "%{$pickup}%")
+                  ->orWhere('service_area', 'like', "%{$pickup}%");
+            });
+        }
+
+        if ($destination) {
+            $vehicleQuery->where(function ($q) use ($destination) {
+                $q->where('service_area', 'like', "%{$destination}%")
+                  ->orWhere('description', 'like', "%{$destination}%")
+                  ->orWhere('model', 'like', "%{$destination}%");
             });
         }
 

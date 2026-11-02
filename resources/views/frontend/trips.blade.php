@@ -512,7 +512,7 @@ body, main {
 
                                     <div class="text-[11px] text-slate-400 flex items-center gap-3">
                                         <span><i class="fa-solid fa-chair text-slate-500 mr-1 text-[10px]"></i> {{ $trip->vehicle->total_seats ?? 14 }} Seats</span>
-                                        <span><i class="fa-solid fa-users text-slate-500 mr-1 text-[10px]"></i> {{ $trip->available_seats }} Available</span>
+                                        <span><i class="fa-solid fa-users text-slate-500 mr-1 text-[10px]"></i> {{ $trip->display_available_seats ?? $trip->available_seats }} Available</span>
                                     </div>
 
                                     <div class="text-[11px] font-bold text-slate-200 flex items-center gap-1.5 pt-0.5">
@@ -565,7 +565,7 @@ body, main {
                                         @else
                                             @if(auth()->user()->isPassenger())
                                                 <a href="{{ route('booking.index', ['trip_id' => $trip->id]) }}"
-                                                   onclick="event.preventDefault(); openBookSeatModal({{ $trip->id }}, '{{ addslashes($trip->route->name ?? 'Trip #' . $trip->id) }}', {{ $trip->fare }}, {{ $trip->available_seats }}, {{ json_encode($trip->search_ordered_stops ?? []) }});"
+                                                   onclick="event.preventDefault(); openBookSeatModal({{ $trip->id }}, '{{ addslashes($trip->route->name ?? 'Trip #' . $trip->id) }}', {{ $trip->fare }}, {{ $trip->display_available_seats ?? $trip->available_seats }}, {{ json_encode($trip->search_ordered_stops ?? []) }}, '{{ $trip->search_from_stop['stop_id'] ?? '' }}', '{{ $trip->search_to_stop['stop_id'] ?? '' }}');"
                                                    data-booking-url="{{ url('/booking/' . $trip->id) }}"
                                                    class="px-4 py-1.5 rounded-xl text-slate-950 font-black text-[11px] transition-colors shadow-sm cursor-pointer"
                                                    style="background-color: #00d084 !important; color: #020617 !important;">
@@ -1594,7 +1594,7 @@ function toggleTripDetails(tripId) {
 }
 
 {{-- ─── Book Seat Modal Controls ─── --}}
-function openBookSeatModal(tripId, routeName, fare, availableSeats, stops) {
+function openBookSeatModal(tripId, routeName, fare, availableSeats, stops, defaultFromId = '', defaultToId = '') {
     activeTripFare = Number(fare) || 0;
     activeTripMaxSeats = Math.max(1, Number(availableSeats) || 1);
 
@@ -1617,7 +1617,14 @@ function openBookSeatModal(tripId, routeName, fare, availableSeats, stops) {
     }
 
     const fullLink = document.getElementById('modalFullBookingLink');
-    if (fullLink) fullLink.href = `/booking/${tripId}`;
+    if (fullLink) {
+        let fullUrl = `/booking/${tripId}`;
+        const qp = [];
+        if (defaultFromId) qp.push(`from_stop_id=${encodeURIComponent(defaultFromId)}`);
+        if (defaultToId) qp.push(`to_stop_id=${encodeURIComponent(defaultToId)}`);
+        if (qp.length) fullUrl += '?' + qp.join('&');
+        fullLink.href = fullUrl;
+    }
 
     // Populate stops if available
     const stopsContainer = document.getElementById('modalStopsContainer');
@@ -1628,16 +1635,21 @@ function openBookSeatModal(tripId, routeName, fare, availableSeats, stops) {
         fromSelect.innerHTML = '';
         toSelect.innerHTML = '';
         stops.forEach((s, idx) => {
+            const val = s.stop_id || s.id || s.name;
             const opt1 = document.createElement('option');
-            opt1.value = s.stop_id || s.id;
+            opt1.value = val;
             opt1.text = s.name + (s.location ? ` (${s.location})` : '');
-            if (idx === 0) opt1.selected = true;
+            if ((defaultFromId && String(val) === String(defaultFromId)) || (!defaultFromId && idx === 0)) {
+                opt1.selected = true;
+            }
             fromSelect.appendChild(opt1);
 
             const opt2 = document.createElement('option');
-            opt2.value = s.stop_id || s.id;
+            opt2.value = val;
             opt2.text = s.name + (s.location ? ` (${s.location})` : '');
-            if (idx === stops.length - 1) opt2.selected = true;
+            if ((defaultToId && String(val) === String(defaultToId)) || (!defaultToId && idx === stops.length - 1)) {
+                opt2.selected = true;
+            }
             toSelect.appendChild(opt2);
         });
         stopsContainer.classList.remove('hidden');

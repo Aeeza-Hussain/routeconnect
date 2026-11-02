@@ -24,11 +24,47 @@ class BookingController extends Controller
             'route.startStop',
             'route.endStop',
             'route.routeStops.stop',
+            'tripStops.stop',
             'driver',
             'vehicle',
         ]);
 
-        return view('frontend.booking_create', compact('trip'));
+        $orderedStops = $trip->getOrderedStops();
+        $numStops = count($orderedStops);
+
+        // Segment parameters from query
+        $fromStopId = $request->query('from_stop_id') ?: $request->query('from');
+        $toStopId   = $request->query('to_stop_id') ?: $request->query('to');
+
+        $fromIdx = $fromStopId !== null ? $trip->findStopIndex($fromStopId, $orderedStops) : 0;
+        $toIdx   = $toStopId !== null ? $trip->findStopIndex($toStopId, $orderedStops) : ($numStops > 0 ? $numStops - 1 : 0);
+
+        if ($fromIdx === null) $fromIdx = 0;
+        if ($toIdx === null)   $toIdx = max(0, $numStops - 1);
+
+        $selectedFromStop = $orderedStops[$fromIdx] ?? null;
+        $selectedToStop   = $orderedStops[$toIdx] ?? null;
+
+        $fromStopIdentifier = $selectedFromStop['stop_id'] ?? $selectedFromStop['name'] ?? null;
+        $toStopIdentifier   = $selectedToStop['stop_id'] ?? $selectedToStop['name'] ?? null;
+
+        $segmentAvailableSeats = $trip->getSegmentAvailableSeats($fromStopIdentifier, $toStopIdentifier);
+        $occupiedSeatNumbers   = $trip->getOccupiedSeatNumbersForSegment($fromStopIdentifier, $toStopIdentifier);
+        $totalCapacity         = (int) ($trip->total_seats ?: ($trip->vehicle?->total_seats ?: 14));
+
+        return view('frontend.booking_create', compact(
+            'trip',
+            'orderedStops',
+            'fromStopId',
+            'toStopId',
+            'fromIdx',
+            'toIdx',
+            'selectedFromStop',
+            'selectedToStop',
+            'segmentAvailableSeats',
+            'occupiedSeatNumbers',
+            'totalCapacity'
+        ));
     }
 
     /**
@@ -38,7 +74,11 @@ class BookingController extends Controller
     public function store(Request $request, Trip $trip)
     {
         $request->validate([
-            'seats' => ['required', 'integer', 'min:1'],
+            'seats'           => ['required', 'integer', 'min:1'],
+            'from_stop_id'    => ['nullable'],
+            'to_stop_id'      => ['nullable'],
+            'seat_numbers'    => ['nullable', 'string', 'max:255'],
+            'passenger_notes' => ['nullable', 'string', 'max:1000'],
         ], [
             'seats.required' => 'Please select the number of seats to book.',
             'seats.min'      => 'You must book at least 1 seat.',
@@ -50,7 +90,7 @@ class BookingController extends Controller
         // Execute inside database transaction with row lock to prevent race conditions & overbooking
         $booking = DB::transaction(function () use ($trip, $seatsToBook, $request) {
             // Pessimistic write lock
-            $lockedTrip = Trip::with(['route.routeStops', 'driver', 'vehicle'])->where('id', $trip->id)->lockForUpdate()->firstOrFail();
+            $lockedTrip = Trip::with(['route.routeStops', 'tripStops', 'driver', 'vehicle'])->where('id', $trip->id)->lockForUpdate()->firstOrFail();
 
             // 1. Check trip status
             if ($lockedTrip->isCancelled()) {
@@ -85,54 +125,128 @@ class BookingController extends Controller
                 ]);
             }
 
-            // 2. Check if fully booked
-            if ($lockedTrip->available_seats <= 0) {
+            // 1b. Check if trip is fully booked
+            if ($lockedTrip->available_seats !== null && $lockedTrip->available_seats <= 0) {
                 throw ValidationException::withMessages([
                     'seats' => 'This trip is fully booked. No seats are available.',
                 ]);
             }
 
-            // 3. Check if sufficient seats are available
-            if ($seatsToBook > $lockedTrip->available_seats) {
+            // 2. Resolve segment stops and order
+            $orderedStops = $lockedTrip->getOrderedStops();
+            $numStops     = count($orderedStops);
+
+            $reqFromId = $request->input('from_stop_id');
+            $reqToId   = $request->input('to_stop_id');
+
+            $fromIdx = $reqFromId !== null ? $lockedTrip->findStopIndex($reqFromId, $orderedStops) : 0;
+            $toIdx   = $reqToId !== null ? $lockedTrip->findStopIndex($reqToId, $orderedStops) : (count($orderedStops) - 1);
+
+            if ($fromIdx === null) $fromIdx = 0;
+            if ($toIdx === null)   $toIdx = count($orderedStops) - 1;
+
+            if ($numStops >= 2 && $fromIdx >= $toIdx) {
                 throw ValidationException::withMessages([
-                    'seats' => "Cannot book {$seatsToBook} seats. Only {$lockedTrip->available_seats} seat(s) available.",
+                    'from_stop_id' => 'Selected boarding stop must be located before the drop-off stop in route sequence.',
                 ]);
             }
 
-            // 3. Decrement available seats
-            $lockedTrip->available_seats -= $seatsToBook;
-            $lockedTrip->save();
+            $fromStop = $orderedStops[$fromIdx] ?? null;
+            $toStop   = $orderedStops[$toIdx] ?? null;
 
-            // 4. Generate unique booking reference
+            $fromIdentifier = $fromStop['stop_id'] ?? $fromStop['name'] ?? null;
+            $toIdentifier   = $toStop['stop_id'] ?? $toStop['name'] ?? null;
+
+            // 3. Segment available seats check
+            if ($numStops <= 2) {
+                $availableOnSegment = (int) $lockedTrip->available_seats;
+            } else {
+                $availableOnSegment = $lockedTrip->getSegmentAvailableSeats($fromIdentifier, $toIdentifier);
+            }
+
+            if ($availableOnSegment <= 0) {
+                throw ValidationException::withMessages([
+                    'seats' => 'This trip is fully booked. No seats are available.',
+                ]);
+            }
+
+            if ($seatsToBook > $availableOnSegment) {
+                throw ValidationException::withMessages([
+                    'seats' => "Cannot book {$seatsToBook} seats. Only {$availableOnSegment} seat(s) available.",
+                ]);
+            }
+
+            // 4. Resolve Seat Numbers
+            $totalCapacity = (int) ($lockedTrip->total_seats ?: ($lockedTrip->vehicle?->total_seats ?: 14));
+            $occupiedSeatNums = $lockedTrip->getOccupiedSeatNumbersForSegment($fromIdentifier, $toIdentifier);
+
+            $requestedSeatNumbers = [];
+            if ($request->filled('seat_numbers')) {
+                $rawSeats = is_array($request->input('seat_numbers'))
+                    ? $request->input('seat_numbers')
+                    : explode(',', $request->input('seat_numbers'));
+
+                $requestedSeatNumbers = array_filter(array_map('trim', $rawSeats));
+
+                // Verify none of the requested seat numbers are already occupied
+                foreach ($requestedSeatNumbers as $sNum) {
+                    if (in_array((string) $sNum, $occupiedSeatNums, true)) {
+                        throw ValidationException::withMessages([
+                            'seat_numbers' => "Seat #{$sNum} is already occupied on this segment. Please choose another seat.",
+                        ]);
+                    }
+                }
+            }
+
+            // Auto-allocate seat numbers if not fully provided
+            if (count($requestedSeatNumbers) < $seatsToBook) {
+                for ($s = 1; $s <= $totalCapacity && count($requestedSeatNumbers) < $seatsToBook; $s++) {
+                    $sStr = (string) $s;
+                    if (!in_array($sStr, $occupiedSeatNums, true) && !in_array($sStr, $requestedSeatNumbers, true)) {
+                        $requestedSeatNumbers[] = $sStr;
+                    }
+                }
+            }
+
+            $seatNumbersString = !empty($requestedSeatNumbers) ? implode(', ', $requestedSeatNumbers) : null;
+
+            // 5. Generate unique booking reference
             do {
                 $reference = 'RC-' . strtoupper(Str::random(4)) . '-' . mt_rand(1000, 9999);
             } while (Booking::where('booking_reference', $reference)->exists());
-
-            // 5. Determine pickup & drop-off stops
-            $fromStopId = $request->input('from_stop_id') 
-                ?: ($lockedTrip->route?->start_stop_id ?: $lockedTrip->route?->routeStops->first()?->stop_id);
-            $toStopId = $request->input('to_stop_id') 
-                ?: ($lockedTrip->route?->end_stop_id ?: $lockedTrip->route?->routeStops->last()?->stop_id);
 
             // 6. Calculate total fare
             $totalFare = $seatsToBook * ($lockedTrip->fare ?? 0);
 
             // 7. Create booking record with confirmed status
             $newBooking = Booking::create([
-                'user_id'           => auth()->id(),
-                'driver_id'         => $lockedTrip->user_id,
-                'trip_id'           => $lockedTrip->id,
-                'vehicle_id'        => $lockedTrip->vehicle_id,
-                'from_stop_id'      => $fromStopId,
-                'to_stop_id'        => $toStopId,
-                'seats'             => $seatsToBook,
-                'total_fare'        => $totalFare,
-                'booking_reference' => $reference,
-                'status'            => 'confirmed',
-                'booking_status'    => 'confirmed',
+                'user_id'              => auth()->id(),
+                'driver_id'            => $lockedTrip->user_id,
+                'trip_id'              => $lockedTrip->id,
+                'vehicle_id'           => $lockedTrip->vehicle_id,
+                'booking_type'         => 'shared',
+                'from_stop_id'         => $fromStop['stop_id'] ?? null,
+                'to_stop_id'           => $toStop['stop_id'] ?? null,
+                'pickup_location'      => $fromStop['name'] ?? $lockedTrip->pickup_point,
+                'destination_location' => $toStop['name'] ?? 'Destination',
+                'seats'                => $seatsToBook,
+                'seat_numbers'         => $seatNumbersString,
+                'total_fare'           => $totalFare,
+                'booking_reference'    => $reference,
+                'passenger_notes'      => $request->passenger_notes ? trim($request->passenger_notes) : null,
+                'status'               => 'confirmed',
+                'booking_status'       => 'confirmed',
             ]);
 
-            // 8. Notification for passenger
+            // 8. Update available seats
+            if ($numStops <= 2) {
+                $lockedTrip->available_seats = max(0, (int) $lockedTrip->available_seats - $seatsToBook);
+                $lockedTrip->save();
+            } else {
+                $lockedTrip->recalculateAvailableSeats();
+            }
+
+            // 9. Notifications
             Notification::create([
                 'user_id' => auth()->id(),
                 'trip_id' => $lockedTrip->id,
@@ -140,7 +254,6 @@ class BookingController extends Controller
                 'is_read' => false,
             ]);
 
-            // Notification for driver (if distinct)
             if ($lockedTrip->user_id && $lockedTrip->user_id !== auth()->id()) {
                 Notification::create([
                     'user_id' => $lockedTrip->user_id,
@@ -253,23 +366,33 @@ class BookingController extends Controller
                     throw new \DomainException('This booking has already been cancelled.');
                 }
 
+                // Update booking status first to reflect cancelled state immediately
+                $lockedBooking->booking_status = 'cancelled';
+                $lockedBooking->status         = 'cancelled';
+                $lockedBooking->save();
+
                 // If this is a shared trip booking, restore seats
                 if ($lockedBooking->trip_id) {
                     $lockedTrip = Trip::with('vehicle')->where('id', $lockedBooking->trip_id)->lockForUpdate()->first();
 
                     if ($lockedTrip) {
-                        $seatsToRestore = max(0, (int) $lockedBooking->seats);
-                        $maxCapacity    = $lockedTrip->vehicle?->total_seats;
+                        $orderedStops = $lockedTrip->getOrderedStops();
+                        if (count($orderedStops) > 2) {
+                            $lockedTrip->recalculateAvailableSeats();
+                        } else {
+                            $seatsToRestore = max(0, (int) $lockedBooking->seats);
+                            $maxCapacity    = (int) ($lockedTrip->vehicle?->total_seats ?: ($lockedTrip->total_seats ?: 14));
 
-                        $newAvailableSeats = $lockedTrip->available_seats + $seatsToRestore;
+                            $newAvailableSeats = (int) $lockedTrip->available_seats + $seatsToRestore;
 
-                        // Prevent invalid / overcapacity restoration
-                        if ($maxCapacity && $newAvailableSeats > $maxCapacity) {
-                            $newAvailableSeats = $maxCapacity;
+                            // Prevent invalid / overcapacity restoration
+                            if ($maxCapacity && $newAvailableSeats > $maxCapacity) {
+                                $newAvailableSeats = $maxCapacity;
+                            }
+
+                            $lockedTrip->available_seats = $newAvailableSeats;
+                            $lockedTrip->save();
                         }
-
-                        $lockedTrip->available_seats = $newAvailableSeats;
-                        $lockedTrip->save();
                     }
 
                     // Notification for trip driver
@@ -292,11 +415,6 @@ class BookingController extends Controller
                         ]);
                     }
                 }
-
-                // Update booking status
-                $lockedBooking->booking_status = 'cancelled';
-                $lockedBooking->status         = 'cancelled';
-                $lockedBooking->save();
 
                 // Notification for passenger
                 Notification::create([
