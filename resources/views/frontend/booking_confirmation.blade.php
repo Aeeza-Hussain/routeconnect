@@ -162,9 +162,9 @@
                         <span>Go to My Bookings</span>
                     </a>
                     <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <a href="{{ url('/book-vehicle') }}" class="flex-1 sm:flex-none px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all text-center">
-                            <i class="fa-solid fa-car-side mr-1"></i>
-                            <span>Book Another</span>
+                        <a href="{{ $isPrivate ? url('/book-vehicle') : url('/trips') }}" class="flex-1 sm:flex-none px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all text-center">
+                            <i class="fa-solid {{ $isPrivate ? 'fa-car-side' : 'fa-magnifying-glass' }} mr-1"></i>
+                            <span>{{ $isPrivate ? 'Book Another Vehicle' : 'Find More Rides' }}</span>
                         </a>
                         @if(!$isPrivate && $booking->trip_id)
                             <a href="{{ url('/trips/' . $booking->trip_id) }}" class="flex-1 sm:flex-none px-4 py-3 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-bold transition-all text-center">

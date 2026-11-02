@@ -57,7 +57,7 @@
                     </span>
                 @else
                     <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-black uppercase tracking-wider">
-                        <i class="fa-solid fa-chair text-emerald-400"></i> {{ $trip->available_seats }} {{ \Illuminate\Support\Str::plural('Seat', $trip->available_seats) }} Left
+                        <i class="fa-solid fa-chair text-emerald-400"></i> {{ $availableForSegment }} {{ \Illuminate\Support\Str::plural('Seat', $availableForSegment) }} Left
                     </span>
                 @endif
             </div>
@@ -67,7 +67,7 @@
 </section>
 
 {{-- ─── Main Content ─── --}}
-<section class="py-10 bg-slate-50 min-h-screen">
+<section class="py-10 bg-slate-50 dark:bg-[#090e17] min-h-screen transition-colors duration-200">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
         {{-- Validation Error Alerts --}}

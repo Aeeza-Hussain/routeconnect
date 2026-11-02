@@ -228,7 +228,7 @@
                         @endif
                     </div>
 
-                    @if ($st === 'confirmed')
+                    @if ($st === 'confirmed' || $st === 'pending')
                         <form method="POST" action="{{ url('/my-bookings/' . $booking->id . '/cancel') }}" onsubmit="return confirm('Are you sure you want to cancel booking #{{ $booking->booking_reference }}?');">
                             @csrf
                             <button type="submit" id="cancel-booking-btn" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black transition-all shadow-md shadow-rose-600/20 flex items-center justify-center gap-2">
@@ -236,9 +236,17 @@
                                 <span>Cancel This Booking</span>
                             </button>
                         </form>
+                    @elseif ($st === 'completed')
+                        <span class="px-4 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-xs border border-blue-200 dark:border-blue-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-check text-blue-500"></i> Trip Completed
+                        </span>
+                    @elseif ($st === 'cancelled')
+                        <span class="px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-ban text-rose-500"></i> Booking Cancelled
+                        </span>
                     @else
-                        <span class="px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-800">
-                            Booking Cancelled
+                        <span class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700">
+                            {{ ucfirst($st) }}
                         </span>
                     @endif
                 </div>
