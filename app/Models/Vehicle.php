@@ -18,6 +18,11 @@ class Vehicle extends Model
         'model',
         'total_seats',
         'rental_rate_per_day',
+        'rental_rate_per_hour',
+        'pickup_location',
+        'service_area',
+        'available_from',
+        'available_to',
         'is_available_for_rental',
         'image',
         'description',
@@ -29,6 +34,9 @@ class Vehicle extends Model
     {
         return [
             'rental_rate_per_day'     => 'decimal:2',
+            'rental_rate_per_hour'    => 'decimal:2',
+            'available_from'          => 'datetime',
+            'available_to'            => 'datetime',
             'is_available_for_rental' => 'boolean',
             'total_seats'             => 'integer',
         ];
@@ -106,19 +114,26 @@ class Vehicle extends Model
         $startCarbon = $start instanceof \Carbon\Carbon ? $start : \Carbon\Carbon::parse($start);
         $endCarbon   = $end instanceof \Carbon\Carbon ? $end : \Carbon\Carbon::parse($end);
 
-        // Calculate full or partial days (minimum 1 day)
         $diffHours = $startCarbon->diffInHours($endCarbon);
         $days = (int) ceil(max(1, $diffHours / 24));
         if ($days < 1) {
             $days = 1;
         }
 
-        $dailyRate = (float) ($this->rental_rate_per_day ?: 4000.00);
-        $totalFare = $days * $dailyRate;
+        $dailyRate  = (float) ($this->rental_rate_per_day ?: 4000.00);
+        $hourlyRate = (float) ($this->rental_rate_per_hour ?: round($dailyRate / 10, 2));
+
+        if ($diffHours > 0 && $diffHours < 24 && $this->rental_rate_per_hour) {
+            $totalFare = $diffHours * $hourlyRate;
+        } else {
+            $totalFare = $days * $dailyRate;
+        }
 
         return [
             'days'        => $days,
+            'hours'       => $diffHours,
             'daily_rate'  => $dailyRate,
+            'hourly_rate' => $hourlyRate,
             'total_fare'  => $totalFare,
         ];
     }
@@ -126,15 +141,15 @@ class Vehicle extends Model
     /**
      * Check if vehicle is available for a specified datetime range.
      */
-    public function isAvailableForRange($start, $end, $excludeBookingId = null): bool
+    public function isAvailableForRange($start, $end, $excludeBookingId = null, $excludeTripId = null): bool
     {
-        return $this->getConflictReason($start, $end, $excludeBookingId) === null;
+        return $this->getConflictReason($start, $end, $excludeBookingId, $excludeTripId) === null;
     }
 
     /**
      * Get descriptive conflict reason if unavailable, or null if available.
      */
-    public function getConflictReason($start, $end, $excludeBookingId = null): ?string
+    public function getConflictReason($start, $end, $excludeBookingId = null, $excludeTripId = null): ?string
     {
         if (!$this->isApproved()) {
             return 'Vehicle is not approved by administrators.';
@@ -153,6 +168,14 @@ class Vehicle extends Model
 
         if ($endCarbon->lessThanOrEqualTo($startCarbon)) {
             return 'End date and time must be after start date and time.';
+        }
+
+        // Check availability window if driver set specific dates
+        if ($this->available_from && $startCarbon->lessThan($this->available_from)) {
+            return "Vehicle availability begins on " . $this->available_from->format('d M Y h:i A') . ".";
+        }
+        if ($this->available_to && $endCarbon->greaterThan($this->available_to)) {
+            return "Vehicle availability ends on " . $this->available_to->format('d M Y h:i A') . ".";
         }
 
         // Check 1: Existing Confirmed Private Bookings
@@ -176,6 +199,9 @@ class Vehicle extends Model
         // Check 2: Scheduled Public Trips using this vehicle
         $trips = Trip::where('vehicle_id', $this->id)
             ->whereNotIn(\Illuminate\Support\Facades\DB::raw('LOWER(status)'), ['cancelled', 'completed'])
+            ->when($excludeTripId, function ($q) use ($excludeTripId) {
+                $q->where('id', '!=', $excludeTripId);
+            })
             ->get();
 
         foreach ($trips as $trip) {

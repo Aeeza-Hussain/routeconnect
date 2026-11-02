@@ -178,7 +178,7 @@
             <form method="POST" action="{{ route('driver.vehicles.rental_settings', $vehicle->id) }}" class="space-y-5 text-xs">
                 @csrf
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="space-y-1.5">
                         <label class="block font-bold text-slate-300">Daily Rental Rate (PKR) *</label>
                         <input type="number"
@@ -191,6 +191,18 @@
                         <span class="text-[10px] text-slate-500">Charged per 24-hour rental window.</span>
                     </div>
 
+                    <div class="space-y-1.5">
+                        <label class="block font-bold text-slate-300">Hourly Rate (PKR) <span class="text-slate-500 font-normal">(Optional)</span></label>
+                        <input type="number"
+                               name="rental_rate_per_hour"
+                               value="{{ old('rental_rate_per_hour', $vehicle->rental_rate_per_hour) }}"
+                               step="50"
+                               min="50"
+                               placeholder="e.g. 500"
+                               class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        <span class="text-[10px] text-slate-500">For short duration rentals.</span>
+                    </div>
+
                     <div class="space-y-1.5 flex flex-col justify-center">
                         <label class="block font-bold text-slate-300 mb-2">Private Rental Availability</label>
                         <label class="inline-flex items-center gap-3 cursor-pointer">
@@ -199,8 +211,46 @@
                                    value="1"
                                    {{ old('is_available_for_rental', $vehicle->is_available_for_rental) ? 'checked' : '' }}
                                    class="w-4 h-4 rounded text-teal-500 bg-slate-900 border-slate-700 focus:ring-teal-500">
-                            <span class="text-xs text-slate-200 font-bold">Accept Private Passenger Bookings</span>
+                            <span class="text-xs text-slate-200 font-bold">Accept Private Bookings</span>
                         </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="block font-bold text-slate-300">Base Pickup Location</label>
+                        <input type="text"
+                               name="pickup_location"
+                               value="{{ old('pickup_location', $vehicle->pickup_location) }}"
+                               placeholder="e.g. Gilgit City Center / Airport"
+                               class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="block font-bold text-slate-300">Service Coverage Area</label>
+                        <input type="text"
+                               name="service_area"
+                               value="{{ old('service_area', $vehicle->service_area) }}"
+                               placeholder="e.g. Gilgit, Hunza, Skardu, Nagar"
+                               class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="block font-bold text-slate-300">Available From</label>
+                        <input type="date"
+                               name="available_from"
+                               value="{{ old('available_from', $vehicle->available_from ? $vehicle->available_from->format('Y-m-d') : '') }}"
+                               class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="block font-bold text-slate-300">Available To</label>
+                        <input type="date"
+                               name="available_to"
+                               value="{{ old('available_to', $vehicle->available_to ? $vehicle->available_to->format('Y-m-d') : '') }}"
+                               class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">
                     </div>
                 </div>
 

@@ -224,19 +224,24 @@ Route::middleware(['driver.approved'])->prefix('driver')->group(function () {
     Route::get('/settings', [DriverProfileController::class, 'settings'])->name('driver.settings');
     Route::put('/settings/password', [DriverProfileController::class, 'updatePassword'])->name('driver.settings.password');
 
-    // Driver Multiple Vehicles Management
+    // Driver Multiple Vehicles Management & Private Listings
     Route::get('/vehicles', [DriverVehicleController::class, 'index'])->name('driver.vehicles.index');
     Route::get('/vehicles/create', [DriverVehicleController::class, 'create'])->name('driver.vehicles.create');
     Route::post('/vehicles', [DriverVehicleController::class, 'store'])->name('driver.vehicles.store');
+    Route::get('/private-vehicles/offer', [DriverVehicleController::class, 'offerPrivate'])->name('driver.vehicles.offer_private');
+    Route::post('/private-vehicles/offer', [DriverVehicleController::class, 'storePrivateListing'])->name('driver.vehicles.offer_private.store');
+    Route::get('/private-vehicles', [DriverVehicleController::class, 'privateListings'])->name('driver.vehicles.private');
+    Route::post('/vehicles/{id}/toggle-rental', [DriverVehicleController::class, 'toggleRentalAvailability'])->name('driver.vehicles.toggle_rental');
     Route::get('/vehicles/{id}', [DriverVehicleController::class, 'show'])->name('driver.vehicles.show');
     Route::post('/vehicles/{id}/rental-settings', [DriverVehicleController::class, 'updateRentalSettings'])->name('driver.vehicles.rental_settings');
     Route::post('/vehicles/{id}/unavailabilities', [DriverVehicleController::class, 'storeUnavailability'])->name('driver.vehicles.unavailabilities.store');
     Route::delete('/vehicles/{id}/unavailabilities/{unavailability}', [DriverVehicleController::class, 'destroyUnavailability'])->name('driver.vehicles.unavailabilities.destroy');
     Route::get('/vehicle', [DriverDashboardController::class, 'vehicle'])->name('driver.vehicle'); // legacy alias
 
-    // Schedule Trips & Manage Trips
+    // Schedule Shared Rides & Manage Trips
     Route::get('/trips', [DriverTripController::class, 'index'])->name('driver.trips');
     Route::get('/trips/create', [DriverTripController::class, 'create'])->name('driver.trips.create');
+    Route::get('/shared-rides/offer', [DriverTripController::class, 'create'])->name('driver.trips.offer_shared');
     Route::post('/trips', [DriverTripController::class, 'store'])->name('driver.trips.store');
     Route::get('/trips/{trip}', [DriverTripController::class, 'show'])->name('driver.trips.show');
     Route::get('/trips/{trip}/edit', [DriverTripController::class, 'edit'])->name('driver.trips.edit');

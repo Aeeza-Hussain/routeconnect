@@ -12,6 +12,9 @@ use App\Models\TripStop;
 use App\Models\RouteStop;
 use App\Models\Notification;
 use App\Models\TripMessage;
+use App\Models\Booking;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DriverTripController extends Controller
 {
@@ -131,6 +134,22 @@ class DriverTripController extends Controller
                 return back()->withInput()->withErrors([
                     'departure_time' => "Schedule conflict: You have another trip #{$overlap->id} ({$overlap->route?->name}) scheduled during this time window.",
                 ]);
+            }
+
+            // Check vehicle conflict against private bookings, other trips, and blocked periods
+            if ($trip->vehicle) {
+                $startCarbon = Carbon::parse("{$tripDate} {$departureTime}");
+                $endCarbon   = $arrivalDest ? Carbon::parse("{$tripDate} {$arrivalDest}") : (clone $startCarbon)->addHours(2);
+                if ($endCarbon->lessThanOrEqualTo($startCarbon)) {
+                    $endCarbon->addDay();
+                }
+
+                $conflictReason = $trip->vehicle->getConflictReason($startCarbon, $endCarbon, null, $trip->id);
+                if ($conflictReason) {
+                    return back()->withInput()->withErrors([
+                        'departure_time' => "Vehicle conflict: {$conflictReason}",
+                    ]);
+                }
             }
         }
 
@@ -337,6 +356,20 @@ class DriverTripController extends Controller
             ]);
         }
 
+        // 4b. Overlap validation for the selected vehicle (prevent vehicle double-booking with private rentals or other trips)
+        $tripStart = Carbon::parse("{$request->trip_date} {$request->departure_time}");
+        $tripEnd   = $expectedArrival ? Carbon::parse("{$request->trip_date} {$expectedArrival}") : (clone $tripStart)->addHours(2);
+        if ($tripEnd->lessThanOrEqualTo($tripStart)) {
+            $tripEnd->addDay();
+        }
+
+        $vehicleConflict = $vehicle->getConflictReason($tripStart, $tripEnd);
+        if ($vehicleConflict) {
+            return back()->withInput()->withErrors([
+                'vehicle_id' => "Vehicle conflict: {$vehicleConflict}",
+            ]);
+        }
+
         // 5. Create trip
         $trip = Trip::create([
             'user_id'               => $driver->id,
@@ -345,6 +378,7 @@ class DriverTripController extends Controller
             'trip_date'             => $request->trip_date,
             'departure_time'        => $request->departure_time,
             'expected_arrival_time' => $expectedArrival,
+            'total_seats'           => (int) $vehicle->total_seats,
             'available_seats'       => (int) $request->available_seats,
             'fare'                  => $request->fare,
             'pickup_point'          => $request->pickup_point,

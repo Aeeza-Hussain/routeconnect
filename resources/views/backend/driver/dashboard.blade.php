@@ -17,16 +17,20 @@
             Real-time operations center for trips, fleet status, passenger reservations, and passenger updates.
         </p>
     </div>
-    <div class="flex items-center gap-3">
-        <span class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20">
+    <div class="flex items-center gap-2.5 flex-wrap">
+        <span class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             Driver Status: Approved
         </span>
-        <a href="{{ route('driver.trips.create') }}" class="px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-extrabold transition-all shadow-lg shadow-teal-500/20 flex items-center gap-2">
-            <i class="fa-solid fa-calendar-plus"></i>
-            <span>Schedule Trip</span>
+        <a href="{{ route('driver.trips.create') }}" class="px-3.5 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-extrabold transition-all shadow-lg shadow-teal-500/20 flex items-center gap-2">
+            <i class="fa-solid fa-users"></i>
+            <span>Offer a Shared Ride</span>
         </a>
-        <a href="{{ route('driver.trips') }}" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all border border-slate-700 flex items-center gap-2">
+        <a href="{{ route('driver.vehicles.offer_private') }}" class="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-extrabold transition-all shadow-lg shadow-sky-500/20 flex items-center gap-2">
+            <i class="fa-solid fa-car-side"></i>
+            <span>Offer a Private Vehicle</span>
+        </a>
+        <a href="{{ route('driver.trips') }}" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all border border-slate-700 flex items-center gap-2">
             <i class="fa-solid fa-route"></i>
             <span>My Trips</span>
         </a>
@@ -120,6 +124,87 @@
         </a>
     </div>
 @endif
+
+{{-- ─── Primary Driver Publishing Actions (Action A & Action B) ─── --}}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+    {{-- Option A: Offer a Shared Ride --}}
+    <div class="relative overflow-hidden bg-gradient-to-br from-teal-950/40 via-slate-950/70 to-slate-950/90 rounded-3xl border border-teal-500/30 p-6 sm:p-7 shadow-xl hover:border-teal-500/50 transition-all flex flex-col justify-between group">
+        <div class="space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center text-2xl border border-teal-500/30 group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-teal-500/10 text-teal-300 border border-teal-500/20">
+                    <i class="fa-solid fa-ticket text-[9px]"></i> Action A · Shared Ride
+                </span>
+            </div>
+            <div>
+                <h3 class="text-xl font-black text-white group-hover:text-teal-300 transition-colors">
+                    Offer a Shared Ride
+                </h3>
+                <p class="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                    Select an approved vehicle, choose route or custom cities, configure ordered intermediate stops with expected arrival timings, specify available passenger seats, and publish per-seat fares.
+                </p>
+            </div>
+            <div class="pt-2 flex items-center gap-3 text-[11px] text-teal-300/80 font-medium flex-wrap">
+                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-check text-[10px] text-teal-400"></i> Route & Intermediate Stops</span>
+                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-check text-[10px] text-teal-400"></i> Fixed Departure Schedule</span>
+                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-check text-[10px] text-teal-400"></i> Per-Seat Pricing</span>
+            </div>
+        </div>
+        <div class="pt-6 border-t border-slate-800/80 mt-6 flex items-center justify-between gap-3">
+            <a href="{{ route('driver.trips.create') }}"
+               class="flex-1 py-3 px-4 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-xs transition-all shadow-lg shadow-teal-500/20 text-center flex items-center justify-center gap-2">
+                <i class="fa-solid fa-calendar-plus"></i>
+                <span>Publish Shared Ride</span>
+            </a>
+            <a href="{{ route('driver.trips') }}"
+               class="py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold border border-slate-800 transition-colors">
+                Trips ({{ $totalTrips }})
+            </a>
+        </div>
+    </div>
+
+    {{-- Option B: Offer a Private Vehicle --}}
+    <div class="relative overflow-hidden bg-gradient-to-br from-sky-950/40 via-slate-950/70 to-slate-950/90 rounded-3xl border border-sky-500/30 p-6 sm:p-7 shadow-xl hover:border-sky-500/50 transition-all flex flex-col justify-between group">
+        <div class="space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-2xl border border-sky-500/30 group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-car-side"></i>
+                </div>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-sky-500/10 text-sky-300 border border-sky-500/20">
+                    <i class="fa-solid fa-shield-halved text-[9px]"></i> Action B · Private Vehicle
+                </span>
+            </div>
+            <div>
+                <h3 class="text-xl font-black text-white group-hover:text-sky-300 transition-colors">
+                    Offer a Private Vehicle
+                </h3>
+                <p class="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                    Select an approved vehicle from your fleet, configure daily and hourly rental rates, define pickup bases and regional service areas, specify active availability windows, and manage blocked dates.
+                </p>
+            </div>
+            <div class="pt-2 flex items-center gap-3 text-[11px] text-sky-300/80 font-medium flex-wrap">
+                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-check text-[10px] text-sky-400"></i> Daily & Hourly Rates</span>
+                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-check text-[10px] text-sky-400"></i> Service Coverage Areas</span>
+                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-check text-[10px] text-sky-400"></i> Availability Schedule</span>
+            </div>
+        </div>
+        <div class="pt-6 border-t border-slate-800/80 mt-6 flex items-center justify-between gap-3">
+            <a href="{{ route('driver.vehicles.offer_private') }}"
+               class="flex-1 py-3 px-4 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs transition-all shadow-lg shadow-sky-500/20 text-center flex items-center justify-center gap-2">
+                <i class="fa-solid fa-car-side"></i>
+                <span>Publish Private Vehicle</span>
+            </a>
+            <a href="{{ route('driver.vehicles.private') }}"
+               class="py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold border border-slate-800 transition-colors">
+                Listings ({{ $activePrivateListingsCount }})
+            </a>
+        </div>
+    </div>
+
+</div>
 
 {{-- ─── Statistics Grid (5 Required KPIs) ─── --}}
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">

@@ -35,6 +35,43 @@
             <span>Dashboard</span>
         </a>
 
+        {{-- Section label: Listings & Offers --}}
+        <div class="px-3 pt-3.5 pb-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+            Listings & Offers
+        </div>
+
+        {{-- Offer Shared Ride --}}
+        <a href="{{ route('driver.trips.create') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
+                  {{ request()->routeIs('driver.trips.create') || request()->routeIs('driver.trips.offer_shared') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+            <i class="fa-solid fa-users text-sm w-4 text-center text-teal-400"></i>
+            <span>Offer a Shared Ride</span>
+        </a>
+
+        {{-- Offer Private Vehicle --}}
+        <a href="{{ route('driver.vehicles.offer_private') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
+                  {{ request()->routeIs('driver.vehicles.offer_private*') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+            <i class="fa-solid fa-car-side text-sm w-4 text-center text-sky-400"></i>
+            <span>Offer a Private Vehicle</span>
+        </a>
+
+        {{-- Shared Ride Listings --}}
+        <a href="{{ route('driver.trips') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
+                  {{ request()->routeIs('driver.trips') && !request()->routeIs('driver.trips.create') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+            <i class="fa-solid fa-route text-sm w-4 text-center"></i>
+            <span>Shared Ride Listings</span>
+        </a>
+
+        {{-- Private Vehicle Listings --}}
+        <a href="{{ route('driver.vehicles.private') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
+                  {{ request()->routeIs('driver.vehicles.private*') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+            <i class="fa-solid fa-car text-sm w-4 text-center"></i>
+            <span>Private Listings</span>
+        </a>
+
         {{-- Section label: Vehicles --}}
         <div class="px-3 pt-3.5 pb-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
             Fleet Vehicles
@@ -56,26 +93,10 @@
             <span>Register Vehicle</span>
         </a>
 
-        {{-- Section label: Trips & Scheduling --}}
+        {{-- Section label: Trips & Bookings --}}
         <div class="px-3 pt-3.5 pb-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-            Trips & Bookings
+            Bookings & Messaging
         </div>
-
-        {{-- 4. Schedule a Trip --}}
-        <a href="{{ route('driver.trips.create') }}"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
-                  {{ request()->routeIs('driver.trips.create') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
-            <i class="fa-solid fa-calendar-plus text-sm w-4 text-center"></i>
-            <span>Schedule a Trip</span>
-        </a>
-
-        {{-- 5. My Trips --}}
-        <a href="{{ route('driver.trips') }}"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
-                  {{ request()->routeIs('driver.trips') && !request()->routeIs('driver.trips.create') ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
-            <i class="fa-solid fa-route text-sm w-4 text-center"></i>
-            <span>My Trips</span>
-        </a>
 
         {{-- 6. Passenger Bookings --}}
         <a href="{{ route('driver.bookings') }}"
