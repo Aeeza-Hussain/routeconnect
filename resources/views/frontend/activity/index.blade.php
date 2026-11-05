@@ -741,10 +741,15 @@
                         <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4 transition-colors">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <div class="space-y-1">
-                                    <div class="flex items-center gap-2">
+                                    <div class="flex items-center gap-2 flex-wrap">
                                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400">
                                             Open Request
                                         </span>
+                                        @if($req->preferred_vehicle_type)
+                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-500/10 text-sky-400">
+                                                <i class="fa-solid fa-car text-[9px]"></i> {{ $req->preferred_vehicle_type }}
+                                            </span>
+                                        @endif
                                         <span class="text-xs text-slate-400">Posted by {{ $req->user?->name ?? 'Passenger' }} · {{ $req->created_at->diffForHumans() }}</span>
                                     </div>
                                     <h3 class="text-lg font-black text-white flex items-center gap-2">
@@ -783,6 +788,17 @@
 
                             @if($req->notes)
                                 <p class="text-xs text-slate-400 italic">"{{ $req->notes }}"</p>
+                            @endif
+
+                            @if($req->intermediate_stops && count($req->intermediate_stops) > 0)
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-[10px] text-slate-500 uppercase font-bold">Via:</span>
+                                    @foreach($req->intermediate_stops as $stop)
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                                            {{ $stop }}
+                                        </span>
+                                    @endforeach
+                                </div>
                             @endif
                         </div>
                     @empty

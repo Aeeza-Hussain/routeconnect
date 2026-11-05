@@ -106,6 +106,14 @@
             <span>Passenger Bookings</span>
         </a>
 
+        {{-- Passenger Requests --}}
+        <a href="{{ route('activity.index', ['tab' => 'passenger-requests']) }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
+                  {{ request()->is('my-activity') && request()->query('tab') === 'passenger-requests' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+            <i class="fa-solid fa-hand-holding-hand text-sm w-4 text-center text-amber-400"></i>
+            <span>Passenger Requests</span>
+        </a>
+
         {{-- 7. Messages --}}
         <a href="{{ route('driver.messages') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
