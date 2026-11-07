@@ -189,6 +189,14 @@
                                 <i class="fa-solid fa-phone text-slate-400 mr-1"></i> {{ $driver->phone }}
                             </div>
                         @endif
+                        @if ($driver && $driver->id !== auth()->id())
+                            <div class="pt-2">
+                                <a href="{{ route('messages.start', ['booking_id' => $booking->id]) }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors shadow-xs">
+                                    <i class="fa-solid fa-comments"></i>
+                                    <span>Message Driver</span>
+                                </a>
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Vehicle Card --}}

@@ -57,6 +57,14 @@
                 <div class="font-extrabold text-white text-sm">{{ $booking->user->name ?? 'Passenger' }}</div>
                 <div class="text-slate-400 mt-1">{{ $booking->user->email ?? 'No email' }}</div>
                 <div class="text-teal-400 mt-0.5">{{ $booking->user->phone ?? 'No phone number' }}</div>
+                @if ($booking->user && $booking->user->id !== auth()->id())
+                    <div class="pt-2">
+                        <a href="{{ route('messages.start', ['booking_id' => $booking->id]) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs transition-colors shadow-sm">
+                            <i class="fa-solid fa-comments"></i>
+                            <span>Message Passenger</span>
+                        </a>
+                    </div>
+                @endif
             </div>
 
             {{-- Seats & Allocation --}}

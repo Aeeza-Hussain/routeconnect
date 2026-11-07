@@ -553,6 +553,15 @@ body, main {
                                             View Details
                                         </a>
 
+                                        @if(auth()->check() && $trip->user_id !== auth()->id())
+                                            <a href="{{ route('messages.start', ['trip_id' => $trip->id]) }}"
+                                               class="px-2.5 py-1.5 rounded-xl text-emerald-400 hover:text-white transition-colors"
+                                               style="background-color: #132238 !important; border: 1px solid #253752 !important;"
+                                               title="Message Driver">
+                                                <i class="fa-solid fa-comments text-xs"></i>
+                                            </a>
+                                        @endif
+
                                         {{-- Book Seat Button --}}
                                         @guest
                                             <button type="button"

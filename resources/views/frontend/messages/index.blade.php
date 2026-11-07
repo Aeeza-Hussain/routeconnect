@@ -69,11 +69,15 @@
                             <div class="flex items-start gap-3">
                                 {{-- Avatar with status dot --}}
                                 <div class="relative shrink-0">
-                                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-black text-sm shadow-sm">
-                                        {{ strtoupper(substr($otherUser?->name ?? 'U', 0, 1)) }}
-                                    </div>
+                                    @if($otherUser && $otherUser->photo)
+                                        <img src="{{ asset('storage/' . $otherUser->photo) }}" alt="{{ $otherUser->name }}" class="w-11 h-11 rounded-2xl object-cover shadow-sm border border-slate-200 dark:border-slate-700">
+                                    @else
+                                        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-black text-sm shadow-sm">
+                                            {{ strtoupper(substr($otherUser?->name ?? 'U', 0, 1)) }}
+                                        </div>
+                                    @endif
                                     @if($unreadCount > 0)
-                                        <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900"></span>
+                                        <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
                                     @endif
                                 </div>
 
@@ -82,9 +86,16 @@
                                         <h4 class="text-xs font-black text-slate-900 dark:text-white truncate">
                                             {{ $otherUser?->name ?? 'User' }}
                                         </h4>
-                                        <span class="text-[10px] text-slate-400 shrink-0">
-                                            {{ $latestMsg ? $latestMsg->created_at->diffForHumans(null, true, true) : '' }}
-                                        </span>
+                                        <div class="flex items-center gap-1.5 shrink-0">
+                                            @if($unreadCount > 0)
+                                                <span class="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-emerald-500 text-white shadow-xs">
+                                                    {{ $unreadCount }}
+                                                </span>
+                                            @endif
+                                            <span class="text-[10px] text-slate-400">
+                                                {{ $latestMsg ? $latestMsg->created_at->diffForHumans(null, true, true) : '' }}
+                                            </span>
+                                        </div>
                                     </div>
 
                                     <div class="flex items-center gap-1.5 mt-0.5">
@@ -142,9 +153,13 @@
                                 <i class="fa-solid fa-arrow-left"></i>
                             </a>
 
-                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-black text-sm shrink-0">
-                                {{ strtoupper(substr($activeOtherUser?->name ?? 'U', 0, 1)) }}
-                            </div>
+                            @if($activeOtherUser && $activeOtherUser->photo)
+                                <img src="{{ asset('storage/' . $activeOtherUser->photo) }}" alt="{{ $activeOtherUser->name }}" class="w-10 h-10 rounded-2xl object-cover shadow-sm shrink-0 border border-slate-200 dark:border-slate-700">
+                            @else
+                                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-black text-sm shrink-0">
+                                    {{ strtoupper(substr($activeOtherUser?->name ?? 'U', 0, 1)) }}
+                                </div>
+                            @endif
 
                             <div class="min-w-0 leading-tight">
                                 <h3 class="text-sm font-black text-slate-900 dark:text-white truncate flex items-center gap-2">
@@ -312,9 +327,13 @@
                             @else
                                 {{-- Received from Other User (Left aligned) --}}
                                 <div class="flex justify-start items-start gap-2.5" data-msg-id="{{ $msg->id }}">
-                                    <div class="w-7 h-7 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-xs shrink-0 mt-1">
-                                        {{ strtoupper(substr($msg->sender?->name ?? 'U', 0, 1)) }}
-                                    </div>
+                                    @if($msg->sender && $msg->sender->photo)
+                                        <img src="{{ asset('storage/' . $msg->sender->photo) }}" alt="{{ $msg->sender->name }}" class="w-7 h-7 rounded-xl object-cover shadow-xs shrink-0 mt-1">
+                                    @else
+                                        <div class="w-7 h-7 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-xs shrink-0 mt-1">
+                                            {{ strtoupper(substr($msg->sender?->name ?? 'U', 0, 1)) }}
+                                        </div>
+                                    @endif
                                     <div class="max-w-sm sm:max-w-md space-y-1">
                                         <div class="inline-block p-3.5 rounded-2xl rounded-tl-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-medium border border-slate-200/80 dark:border-slate-700 shadow-xs">
                                             {{ $msg->body }}

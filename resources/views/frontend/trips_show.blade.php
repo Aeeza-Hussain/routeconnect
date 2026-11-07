@@ -336,6 +336,22 @@
                     @if ($trip->driver && $trip->driver->bio)
                         <p class="text-xs text-slate-500 pt-3 border-t border-slate-100 leading-relaxed">{{ $trip->driver->bio }}</p>
                     @endif
+
+                    @if (auth()->check() && $trip->driver && $trip->driver->id !== auth()->id())
+                        <div class="pt-3 border-t border-slate-100">
+                            <a href="{{ route('messages.start', ['trip_id' => $trip->id]) }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors">
+                                <i class="fa-solid fa-comments text-emerald-400"></i>
+                                <span>Message Driver</span>
+                            </a>
+                        </div>
+                    @elseif(!auth()->check())
+                        <div class="pt-3 border-t border-slate-100">
+                            <a href="{{ route('login') }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-colors">
+                                <i class="fa-solid fa-comments text-slate-400"></i>
+                                <span>Log In to Message Driver</span>
+                            </a>
+                        </div>
+                    @endif
                 </div>
 
                 {{-- Vehicle Card --}}

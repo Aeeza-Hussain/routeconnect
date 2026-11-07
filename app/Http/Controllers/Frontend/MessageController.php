@@ -350,6 +350,136 @@ class MessageController extends Controller
             return redirect()->route('messages.index', ['conversation_id' => $conversation->id]);
         }
 
+        // Case 5: From Existing Booking (Passenger <-> Driver)
+        if ($request->filled('booking_id')) {
+            $booking = Booking::with(['user', 'vehicle.driver', 'trip.driver'])->findOrFail($request->booking_id);
+
+            $driver = $booking->vehicle?->driver ?? $booking->trip?->driver;
+            $passenger = $booking->user;
+
+            $isPassenger = ($booking->user_id === $user->id);
+            $isDriver = ($driver && $driver->id === $user->id);
+
+            if (!$isPassenger && !$isDriver && !$user->isAdmin()) {
+                abort(403, 'Unauthorized access to this booking conversation.');
+            }
+
+            $otherUserId = $isPassenger ? ($driver?->id) : $passenger?->id;
+            if (!$otherUserId) {
+                return redirect()->back()->with('error', 'Unable to find recipient for this booking.');
+            }
+
+            $conversation = Conversation::where('subject_type', 'booking')
+                ->where('subject_id', $booking->id)
+                ->whereHas('participants', fn($q) => $q->where('user_id', $user->id))
+                ->whereHas('participants', fn($q) => $q->where('user_id', $otherUserId))
+                ->first();
+
+            if (!$conversation) {
+                $conversation = DB::transaction(function () use ($user, $otherUserId, $booking) {
+                    $conv = Conversation::create([
+                        'title'               => "Booking #{$booking->booking_reference}",
+                        'subject_type'        => 'booking',
+                        'subject_id'          => $booking->id,
+                        'booking_id'          => $booking->id,
+                        'status'              => 'active',
+                        'arrangement_status'  => 'confirmed',
+                        'arrangement_details' => [
+                            'reference' => $booking->booking_reference,
+                            'route'     => ($booking->pickup_location ?? 'Pickup') . ' → ' . ($booking->destination_location ?? 'Destination'),
+                            'fare'      => (float) $booking->total_fare,
+                            'seats'     => (int) $booking->seats,
+                        ],
+                        'created_by'          => $user->id,
+                    ]);
+
+                    ConversationParticipant::create([
+                        'conversation_id' => $conv->id,
+                        'user_id'         => $user->id,
+                        'last_read_at'    => now(),
+                    ]);
+
+                    ConversationParticipant::create([
+                        'conversation_id' => $conv->id,
+                        'user_id'         => $otherUserId,
+                        'last_read_at'    => null,
+                    ]);
+
+                    Message::create([
+                        'conversation_id' => $conv->id,
+                        'sender_id'       => $user->id,
+                        'body'            => "Hello! I am messaging regarding Booking #{$booking->booking_reference}.",
+                        'type'            => 'text',
+                    ]);
+
+                    return $conv;
+                });
+            }
+
+            return redirect()->route('messages.index', ['conversation_id' => $conversation->id]);
+        }
+
+        // Case 6: Direct from Driver Profile or User ID
+        if ($request->filled('driver_id') || $request->filled('target_driver_id') || $request->filled('user_id')) {
+            $targetId = (int) ($request->driver_id ?: ($request->target_driver_id ?: $request->user_id));
+            $targetUser = \App\Models\User::findOrFail($targetId);
+
+            if ($targetUser->id === $user->id) {
+                return redirect()->back()->with('error', 'You cannot message yourself.');
+            }
+
+            $conversation = Conversation::where(function ($q) {
+                    $q->where('subject_type', 'direct')
+                      ->orWhere('subject_type', 'profile');
+                })
+                ->whereHas('participants', fn($q) => $q->where('user_id', $user->id))
+                ->whereHas('participants', fn($q) => $q->where('user_id', $targetUser->id))
+                ->first();
+
+            if (!$conversation) {
+                $conversation = Conversation::whereHas('participants', fn($q) => $q->where('user_id', $user->id))
+                    ->whereHas('participants', fn($q) => $q->where('user_id', $targetUser->id))
+                    ->latest()
+                    ->first();
+            }
+
+            if (!$conversation) {
+                $conversation = DB::transaction(function () use ($user, $targetUser) {
+                    $conv = Conversation::create([
+                        'title'              => "Chat with {$targetUser->name}",
+                        'subject_type'       => 'direct',
+                        'subject_id'         => $targetUser->id,
+                        'status'             => 'active',
+                        'arrangement_status' => 'negotiating',
+                        'created_by'         => $user->id,
+                    ]);
+
+                    ConversationParticipant::create([
+                        'conversation_id' => $conv->id,
+                        'user_id'         => $user->id,
+                        'last_read_at'    => now(),
+                    ]);
+
+                    ConversationParticipant::create([
+                        'conversation_id' => $conv->id,
+                        'user_id'         => $targetUser->id,
+                        'last_read_at'    => null,
+                    ]);
+
+                    Message::create([
+                        'conversation_id' => $conv->id,
+                        'sender_id'       => $user->id,
+                        'body'            => "Hello {$targetUser->name}! I'd like to discuss travel arrangements with you.",
+                        'type'            => 'text',
+                    ]);
+
+                    return $conv;
+                });
+            }
+
+            return redirect()->route('messages.index', ['conversation_id' => $conversation->id]);
+        }
+
         return redirect()->route('messages.index')->with('error', 'Invalid messaging request.');
     }
 

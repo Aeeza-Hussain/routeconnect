@@ -159,7 +159,13 @@
                                 </td>
 
                                 {{-- Action --}}
-                                <td class="px-6 py-4 text-right">
+                                <td class="px-6 py-4 text-right space-x-1.5 whitespace-nowrap">
+                                    <a href="{{ route('messages.start', ['booking_id' => $booking->id]) }}"
+                                       class="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-bold transition-all inline-flex items-center gap-1"
+                                       title="Chat with Passenger">
+                                        <i class="fa-solid fa-comments text-[10px]"></i>
+                                        <span>Chat</span>
+                                    </a>
                                     <a href="{{ route('driver.bookings.show', $booking->id) }}"
                                        class="px-3 py-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 border border-teal-500/20 text-xs font-bold transition-all inline-flex items-center gap-1.5">
                                         <i class="fa-solid fa-eye text-[10px]"></i>
