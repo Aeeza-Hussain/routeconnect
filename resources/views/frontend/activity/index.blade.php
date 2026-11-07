@@ -401,26 +401,69 @@
 
                             {{-- Offers Received on This Request --}}
                             @if($tr->applications->isNotEmpty())
-                                <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                                    <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider block">Driver Offers Received:</span>
-                                    <div class="space-y-2">
+                                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider block">
+                                            Driver Offers Received ({{ $tr->applications->count() }}):
+                                        </span>
+                                        @if($tr->isConfirmed())
+                                            <span class="text-xs font-bold text-emerald-500 flex items-center gap-1">
+                                                <i class="fa-solid fa-circle-check"></i> Driver Confirmed
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div class="space-y-3">
                                         @foreach($tr->applications as $app)
-                                            <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                                                <div>
-                                                    <span class="font-bold text-slate-900 dark:text-white">{{ $app->driver?->name ?? 'Driver' }}</span>
-                                                    <span class="text-slate-400 mx-1">·</span>
-                                                    <span class="font-mono font-bold text-emerald-600">Rs. {{ number_format($app->offered_fare, 2) }}</span>
-                                                    @if($app->proposed_time)
-                                                        <span class="text-slate-400 ml-2">({{ $app->proposed_time }})</span>
-                                                    @endif
+                                            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border {{ $app->status === 'accepted' ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-slate-200 dark:border-slate-700' }} flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+                                                <div class="space-y-1.5 flex-1">
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <span class="font-extrabold text-slate-900 dark:text-white text-sm">{{ $app->driver?->name ?? 'Driver' }}</span>
+                                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $app->status === 'accepted' ? 'bg-emerald-500/20 text-emerald-400' : ($app->status === 'rejected' ? 'bg-rose-500/10 text-rose-400' : 'bg-amber-500/10 text-amber-400') }}">
+                                                            {{ ucfirst($app->status) }}
+                                                        </span>
+                                                        @if($app->proposed_time)
+                                                            <span class="text-slate-400 font-medium">
+                                                                <i class="fa-regular fa-clock mr-1"></i>{{ $app->proposed_time }}
+                                                            </span>
+                                                        @endif
+                                                    </div>
+
+                                                    <div class="flex items-center gap-4 text-slate-500 dark:text-slate-400 flex-wrap">
+                                                        @if($app->vehicle)
+                                                            <span><i class="fa-solid fa-car text-teal-500 mr-1"></i>{{ $app->vehicle->model }} ({{ $app->vehicle->registration_no }}) · {{ $app->vehicle->type }}</span>
+                                                        @endif
+                                                        @if($app->available_seats)
+                                                            <span><i class="fa-solid fa-chair text-emerald-500 mr-1"></i>{{ $app->available_seats }} Seats</span>
+                                                        @endif
+                                                        <span class="font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                                                            Fare: Rs. {{ number_format($app->offered_fare, 2) }}
+                                                        </span>
+                                                    </div>
+
                                                     @if($app->message)
-                                                        <p class="text-slate-500 mt-1 italic">"{{ $app->message }}"</p>
+                                                        <p class="text-slate-600 dark:text-slate-300 italic pt-0.5">"{{ $app->message }}"</p>
                                                     @endif
                                                 </div>
-                                                <div class="flex items-center gap-2">
-                                                    <a href="{{ route('messages.start') }}?driver_application_id={{ $app->id }}" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow-sm">
-                                                        <i class="fa-solid fa-comments"></i>
-                                                        <span>Chat & Negotiate</span>
+
+                                                <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                                                    @if($tr->isOpen() && $app->status === 'pending')
+                                                        <form action="{{ route('activity.requests.select-application', [$tr->id, $app->id]) }}" method="POST" onsubmit="return confirm('Accept {{ addslashes($app->driver?->name) }}\'s offer of Rs. {{ number_format($app->offered_fare, 2) }}? Other driver offers will be closed.');">
+                                                            @csrf
+                                                            <button type="submit" class="px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-sm">
+                                                                <i class="fa-solid fa-check"></i>
+                                                                <span>Select Driver</span>
+                                                            </button>
+                                                        </form>
+                                                    @elseif($app->status === 'accepted')
+                                                        <span class="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-400 font-extrabold text-xs flex items-center gap-1">
+                                                            <i class="fa-solid fa-circle-check"></i>
+                                                            <span>Selected</span>
+                                                        </span>
+                                                    @endif
+
+                                                    <a href="{{ route('messages.start') }}?driver_application_id={{ $app->id }}" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1 border border-slate-700">
+                                                        <i class="fa-solid fa-comments text-emerald-400"></i>
+                                                        <span>Chat</span>
                                                     </a>
                                                 </div>
                                             </div>
@@ -457,7 +500,15 @@
                                 </h3>
                                 <div class="text-xs text-slate-500 dark:text-slate-400 space-y-1">
                                     <p>Trip: <strong>{{ $offer->travelRequest?->pickup_location }} → {{ $offer->travelRequest?->destination_location }}</strong></p>
-                                    <p>Proposed Time: <strong>{{ $offer->proposed_time ?: 'Flexible' }}</strong></p>
+                                    @if($offer->vehicle)
+                                        <p><i class="fa-solid fa-van-shuttle text-teal-500 mr-1"></i> Vehicle: <strong>{{ $offer->vehicle->model }} ({{ $offer->vehicle->registration_no }}) · {{ $offer->vehicle->type }}</strong></p>
+                                    @endif
+                                    <p>
+                                        <span>Proposed Time: <strong>{{ $offer->proposed_time ?: 'Flexible' }}</strong></span>
+                                        @if($offer->available_seats)
+                                            <span class="ml-3"><i class="fa-solid fa-chair text-emerald-500 mr-1"></i> Seats: <strong>{{ $offer->available_seats }}</strong></span>
+                                        @endif
+                                    </p>
                                     @if($offer->message)
                                         <p class="italic text-slate-600 dark:text-slate-300">"{{ $offer->message }}"</p>
                                     @endif
@@ -469,10 +520,21 @@
                                     <span class="text-[10px] text-slate-400 uppercase font-bold block">Offered Fare</span>
                                     <span class="font-mono text-xl font-black text-emerald-600">Rs. {{ number_format($offer->offered_fare, 2) }}</span>
                                 </div>
-                                <a href="{{ route('messages.start') }}?driver_application_id={{ $offer->id }}" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm">
-                                    <i class="fa-solid fa-comments"></i>
-                                    <span>Chat with Driver</span>
-                                </a>
+                                <div class="flex items-center gap-2">
+                                    @if($offer->travelRequest && $offer->travelRequest->isOpen() && $offer->status === 'pending')
+                                        <form action="{{ route('activity.requests.select-application', [$offer->travel_request_id, $offer->id]) }}" method="POST" onsubmit="return confirm('Accept this driver offer of Rs. {{ number_format($offer->offered_fare, 2) }}? Other offers will be closed.');">
+                                            @csrf
+                                            <button type="submit" class="px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-sm">
+                                                <i class="fa-solid fa-check"></i>
+                                                <span>Select Driver</span>
+                                            </button>
+                                        </form>
+                                    @endif
+                                    <a href="{{ route('messages.start') }}?driver_application_id={{ $offer->id }}" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1.5 shadow-sm border border-slate-700">
+                                        <i class="fa-solid fa-comments text-emerald-400"></i>
+                                        <span>Chat with Driver</span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     @empty
@@ -965,13 +1027,31 @@
                 </div>
             </div>
 
-            <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Estimated Budget (PKR, Optional)</label>
-                <input type="number" name="budget" placeholder="e.g. 1500" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-slate-900 dark:text-white">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Preferred Vehicle Type</label>
+                    <select name="preferred_vehicle_type" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-slate-900 dark:text-white">
+                        <option value="">Any Vehicle Type</option>
+                        <option value="Car">Car / Sedan</option>
+                        <option value="Van">Van / HiAce</option>
+                        <option value="Daba">Daba / Carry</option>
+                        <option value="Bus">Coaster / Bus</option>
+                        <option value="Other">Other / 4x4 Jeep</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Estimated Budget (PKR, Optional)</label>
+                    <input type="number" name="budget" placeholder="e.g. 1500" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-slate-900 dark:text-white">
+                </div>
             </div>
 
             <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Notes / Luggage Details</label>
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Intermediate Stops (Optional, comma-separated)</label>
+                <input type="text" name="intermediate_stops" placeholder="e.g. Nagar, Aliabad, Passu" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-slate-900 dark:text-white">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Additional Instructions / Notes</label>
                 <textarea name="notes" rows="2" placeholder="Any specific requirements, stops along the way, or contact notes..." class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium"></textarea>
             </div>
 
@@ -1011,16 +1091,23 @@
                     <input type="text" name="proposed_time" placeholder="e.g. 09:30 AM" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-slate-900 dark:text-white">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Assign Fleet Vehicle</label>
-                    <select name="vehicle_id" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-slate-900 dark:text-white">
-                        <option value="">Select a Vehicle (Optional)</option>
-                        @if($isDriver)
-                            @foreach($myVehicles as $veh)
-                                <option value="{{ $veh->id }}">{{ $veh->model }} ({{ $veh->registration_no }})</option>
-                            @endforeach
-                        @endif
-                    </select>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Available Seats (Optional)</label>
+                    <input type="number" name="available_seats" min="1" max="50" placeholder="e.g. 4" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-slate-900 dark:text-white">
                 </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Select Approved Vehicle</label>
+                <select name="vehicle_id" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-slate-900 dark:text-white">
+                    <option value="">Select a Vehicle (Optional)</option>
+                    @if($isDriver)
+                        @foreach($myVehicles as $veh)
+                            @if($veh->isApproved())
+                                <option value="{{ $veh->id }}">{{ $veh->model }} ({{ $veh->registration_no }}) · {{ $veh->type }} ({{ $veh->total_seats }} seats)</option>
+                            @endif
+                        @endforeach
+                    @endif
+                </select>
             </div>
 
             <div>

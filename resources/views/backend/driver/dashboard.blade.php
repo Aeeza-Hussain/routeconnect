@@ -206,8 +206,8 @@
 
 </div>
 
-{{-- ─── Statistics Grid (5 Required KPIs) ─── --}}
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+{{-- ─── Statistics Grid (Key Operational KPIs) ─── --}}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
 
     {{-- 1. Total Trips --}}
     <div class="bg-slate-950/60 p-5 rounded-2xl border border-slate-800 shadow-sm hover:border-slate-700 transition-all flex flex-col justify-between">
@@ -306,6 +306,26 @@
         <div class="mt-4 pt-3 border-t border-slate-800/80">
             <a href="{{ route('driver.vehicles.index') }}" class="text-[11px] font-bold text-amber-400 hover:text-amber-300 transition-colors flex items-center justify-between">
                 <span>Fleet Details ({{ $vehiclesCount }})</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </a>
+        </div>
+    </div>
+
+    {{-- 6. Passenger Requests --}}
+    <div class="bg-slate-950/60 p-5 rounded-2xl border border-slate-800 shadow-sm hover:border-slate-700 transition-all flex flex-col justify-between">
+        <div class="flex items-start justify-between">
+            <div>
+                <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Passenger Requests</p>
+                <p class="text-3xl font-black text-amber-400 mt-2">{{ $passengerRequestsCount ?? 0 }}</p>
+                <p class="text-[11px] text-slate-500 mt-1">Open ride offers</p>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-lg border border-amber-500/20">
+                <i class="fa-solid fa-hand-holding-hand"></i>
+            </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/80">
+            <a href="{{ route('driver.passenger-requests') }}" class="text-[11px] font-bold text-amber-400 hover:text-amber-300 transition-colors flex items-center justify-between">
+                <span>Browse & Apply</span>
                 <i class="fa-solid fa-arrow-right text-[10px]"></i>
             </a>
         </div>
@@ -439,6 +459,15 @@
                     </div>
                     <span class="text-xs font-bold text-white block">Passenger Bookings</span>
                     <span class="text-[10px] text-slate-500">{{ $bookingsCount }} seats</span>
+                </a>
+
+                {{-- Passenger Requests Marketplace --}}
+                <a href="{{ route('driver.passenger-requests') }}" class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-500/50 hover:bg-slate-800/80 transition-all group">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-hand-holding-hand text-sm"></i>
+                    </div>
+                    <span class="text-xs font-bold text-white block">Passenger Requests</span>
+                    <span class="text-[10px] text-amber-400 font-bold">{{ $passengerRequestsCount ?? 0 }} open</span>
                 </a>
 
                 {{-- 6. Trip Messages --}}

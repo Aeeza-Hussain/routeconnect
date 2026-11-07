@@ -121,6 +121,14 @@ class ActivityController extends Controller
 
         $passengerRequests = TravelRequest::with('user')
             ->where('status', 'open')
+            ->when($request->query('filter_date'), fn($q, $d) => $q->whereDate('travel_date', $d))
+            ->when($request->query('filter_vehicle'), fn($q, $v) => $q->where('preferred_vehicle_type', $v))
+            ->when($request->query('filter_route'), function ($q, $route) {
+                $q->where(function ($inner) use ($route) {
+                    $inner->where('pickup_location', 'like', "%{$route}%")
+                          ->orWhere('destination_location', 'like', "%{$route}%");
+                });
+            })
             ->latest()
             ->get();
 
@@ -265,6 +273,16 @@ class ActivityController extends Controller
             return redirect()->back()->with('error', 'This travel request is no longer open for offers.');
         }
 
+        // Prevent duplicate applications from the same driver to the same request
+        $existingApplication = DriverApplication::where('travel_request_id', $travelRequest->id)
+            ->where('driver_id', $driver->id)
+            ->whereNotIn('status', ['cancelled', 'rejected'])
+            ->first();
+
+        if ($existingApplication) {
+            return redirect()->back()->with('error', 'You have already submitted an offer for this travel request.');
+        }
+
         $validated = $request->validate([
             'offered_fare'    => ['required', 'numeric', 'min:50'],
             'proposed_time'   => ['nullable', 'string', 'max:50'],
@@ -273,9 +291,20 @@ class ActivityController extends Controller
             'message'         => ['nullable', 'string', 'max:1000'],
         ]);
 
+        // Ensure the chosen vehicle belongs to the applying driver and is approved (security check)
+        if (!empty($validated['vehicle_id'])) {
+            $chosenVehicle = Vehicle::where('id', $validated['vehicle_id'])
+                ->where('user_id', $driver->id)
+                ->whereIn(DB::raw('LOWER(status)'), ['approved', 'active'])
+                ->first();
+            if (!$chosenVehicle) {
+                return redirect()->back()->with('error', 'The selected vehicle does not belong to you or is not approved.');
+            }
+        }
+
         $availableSeats = $validated['available_seats'] ?? null;
         if (!$availableSeats && !empty($validated['vehicle_id'])) {
-            $chosenVehicle = Vehicle::find($validated['vehicle_id']);
+            $chosenVehicle = $chosenVehicle ?? Vehicle::find($validated['vehicle_id']);
             $availableSeats = $chosenVehicle?->total_seats;
         }
 

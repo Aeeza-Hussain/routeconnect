@@ -252,6 +252,10 @@ Route::middleware(['driver.approved'])->prefix('driver')->group(function () {
     Route::get('/bookings', [DriverBookingController::class, 'index'])->name('driver.bookings');
     Route::get('/bookings/{booking}', [DriverBookingController::class, 'show'])->name('driver.bookings.show');
 
+    // Passenger Requests Section
+    Route::get('/passenger-requests', [DriverDashboardController::class, 'passengerRequests'])->name('driver.passenger-requests');
+    Route::post('/passenger-requests/{travelRequest}/apply', [ActivityController::class, 'applyToRequest'])->name('driver.passenger-requests.apply')->whereNumber('travelRequest');
+
     // Trip Messages (post message for driver's own trip)
     Route::get('/messages', [DriverMessageController::class, 'index'])->name('driver.messages');
     Route::post('/messages', [DriverMessageController::class, 'store'])->name('driver.messages.store');
