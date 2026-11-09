@@ -479,8 +479,8 @@
 
 {{-- ─── IN-PAGE CHAT DRAWER / OVERLAY (Opens seamlessly without leaving the page) ─── --}}
 @auth
-<div id="inPageChatDrawerOverlay" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden transition-opacity" onclick="closeInPageChat()"></div>
-<div id="inPageChatDrawer" class="fixed top-0 right-0 h-full w-full sm:w-[440px] max-w-full bg-white dark:bg-[#0f172a] border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
+<div id="inPageChatDrawerOverlay" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden transition-opacity" style="display: none;" onclick="closeInPageChat()"></div>
+<div id="inPageChatDrawer" class="fixed top-0 right-0 h-full bg-white dark:bg-[#0f172a] border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col hidden" style="display: none; width: 100%; max-width: 440px;">
     {{-- Drawer Header --}}
     <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/80">
         <div class="flex items-center gap-3 min-w-0">
@@ -597,7 +597,9 @@ function openInPageChat(conversationId, title = 'Conversation') {
 
     if (overlay && drawer) {
         overlay.classList.remove('hidden');
-        drawer.classList.remove('translate-x-full');
+        overlay.style.display = 'block';
+        drawer.classList.remove('hidden');
+        drawer.style.display = 'flex';
     }
 
     if (titleEl) titleEl.innerText = title;
@@ -622,7 +624,9 @@ function closeInPageChat() {
     const drawer  = document.getElementById('inPageChatDrawer');
     if (overlay && drawer) {
         overlay.classList.add('hidden');
-        drawer.classList.add('translate-x-full');
+        overlay.style.display = 'none';
+        drawer.classList.add('hidden');
+        drawer.style.display = 'none';
     }
 }
 
