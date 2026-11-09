@@ -15,6 +15,8 @@ use App\Models\User;
 use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PassengerDriverMessagingSystemTest extends TestCase
@@ -402,6 +404,152 @@ class PassengerDriverMessagingSystemTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonCount(1, 'messages');
         $response->assertJsonFragment(['body' => 'Second live polled message']);
+    }
+
+    /** 13. Message Attachment: participant can upload and store image/document in private storage */
+    public function test_participant_can_send_message_with_attachment(): void
+    {
+        Storage::fake('local');
+
+        $conv = Conversation::create(['created_by' => $this->passenger->id]);
+        ConversationParticipant::create(['conversation_id' => $conv->id, 'user_id' => $this->passenger->id]);
+        ConversationParticipant::create(['conversation_id' => $conv->id, 'user_id' => $this->driver->id]);
+
+        $file = UploadedFile::fake()->create('contract.pdf', 300, 'application/pdf');
+
+        $response = $this->actingAs($this->passenger)->post("/messages/{$conv->id}", [
+            'body'       => 'Here is the signed travel agreement.',
+            'attachment' => $file,
+        ]);
+
+        $response->assertRedirect();
+
+        $message = Message::where('conversation_id', $conv->id)->first();
+        $this->assertNotNull($message);
+        $this->assertEquals('Here is the signed travel agreement.', $message->body);
+        $this->assertTrue($message->hasAttachment());
+        $this->assertFalse($message->isImageAttachment());
+        $this->assertNotNull($message->attachment_path);
+        $this->assertStringContainsString('contract.pdf', $message->attachment_name);
+
+        Storage::disk('local')->assertExists($message->attachment_path);
+    }
+
+    /** 14. Message Attachment: validation rejects invalid file extensions */
+    public function test_attachment_validation_fails_for_disallowed_file_types(): void
+    {
+        Storage::fake('local');
+
+        $conv = Conversation::create(['created_by' => $this->passenger->id]);
+        ConversationParticipant::create(['conversation_id' => $conv->id, 'user_id' => $this->passenger->id]);
+        ConversationParticipant::create(['conversation_id' => $conv->id, 'user_id' => $this->driver->id]);
+
+        $invalidFile = UploadedFile::fake()->create('malicious.exe', 100, 'application/x-msdownload');
+
+        $response = $this->actingAs($this->passenger)->post("/messages/{$conv->id}", [
+            'body'       => 'Try opening this file.',
+            'attachment' => $invalidFile,
+        ]);
+
+        $response->assertSessionHasErrors('attachment');
+        $this->assertDatabaseMissing('messages', ['conversation_id' => $conv->id]);
+    }
+
+    /** 15. Secure Attachment Download: authorized for participant, forbidden for outsiders */
+    public function test_secure_attachment_download_access_control(): void
+    {
+        Storage::fake('local');
+
+        $conv = Conversation::create(['created_by' => $this->passenger->id]);
+        ConversationParticipant::create(['conversation_id' => $conv->id, 'user_id' => $this->passenger->id]);
+        ConversationParticipant::create(['conversation_id' => $conv->id, 'user_id' => $this->driver->id]);
+
+        $filePath = 'chat_attachments/test_voucher.pdf';
+        Storage::disk('local')->put($filePath, 'Fake PDF Content');
+
+        $msg = Message::create([
+            'conversation_id' => $conv->id,
+            'sender_id'       => $this->passenger->id,
+            'body'            => 'Hotel voucher attachment',
+            'attachment_path' => $filePath,
+            'attachment_name' => 'voucher.pdf',
+            'attachment_type' => 'application/pdf',
+            'attachment_size' => 1024,
+            'type'            => 'attachment',
+        ]);
+
+        // 1. Participant can download
+        $authResponse = $this->actingAs($this->driver)->get("/messages/{$conv->id}/attachments/{$msg->id}");
+        $authResponse->assertStatus(200);
+
+        // 2. Unrelated passenger gets 403 Forbidden
+        $deniedResponse = $this->actingAs($this->otherPassenger)->get("/messages/{$conv->id}/attachments/{$msg->id}");
+        $deniedResponse->assertStatus(403);
+    }
+
+    /** 16. Complete Arrangement: workflow updates arrangement and booking status to completed */
+    public function test_complete_arrangement_workflow(): void
+    {
+        $conv = Conversation::create([
+            'title'              => 'Private Trip',
+            'subject_type'       => 'vehicle',
+            'subject_id'         => $this->vehicle->id,
+            'arrangement_status' => 'negotiating',
+            'arrangement_details' => [
+                'route' => 'Islamabad → Murree',
+                'fare'  => 3000,
+                'seats' => 2,
+            ],
+            'created_by'         => $this->passenger->id,
+        ]);
+
+        ConversationParticipant::create(['conversation_id' => $conv->id, 'user_id' => $this->passenger->id]);
+        ConversationParticipant::create(['conversation_id' => $conv->id, 'user_id' => $this->driver->id]);
+
+        // 1. Confirm arrangement
+        $confirmResponse = $this->actingAs($this->passenger)->post("/messages/{$conv->id}/confirm");
+        $confirmResponse->assertRedirect();
+
+        $conv->refresh();
+        $this->assertEquals('confirmed', $conv->arrangement_status);
+        $this->assertNotNull($conv->confirmed_booking_id);
+
+        $booking = Booking::find($conv->confirmed_booking_id);
+        $this->assertEquals('confirmed', $booking->status);
+
+        // 2. Complete arrangement
+        $completeResponse = $this->actingAs($this->driver)->post("/messages/{$conv->id}/complete");
+        $completeResponse->assertRedirect();
+
+        $conv->refresh();
+        $this->assertEquals('completed', $conv->arrangement_status);
+
+        $booking->refresh();
+        $this->assertEquals('completed', $booking->status);
+    }
+
+    /** 17. Start conversation from travel request */
+    public function test_driver_can_start_conversation_from_travel_request(): void
+    {
+        $travelRequest = TravelRequest::create([
+            'user_id'              => $this->passenger->id,
+            'pickup_location'      => 'Islamabad',
+            'destination_location' => 'Naran',
+            'travel_date'          => Carbon::tomorrow()->format('Y-m-d'),
+            'travel_time'          => '07:00 AM',
+            'seats_needed'         => 3,
+            'vehicle_type'         => 'SUV / 4x4',
+            'budget'               => 15000,
+            'status'               => 'open',
+        ]);
+
+        $response = $this->actingAs($this->driver)->get("/messages/start?travel_request_id={$travelRequest->id}");
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('conversations', [
+            'subject_type' => 'travel_request',
+            'subject_id'   => $travelRequest->id,
+        ]);
     }
 }
 

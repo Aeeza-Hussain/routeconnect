@@ -218,49 +218,97 @@
                     </div>
 
                     {{-- ─── Arrangement Tracker Banner ─── --}}
-                    <div id="arrangementBanner" class="p-3.5 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs {{ $activeConversation->arrangement_status === 'confirmed' ? 'bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300' : ($activeConversation->arrangement_status === 'negotiating' ? 'bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-300' : 'bg-slate-100 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300') }}">
+                    @php
+                        $status = strtolower($activeConversation->arrangement_status ?? 'pending');
+                    @endphp
+                    <div id="arrangementBanner" class="p-3.5 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs 
+                        @if($status === 'confirmed') bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300
+                        @elseif($status === 'completed') bg-teal-50/80 dark:bg-teal-950/40 text-teal-900 dark:text-teal-300
+                        @elseif($status === 'negotiating') bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-300
+                        @elseif($status === 'cancelled') bg-rose-50/80 dark:bg-rose-950/40 text-rose-900 dark:text-rose-300
+                        @else bg-amber-50/80 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300
+                        @endif">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs {{ $activeConversation->arrangement_status === 'confirmed' ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-white' }}">
-                                @if($activeConversation->arrangement_status === 'confirmed')
+                            <div class="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 
+                                @if($status === 'confirmed') bg-emerald-600 text-white
+                                @elseif($status === 'completed') bg-teal-600 text-white
+                                @elseif($status === 'negotiating') bg-indigo-600 text-white
+                                @elseif($status === 'cancelled') bg-rose-600 text-white
+                                @else bg-amber-600 text-white
+                                @endif">
+                                @if($status === 'confirmed')
                                     <i class="fa-solid fa-check"></i>
-                                @else
+                                @elseif($status === 'completed')
+                                    <i class="fa-solid fa-flag-checkered"></i>
+                                @elseif($status === 'cancelled')
+                                    <i class="fa-solid fa-xmark"></i>
+                                @elseif($status === 'negotiating')
                                     <i class="fa-solid fa-handshake"></i>
+                                @else
+                                    <i class="fa-solid fa-clock"></i>
                                 @endif
                             </div>
                             <div>
                                 <span class="font-extrabold uppercase text-[10px] tracking-wider block">
-                                    Arrangement Status: <span class="font-black">{{ strtoupper($activeConversation->arrangement_status) }}</span>
+                                    Arrangement Status: <span class="font-black">{{ strtoupper($status) }}</span>
                                 </span>
                                 @if(!empty($arrangementDetails['route']))
                                     <p class="text-[11px] font-medium mt-0.5">
                                         Route: <strong>{{ $arrangementDetails['route'] }}</strong>
                                         @if(!empty($arrangementDetails['fare'])) · Fare: <strong>Rs. {{ number_format($arrangementDetails['fare'], 2) }}</strong> @endif
                                         @if(!empty($arrangementDetails['date'])) · Date: <strong>{{ $arrangementDetails['date'] }}</strong> @endif
+                                        @if(!empty($arrangementDetails['seats'])) · Seats: <strong>{{ $arrangementDetails['seats'] }}</strong> @endif
                                     </p>
                                 @else
-                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Chatting does not book automatically. Discuss and confirm when ready.</p>
+                                    <p class="text-[11px] opacity-80 mt-0.5">Chatting does not book automatically. Discuss and confirm when ready.</p>
                                 @endif
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-2 shrink-0">
-                            @if($activeConversation->arrangement_status === 'negotiating')
+                        <div class="flex items-center gap-2 shrink-0 flex-wrap">
+                            @if($status === 'negotiating' || $status === 'pending')
                                 <form action="{{ route('messages.confirm', $activeConversation->id) }}" method="POST" onsubmit="return confirm('Confirm this travel arrangement? Both parties must agree.');">
                                     @csrf
-                                    <button type="submit" class="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-600/20">
-                                        Confirm Arrangement
+                                    <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-600/20">
+                                        <i class="fa-solid fa-check mr-1"></i> Confirm Arrangement
                                     </button>
                                 </form>
-                            @elseif($activeConversation->arrangement_status === 'confirmed')
-                                <span class="px-3 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase">
-                                    Confirmed & Locked
-                                </span>
-                                <form action="{{ route('messages.cancel', $activeConversation->id) }}" method="POST" onsubmit="return confirm('Cancel this confirmed arrangement?');">
+                                <button type="button" onclick="openProposeModal()" class="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs hover:bg-slate-300">
+                                    Propose Terms
+                                </button>
+                                <form action="{{ route('messages.cancel', $activeConversation->id) }}" method="POST" onsubmit="return confirm('Cancel this arrangement?');">
                                     @csrf
-                                    <button type="submit" class="px-3 py-1 rounded-xl bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold text-[10px]">
+                                    <button type="submit" class="px-2.5 py-1.5 rounded-xl bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold text-[11px]">
                                         Cancel
                                     </button>
                                 </form>
+                            @elseif($status === 'confirmed')
+                                <span class="px-3 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase inline-flex items-center gap-1">
+                                    <i class="fa-solid fa-lock"></i> Confirmed & Locked
+                                </span>
+                                <form action="{{ route('messages.complete', $activeConversation->id) }}" method="POST" onsubmit="return confirm('Mark this ride arrangement as completed?');">
+                                    @csrf
+                                    <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-black text-xs shadow-md shadow-teal-600/20">
+                                        <i class="fa-solid fa-flag-checkered mr-1"></i> Mark as Completed
+                                    </button>
+                                </form>
+                                <form action="{{ route('messages.cancel', $activeConversation->id) }}" method="POST" onsubmit="return confirm('Cancel this confirmed arrangement?');">
+                                    @csrf
+                                    <button type="submit" class="px-2.5 py-1.5 rounded-xl bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold text-[11px]">
+                                        Cancel
+                                    </button>
+                                </form>
+                            @elseif($status === 'completed')
+                                <span class="px-3 py-1 rounded-full bg-teal-600 text-white text-[10px] font-black uppercase inline-flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-check"></i> Completed
+                                </span>
+                            @elseif($status === 'cancelled')
+                                <span class="px-3 py-1 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase inline-flex items-center gap-1">
+                                    <i class="fa-solid fa-ban"></i> Cancelled
+                                </span>
+                                <button type="button" onclick="openProposeModal()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs">
+                                    Propose New Terms
+                                </button>
                             @endif
                         </div>
                     </div>
@@ -312,7 +360,29 @@
                                 <div class="flex justify-end" data-msg-id="{{ $msg->id }}">
                                     <div class="max-w-sm sm:max-w-md space-y-1 text-right">
                                         <div class="inline-block p-3.5 rounded-2xl rounded-tr-xs bg-emerald-600 text-white text-xs font-medium text-left shadow-sm">
-                                            {{ $msg->body }}
+                                            @if($msg->body && (!$msg->hasAttachment() || $msg->body !== 'Sent an attachment: ' . $msg->attachment_name))
+                                                <p class="leading-relaxed">{{ $msg->body }}</p>
+                                            @endif
+                                            @if($msg->hasAttachment())
+                                                @if($msg->isImageAttachment())
+                                                    <a href="{{ route('messages.attachment', [$activeConversation->id, $msg->id]) }}?preview=1" target="_blank" class="block {{ $msg->body ? 'mt-2' : '' }} rounded-xl overflow-hidden border border-white/20 max-w-xs group relative">
+                                                        <img src="{{ route('messages.attachment', [$activeConversation->id, $msg->id]) }}?preview=1" alt="{{ $msg->attachment_name }}" class="w-full max-h-56 object-cover rounded-xl transition-transform group-hover:scale-105" loading="lazy">
+                                                        <div class="p-1.5 bg-black/60 text-white text-[10px] flex items-center justify-between">
+                                                            <span class="truncate max-w-[140px]">{{ $msg->attachment_name }}</span>
+                                                            <span class="font-mono text-[9px] opacity-80">{{ $msg->formattedAttachmentSize() }}</span>
+                                                        </div>
+                                                    </a>
+                                                @else
+                                                    <a href="{{ route('messages.attachment', [$activeConversation->id, $msg->id]) }}" class="flex items-center gap-2.5 p-2.5 {{ $msg->body ? 'mt-2' : '' }} rounded-xl bg-emerald-700/80 hover:bg-emerald-700 text-white border border-white/20 transition-colors">
+                                                        <i class="fa-solid fa-file-arrow-down text-lg"></i>
+                                                        <div class="min-w-0 flex-1">
+                                                            <p class="text-xs font-bold truncate">{{ $msg->attachment_name }}</p>
+                                                            <p class="text-[10px] text-emerald-100 font-mono">{{ $msg->formattedAttachmentSize() }}</p>
+                                                        </div>
+                                                        <i class="fa-solid fa-download text-xs opacity-80"></i>
+                                                    </a>
+                                                @endif
+                                            @endif
                                         </div>
                                         <div class="text-[10px] text-slate-400 flex items-center justify-end gap-1 font-mono">
                                             <span>{{ $msg->created_at->format('h:i A') }}</span>
@@ -336,7 +406,29 @@
                                     @endif
                                     <div class="max-w-sm sm:max-w-md space-y-1">
                                         <div class="inline-block p-3.5 rounded-2xl rounded-tl-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-medium border border-slate-200/80 dark:border-slate-700 shadow-xs">
-                                            {{ $msg->body }}
+                                            @if($msg->body && (!$msg->hasAttachment() || $msg->body !== 'Sent an attachment: ' . $msg->attachment_name))
+                                                <p class="leading-relaxed">{{ $msg->body }}</p>
+                                            @endif
+                                            @if($msg->hasAttachment())
+                                                @if($msg->isImageAttachment())
+                                                    <a href="{{ route('messages.attachment', [$activeConversation->id, $msg->id]) }}?preview=1" target="_blank" class="block {{ $msg->body ? 'mt-2' : '' }} rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 max-w-xs group relative">
+                                                        <img src="{{ route('messages.attachment', [$activeConversation->id, $msg->id]) }}?preview=1" alt="{{ $msg->attachment_name }}" class="w-full max-h-56 object-cover rounded-xl transition-transform group-hover:scale-105" loading="lazy">
+                                                        <div class="p-1.5 bg-slate-900/80 text-white text-[10px] flex items-center justify-between">
+                                                            <span class="truncate max-w-[140px]">{{ $msg->attachment_name }}</span>
+                                                            <span class="font-mono text-[9px] text-slate-300">{{ $msg->formattedAttachmentSize() }}</span>
+                                                        </div>
+                                                    </a>
+                                                @else
+                                                    <a href="{{ route('messages.attachment', [$activeConversation->id, $msg->id]) }}" class="flex items-center gap-2.5 p-2.5 {{ $msg->body ? 'mt-2' : '' }} rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700/60 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-600 transition-colors">
+                                                        <i class="fa-solid fa-file-arrow-down text-lg text-teal-500"></i>
+                                                        <div class="min-w-0 flex-1">
+                                                            <p class="text-xs font-bold truncate">{{ $msg->attachment_name }}</p>
+                                                            <p class="text-[10px] text-slate-400 font-mono">{{ $msg->formattedAttachmentSize() }}</p>
+                                                        </div>
+                                                        <i class="fa-solid fa-download text-xs text-slate-400"></i>
+                                                    </a>
+                                                @endif
+                                            @endif
                                         </div>
                                         <div class="text-[10px] text-slate-400 font-mono">
                                             {{ $msg->created_at->format('h:i A') }}
@@ -350,13 +442,33 @@
                     {{-- ─── Chat Input Bar ─── --}}
                     @if(!$isBlocked)
                         <div class="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-                            <form id="chatForm" onsubmit="handleSendMessage(event)" class="flex items-center gap-2">
+                            {{-- Attachment Preview Pill --}}
+                            <div id="attachmentPreview" class="hidden items-center justify-between p-2.5 mb-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-paperclip text-teal-500"></i>
+                                    <span id="attachmentFileName" class="font-bold text-slate-800 dark:text-slate-200 truncate"></span>
+                                    <span id="attachmentFileSize" class="text-[10px] text-slate-400 font-mono shrink-0"></span>
+                                </div>
+                                <button type="button" onclick="clearSelectedAttachment()" class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-rose-500 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-xmark text-xs"></i>
+                                </button>
+                            </div>
+
+                            <form id="chatForm" onsubmit="handleSendMessage(event)" class="flex items-center gap-2" enctype="multipart/form-data">
                                 @csrf
+                                <input type="file" id="attachmentInput" name="attachment" accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.txt" class="hidden" onchange="handleFileSelect(event)">
+
+                                <button type="button"
+                                        onclick="document.getElementById('attachmentInput').click()"
+                                        title="Attach image or document"
+                                        class="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center text-sm transition-colors shrink-0">
+                                    <i class="fa-solid fa-paperclip"></i>
+                                </button>
+
                                 <input type="text"
                                        id="messageInput"
                                        name="body"
                                        autocomplete="off"
-                                       required
                                        placeholder="Type a message to {{ $activeOtherUser?->name }}..."
                                        class="flex-1 px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
 
@@ -550,28 +662,110 @@ function filterConversations() {
 }
 
 // ─── Instant Message Sending & Polling ───
+function handleFileSelect(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('attachmentPreview');
+    const nameEl = document.getElementById('attachmentFileName');
+    const sizeEl = document.getElementById('attachmentFileSize');
+    if (!file) {
+        if (preview) preview.classList.add('hidden');
+        return;
+    }
+    if (preview) {
+        preview.classList.remove('hidden');
+        preview.classList.add('flex');
+    }
+    if (nameEl) nameEl.textContent = file.name;
+    if (sizeEl) {
+        const kb = file.size / 1024;
+        sizeEl.textContent = kb > 1024 ? (kb / 1024).toFixed(1) + ' MB' : kb.toFixed(1) + ' KB';
+    }
+}
+
+function clearSelectedAttachment() {
+    const fileInput = document.getElementById('attachmentInput');
+    const preview = document.getElementById('attachmentPreview');
+    if (fileInput) fileInput.value = '';
+    if (preview) {
+        preview.classList.add('hidden');
+        preview.classList.remove('flex');
+    }
+}
+
+function renderAttachmentHtml(msg, isSender) {
+    if (!msg.attachment_url) return '';
+    const safeUrl = msg.attachment_url;
+    const safeName = escapeHtml(msg.attachment_name || 'Attachment');
+    const safeSize = escapeHtml(msg.attachment_size || '');
+    if (msg.is_image_attachment) {
+        return `
+            <a href="${safeUrl}?preview=1" target="_blank" class="block mt-2 rounded-xl overflow-hidden border ${isSender ? 'border-white/20' : 'border-slate-200 dark:border-slate-700'} max-w-xs group relative">
+                <img src="${safeUrl}?preview=1" alt="${safeName}" class="w-full max-h-56 object-cover rounded-xl transition-transform group-hover:scale-105" loading="lazy">
+                <div class="p-1.5 ${isSender ? 'bg-black/60 text-white' : 'bg-slate-900/80 text-white'} text-[10px] flex items-center justify-between">
+                    <span class="truncate max-w-[140px]">${safeName}</span>
+                    <span class="font-mono text-[9px] opacity-80">${safeSize}</span>
+                </div>
+            </a>
+        `;
+    } else {
+        return `
+            <a href="${safeUrl}" class="flex items-center gap-2.5 p-2.5 mt-2 rounded-xl ${isSender ? 'bg-emerald-700/80 hover:bg-emerald-700 text-white border border-white/20' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-700/60 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-600'} transition-colors">
+                <i class="fa-solid fa-file-arrow-down text-lg ${isSender ? '' : 'text-teal-500'}"></i>
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs font-bold truncate">${safeName}</p>
+                    <p class="text-[10px] ${isSender ? 'text-emerald-100' : 'text-slate-400'} font-mono">${safeSize}</p>
+                </div>
+                <i class="fa-solid fa-download text-xs opacity-80"></i>
+            </a>
+        `;
+    }
+}
+
 async function handleSendMessage(e) {
     e.preventDefault();
     const input = document.getElementById('messageInput');
-    const text = input.value.trim();
-    if (!text || !activeConvId) return;
+    const fileInput = document.getElementById('attachmentInput');
+    const text = input ? input.value.trim() : '';
+    const file = fileInput && fileInput.files ? fileInput.files[0] : null;
 
-    input.value = '';
+    if ((!text && !file) || !activeConvId) return;
+
+    const formData = new FormData();
+    if (text) formData.append('body', text);
+    if (file) formData.append('attachment', file);
+
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+    formData.append('_token', csrf);
+
+    if (input) input.value = '';
+    clearSelectedAttachment();
+
     const container = document.getElementById('messagesContainer');
-
-    // Instant optimistic render in chat
     const tempId = 'temp_' + Date.now();
     const bubble = document.createElement('div');
     bubble.className = 'flex justify-end';
     bubble.id = tempId;
+
+    let tempAttachmentHtml = '';
+    if (file) {
+        tempAttachmentHtml = `
+            <div class="p-2.5 mt-2 rounded-xl bg-emerald-700/80 text-white text-[11px] flex items-center gap-2">
+                <i class="fa-solid fa-paperclip"></i>
+                <span class="truncate max-w-[140px]">${escapeHtml(file.name)}</span>
+                <span class="opacity-80">Uploading...</span>
+            </div>
+        `;
+    }
+
     bubble.innerHTML = `
         <div class="max-w-sm sm:max-w-md space-y-1 text-right">
             <div class="inline-block p-3.5 rounded-2xl rounded-tr-xs bg-emerald-600 text-white text-xs font-medium text-left shadow-sm">
-                ${escapeHtml(text)}
+                ${text ? `<p class="leading-relaxed">${escapeHtml(text)}</p>` : ''}
+                ${tempAttachmentHtml}
             </div>
             <div class="text-[10px] text-slate-400 flex items-center justify-end gap-1 font-mono">
-                <span>Just now</span>
-                <i class="fa-solid fa-check text-slate-400 text-[10px]"></i>
+                <span>Sending...</span>
+                <i class="fa-solid fa-clock text-slate-400 text-[10px]"></i>
             </div>
         </div>
     `;
@@ -582,14 +776,34 @@ async function handleSendMessage(e) {
         const response = await fetch(`/messages/${activeConvId}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': csrf,
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ body: text })
+            body: formData
         });
 
-        if (!response.ok) {
+        if (response.ok) {
+            const result = await response.json();
+            if (result.message) {
+                const realMsg = result.message;
+                const tempEl = document.getElementById(tempId);
+                if (tempEl) {
+                    tempEl.setAttribute('data-msg-id', realMsg.id);
+                    tempEl.innerHTML = `
+                        <div class="max-w-sm sm:max-w-md space-y-1 text-right">
+                            <div class="inline-block p-3.5 rounded-2xl rounded-tr-xs bg-emerald-600 text-white text-xs font-medium text-left shadow-sm">
+                                ${realMsg.body && (!realMsg.attachment_url || realMsg.body !== 'Sent an attachment: ' + realMsg.attachment_name) ? `<p class="leading-relaxed">${escapeHtml(realMsg.body)}</p>` : ''}
+                                ${renderAttachmentHtml(realMsg, true)}
+                            </div>
+                            <div class="text-[10px] text-slate-400 flex items-center justify-end gap-1 font-mono">
+                                <span>Just now</span>
+                                <i class="fa-solid fa-check text-slate-400 text-[10px]" title="Delivered"></i>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        } else {
             console.error('Failed to send message');
         }
     } catch (err) {
@@ -648,7 +862,8 @@ async function pollMessages() {
                     wrapper.innerHTML = `
                         <div class="max-w-sm sm:max-w-md space-y-1 text-right">
                             <div class="inline-block p-3.5 rounded-2xl rounded-tr-xs bg-emerald-600 text-white text-xs font-medium text-left shadow-sm">
-                                ${escapeHtml(msg.body)}
+                                ${msg.body && (!msg.attachment_url || msg.body !== 'Sent an attachment: ' + msg.attachment_name) ? `<p class="leading-relaxed">${escapeHtml(msg.body)}</p>` : ''}
+                                ${renderAttachmentHtml(msg, true)}
                             </div>
                             <div class="text-[10px] text-slate-400 flex items-center justify-end gap-1 font-mono">
                                 <span>Just now</span>
@@ -664,7 +879,8 @@ async function pollMessages() {
                         </div>
                         <div class="max-w-sm sm:max-w-md space-y-1">
                             <div class="inline-block p-3.5 rounded-2xl rounded-tl-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-medium border border-slate-200/80 dark:border-slate-700 shadow-xs">
-                                ${escapeHtml(msg.body)}
+                                ${msg.body && (!msg.attachment_url || msg.body !== 'Sent an attachment: ' + msg.attachment_name) ? `<p class="leading-relaxed">${escapeHtml(msg.body)}</p>` : ''}
+                                ${renderAttachmentHtml(msg, false)}
                             </div>
                             <div class="text-[10px] text-slate-400 font-mono">Just now</div>
                         </div>

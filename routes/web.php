@@ -59,12 +59,14 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
-    Route::get('/messages/start', [MessageController::class, 'start'])->name('messages.start');
+    Route::get('/messages/start', [MessageController::class, 'start'])->name('messages.start')->middleware('throttle:60,1');
     Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show')->whereNumber('conversation');
-    Route::post('/messages/{conversation}', [MessageController::class, 'store'])->name('messages.store')->whereNumber('conversation');
+    Route::post('/messages/{conversation}', [MessageController::class, 'store'])->name('messages.store')->whereNumber('conversation')->middleware('throttle:60,1');
     Route::get('/messages/{conversation}/fetch', [MessageController::class, 'fetchMessages'])->name('messages.fetch')->whereNumber('conversation');
+    Route::get('/messages/{conversation}/attachments/{message}', [MessageController::class, 'downloadAttachment'])->name('messages.attachment')->whereNumber('conversation')->whereNumber('message');
     Route::post('/messages/{conversation}/propose', [MessageController::class, 'proposeArrangement'])->name('messages.propose')->whereNumber('conversation');
     Route::post('/messages/{conversation}/confirm', [MessageController::class, 'confirmArrangement'])->name('messages.confirm')->whereNumber('conversation');
+    Route::post('/messages/{conversation}/complete', [MessageController::class, 'completeArrangement'])->name('messages.complete')->whereNumber('conversation');
     Route::post('/messages/{conversation}/cancel', [MessageController::class, 'cancelArrangement'])->name('messages.cancel')->whereNumber('conversation');
     Route::post('/messages/{conversation}/block', [MessageController::class, 'toggleBlock'])->name('messages.block')->whereNumber('conversation');
     Route::post('/messages/{conversation}/report', [MessageController::class, 'report'])->name('messages.report')->whereNumber('conversation');

@@ -15,6 +15,7 @@ use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class MessageController extends Controller
@@ -502,15 +503,45 @@ class MessageController extends Controller
         }
 
         $validated = $request->validate([
-            'body' => ['required', 'string', 'max:3000'],
+            'body'       => ['nullable', 'string', 'max:3000', 'required_without:attachment'],
+            'attachment' => ['nullable', 'file', 'max:10240', 'mimes:jpeg,jpg,png,webp,pdf,doc,docx,txt'],
         ]);
 
-        $message = DB::transaction(function () use ($conversation, $user, $validated) {
+        $attachmentData = null;
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $extension = $file->getClientOriginalExtension();
+            $safeName = Str::slug(substr($originalName, 0, 50)) . '.' . $extension;
+            if (empty($safeName) || $safeName === '.') {
+                $safeName = 'attachment_' . time() . '.' . $extension;
+            }
+
+            $path = $file->store('chat_attachments', 'local');
+
+            $attachmentData = [
+                'path' => $path,
+                'name' => $safeName,
+                'type' => $file->getClientMimeType() ?: 'application/octet-stream',
+                'size' => $file->getSize(),
+            ];
+        }
+
+        $bodyText = !empty($validated['body']) ? trim($validated['body']) : '';
+        if (empty($bodyText) && $attachmentData) {
+            $bodyText = "Sent an attachment: " . $attachmentData['name'];
+        }
+
+        $message = DB::transaction(function () use ($conversation, $user, $bodyText, $attachmentData) {
             $msg = Message::create([
                 'conversation_id' => $conversation->id,
                 'sender_id'       => $user->id,
-                'body'            => trim($validated['body']),
-                'type'            => 'text',
+                'body'            => $bodyText,
+                'attachment_path' => $attachmentData['path'] ?? null,
+                'attachment_name' => $attachmentData['name'] ?? null,
+                'attachment_type' => $attachmentData['type'] ?? null,
+                'attachment_size' => $attachmentData['size'] ?? null,
+                'type'            => $attachmentData ? 'attachment' : 'text',
                 'is_read'         => false,
             ]);
 
@@ -540,11 +571,49 @@ class MessageController extends Controller
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => $message->load('sender'),
+                'message' => array_merge($message->load('sender')->toArray(), [
+                    'attachment_url'      => $message->hasAttachment() ? route('messages.attachment', ['conversation' => $conversation->id, 'message' => $message->id]) : null,
+                    'attachment_name'     => $message->attachment_name,
+                    'attachment_size'     => $message->formattedAttachmentSize(),
+                    'is_image_attachment' => $message->isImageAttachment(),
+                ]),
             ]);
         }
 
         return redirect()->route('messages.index', ['conversation_id' => $conversation->id]);
+    }
+
+    /**
+     * Download or stream message attachment from secure private storage.
+     */
+    public function downloadAttachment(Request $request, Conversation $conversation, Message $message)
+    {
+        $user = auth()->user();
+
+        if (!$conversation->isParticipant($user) && !$user->isAdmin()) {
+            abort(403, 'Unauthorized access to this attachment.');
+        }
+
+        if ($message->conversation_id !== $conversation->id) {
+            abort(404, 'Message does not belong to this conversation.');
+        }
+
+        if (!$message->hasAttachment() || !Storage::disk('local')->exists($message->attachment_path)) {
+            abort(404, 'Attachment file not found.');
+        }
+
+        $fullPath = Storage::disk('local')->path($message->attachment_path);
+        $mime = $message->attachment_type ?: mime_content_type($fullPath) ?: 'application/octet-stream';
+        $fileName = $message->attachment_name ?: basename($message->attachment_path);
+
+        if ($request->boolean('preview') || ($message->isImageAttachment() && !$request->boolean('download'))) {
+            return response()->file($fullPath, [
+                'Content-Type'        => $mime,
+                'Content-Disposition' => 'inline; filename="' . addslashes($fileName) . '"',
+            ]);
+        }
+
+        return Storage::disk('local')->download($message->attachment_path, $fileName);
     }
 
     /**
@@ -575,7 +644,14 @@ class MessageController extends Controller
             $query->where('id', '>', (int) $sinceId);
         }
 
-        $messages = $query->get();
+        $messages = $query->get()->map(function ($msg) use ($conversation) {
+            $data = $msg->toArray();
+            $data['attachment_url'] = $msg->hasAttachment() ? route('messages.attachment', ['conversation' => $conversation->id, 'message' => $msg->id]) : null;
+            $data['attachment_name'] = $msg->attachment_name;
+            $data['attachment_size'] = $msg->formattedAttachmentSize();
+            $data['is_image_attachment'] = $msg->isImageAttachment();
+            return $data;
+        });
 
         return response()->json([
             'messages'            => $messages,
@@ -748,6 +824,61 @@ class MessageController extends Controller
 
         return redirect()->route('messages.index', ['conversation_id' => $conversation->id])
             ->with('success', 'Trip arrangement has been confirmed successfully! It is now recorded in My Activity.');
+    }
+
+    /**
+     * Mark an arrangement as completed when the ride finishes.
+     */
+    public function completeArrangement(Request $request, Conversation $conversation)
+    {
+        $user = auth()->user();
+
+        if (!$conversation->isParticipant($user) && !$user->isAdmin()) {
+            abort(403);
+        }
+
+        if ($conversation->arrangement_status !== 'confirmed') {
+            return redirect()->back()->with('error', 'Only confirmed arrangements can be marked as completed.');
+        }
+
+        DB::transaction(function () use ($conversation, $user) {
+            $conversation->update(['arrangement_status' => 'completed']);
+
+            if ($conversation->confirmed_booking_id) {
+                $booking = Booking::find($conversation->confirmed_booking_id);
+                if ($booking) {
+                    $booking->update([
+                        'status'         => 'completed',
+                        'booking_status' => 'completed',
+                    ]);
+                }
+            }
+
+            if ($conversation->subject_type === 'travel_request' && $conversation->subject_id) {
+                $tr = TravelRequest::find($conversation->subject_id);
+                if ($tr && $tr->status === 'confirmed') {
+                    $tr->update(['status' => 'completed']);
+                }
+            }
+
+            Message::create([
+                'conversation_id' => $conversation->id,
+                'sender_id'       => $user->id,
+                'body'            => "🏁 Trip arrangement has been successfully completed! Thank you for traveling with RouteConnect.",
+                'type'            => 'system',
+            ]);
+
+            foreach ($conversation->participants as $p) {
+                Notification::create([
+                    'user_id' => $p->user_id,
+                    'message' => "Arrangement for '{$conversation->title}' has been marked as completed.",
+                    'is_read' => false,
+                ]);
+            }
+        });
+
+        return redirect()->route('messages.index', ['conversation_id' => $conversation->id])
+            ->with('success', 'Arrangement has been marked as completed successfully!');
     }
 
     /**

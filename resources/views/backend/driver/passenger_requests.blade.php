@@ -117,11 +117,15 @@
                 {{-- Action / Application status --}}
                 <div class="flex items-center gap-2 shrink-0">
                     @if($hasApplied)
-                        <div class="text-right">
+                        <div class="flex items-center gap-2">
                             <span class="px-3 py-1.5 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 font-extrabold text-xs inline-flex items-center gap-1.5">
                                 <i class="fa-solid fa-check"></i>
                                 <span>Applied: Rs. {{ number_format($myApp->offered_fare, 2) }} ({{ ucfirst($myApp->status) }})</span>
                             </span>
+                            <a href="{{ route('messages.start') }}?travel_request_id={{ $req->id }}" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-400 font-bold text-xs inline-flex items-center gap-1.5 border border-teal-500/30 transition-colors">
+                                <i class="fa-solid fa-comments"></i>
+                                <span>Message</span>
+                            </a>
                         </div>
                     @else
                         <button type="button"
