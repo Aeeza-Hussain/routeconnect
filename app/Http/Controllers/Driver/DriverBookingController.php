@@ -42,11 +42,17 @@ class DriverBookingController extends Controller
      */
     public function show($id)
     {
-        $booking = Booking::with(['user', 'trip.route', 'trip.vehicle', 'fromStop', 'toStop'])
+        $booking = Booking::with(['user', 'trip.route', 'trip.vehicle', 'vehicle', 'fromStop', 'toStop'])
             ->findOrFail($id);
 
-        if ($booking->trip->user_id !== auth()->id()) {
-            abort(403, 'Unauthorized access. You can only view bookings for your own trips.');
+        $driverId = auth()->id();
+        $isOwner = ($booking->trip && $booking->trip->user_id === $driverId)
+            || ($booking->vehicle && $booking->vehicle->user_id === $driverId)
+            || ($booking->driver_id === $driverId)
+            || auth()->user()->isAdmin();
+
+        if (!$isOwner) {
+            abort(403, 'Unauthorized access. You can only view bookings for your own trips or vehicles.');
         }
 
         return view('backend.driver.bookings.show', compact('booking'));

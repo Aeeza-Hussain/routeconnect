@@ -25,40 +25,58 @@ class ActivityController extends Controller
     {
         $user = auth()->user();
         $isDriver = $user->isDriver();
-        $defaultTab = $isDriver ? 'my-vehicles' : 'seat-bookings';
+
+        $defaultTab = $isDriver ? 'shared-rides' : 'seat-bookings';
         $activeTab = $request->query('tab', $defaultTab);
 
-        // Common Counts
+        // Aliases for tab links
+        if ($activeTab === 'driver-offers') $activeTab = 'applications-received';
+        if ($activeTab === 'arrangements') $activeTab = 'confirmed-arrangements';
+        if ($activeTab === 'history') $activeTab = 'completed-trips';
+        if ($activeTab === 'private-bookings' && $isDriver && !$request->has('tab')) $activeTab = 'shared-rides';
+
         $counts = [];
 
         if (!$isDriver) {
-            // ─── Passenger Activity Data ───
+            // ══════════════════════════════════════════════════════════
+            // 1. PASSENGER ACTIVITY DATA
+            // ══════════════════════════════════════════════════════════
+
+            // 1.1 My Seat Bookings (Shared)
             $seatBookings = Booking::with(['trip.route', 'trip.driver', 'trip.vehicle', 'fromStop', 'toStop'])
                 ->where('user_id', $user->id)
                 ->where(function ($q) {
                     $q->whereNull('booking_type')->orWhere('booking_type', 'shared');
                 })
+                ->whereNotIn(DB::raw('LOWER(booking_status)'), ['completed', 'cancelled'])
                 ->latest()
                 ->get();
 
-            $privateBookings = Booking::with(['vehicle.driver'])
+            // 1.2 My Private Vehicle Bookings
+            $privateBookings = Booking::with(['vehicle.driver', 'driver'])
                 ->where('user_id', $user->id)
                 ->where('booking_type', 'private')
+                ->whereNotIn(DB::raw('LOWER(booking_status)'), ['completed', 'cancelled'])
                 ->latest()
                 ->get();
 
-            $myTravelRequests = TravelRequest::with(['applications.driver', 'applications.vehicle'])
+            // 1.3 My Travel Requests (Active / Open / Confirmed)
+            $myTravelRequests = TravelRequest::with(['applications.driver', 'applications.vehicle', 'selectedApplication.driver'])
                 ->where('user_id', $user->id)
+                ->whereNotIn(DB::raw('LOWER(status)'), ['completed', 'cancelled'])
                 ->latest()
                 ->get();
 
-            $driverOffers = DriverApplication::with(['travelRequest', 'driver', 'vehicle'])
+            // 1.4 Applications Received on Passenger Requests
+            $applicationsReceived = DriverApplication::with(['travelRequest', 'driver', 'vehicle'])
                 ->whereHas('travelRequest', function ($q) use ($user) {
                     $q->where('user_id', $user->id);
                 })
+                ->whereNotIn(DB::raw('LOWER(status)'), ['rejected', 'cancelled'])
                 ->latest()
                 ->get();
 
+            // 1.5 Confirmed Arrangements
             $confirmedArrangements = Conversation::with(['users', 'confirmedBooking.vehicle.driver'])
                 ->whereHas('participants', function ($q) use ($user) {
                     $q->where('user_id', $user->id);
@@ -67,23 +85,65 @@ class ActivityController extends Controller
                 ->latest()
                 ->get();
 
-            // History (Completed & Cancelled)
-            $completedBookings = Booking::with(['trip.route', 'vehicle.driver'])
+            // 1.6 Completed Trips
+            $completedBookings = Booking::with(['trip.route', 'trip.driver', 'vehicle.driver', 'fromStop', 'toStop'])
                 ->where('user_id', $user->id)
                 ->where(function ($q) {
-                    $q->whereIn(DB::raw('LOWER(booking_status)'), ['completed', 'cancelled'])
-                      ->orWhereIn(DB::raw('LOWER(status)'), ['completed', 'cancelled']);
+                    $q->whereIn(DB::raw('LOWER(booking_status)'), ['completed'])
+                      ->orWhereIn(DB::raw('LOWER(status)'), ['completed']);
+                })
+                ->latest()
+                ->get();
+
+            $completedRequests = TravelRequest::with(['selectedApplication.driver', 'selectedApplication.vehicle'])
+                ->where('user_id', $user->id)
+                ->where(DB::raw('LOWER(status)'), 'completed')
+                ->latest()
+                ->get();
+
+            $completedArrangements = Conversation::with(['users', 'confirmedBooking.vehicle.driver'])
+                ->whereHas('participants', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })
+                ->where('arrangement_status', 'completed')
+                ->latest()
+                ->get();
+
+            // 1.7 Cancelled and Expired Records
+            $cancelledBookings = Booking::with(['trip.route', 'trip.driver', 'vehicle.driver', 'fromStop', 'toStop'])
+                ->where('user_id', $user->id)
+                ->where(function ($q) {
+                    $q->whereIn(DB::raw('LOWER(booking_status)'), ['cancelled', 'rejected'])
+                      ->orWhereIn(DB::raw('LOWER(status)'), ['cancelled', 'rejected']);
+                })
+                ->latest()
+                ->get();
+
+            $cancelledRequests = TravelRequest::with(['applications.driver'])
+                ->where('user_id', $user->id)
+                ->where(function ($q) {
+                    $q->whereIn(DB::raw('LOWER(status)'), ['cancelled', 'expired'])
+                      ->orWhere(function ($inner) {
+                          $inner->where('status', 'open')
+                                ->whereNotNull('expires_at')
+                                ->where('expires_at', '<', now());
+                      });
                 })
                 ->latest()
                 ->get();
 
             $counts = [
-                'seat_bookings'    => $seatBookings->where('booking_status', '!=', 'cancelled')->count(),
-                'private_bookings' => $privateBookings->where('booking_status', '!=', 'cancelled')->count(),
-                'travel_requests'  => $myTravelRequests->where('status', 'open')->count(),
-                'driver_offers'    => $driverOffers->where('status', 'pending')->count(),
-                'arrangements'     => $confirmedArrangements->count(),
-                'history'          => $completedBookings->count(),
+                'seat_bookings'          => $seatBookings->count(),
+                'private_bookings'       => $privateBookings->count(),
+                'travel_requests'        => $myTravelRequests->count(),
+                'applications_received'  => $applicationsReceived->count(),
+                'confirmed_arrangements' => $confirmedArrangements->count(),
+                'completed_trips'        => $completedBookings->count() + $completedRequests->count() + $completedArrangements->count(),
+                'cancelled_expired'      => $cancelledBookings->count() + $cancelledRequests->count(),
+                // Backwards compat keys
+                'driver_offers'          => $applicationsReceived->count(),
+                'arrangements'           => $confirmedArrangements->count(),
+                'history'                => $completedBookings->count() + $completedRequests->count(),
             ];
 
             return view('frontend.activity.index', compact(
@@ -94,33 +154,59 @@ class ActivityController extends Controller
                 'seatBookings',
                 'privateBookings',
                 'myTravelRequests',
-                'driverOffers',
+                'applicationsReceived',
                 'confirmedArrangements',
-                'completedBookings'
+                'completedBookings',
+                'completedRequests',
+                'completedArrangements',
+                'cancelledBookings',
+                'cancelledRequests'
             ));
         }
 
-        // ─── Driver Activity Data ───
+        // ══════════════════════════════════════════════════════════
+        // 2. DRIVER ACTIVITY DATA
+        // ══════════════════════════════════════════════════════════
+
+        // 2.1 My Shared Ride Listings
+        $sharedRideListings = Trip::with(['route', 'vehicle', 'bookings'])
+            ->where('user_id', $user->id)
+            ->whereNotIn(DB::raw('LOWER(status)'), ['completed', 'cancelled'])
+            ->latest('trip_date')
+            ->get();
+
+        // 2.2 My Private Vehicle Listings
         $myVehicles = Vehicle::with(['unavailabilities'])
             ->where('user_id', $user->id)
             ->latest()
             ->get();
 
-        $sharedRideListings = Trip::with(['route', 'vehicle'])
-            ->where('user_id', $user->id)
-            ->latest('trip_date')
-            ->get();
-
-        $receivedPrivateBookings = Booking::with(['user', 'vehicle'])
-            ->whereHas('vehicle', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
+        // 2.3 My Bookings (Shared seat bookings & private rentals received by driver)
+        $myBookingsQuery = Booking::with(['user', 'trip.route', 'vehicle', 'fromStop', 'toStop'])
+            ->where(function ($q) use ($user) {
+                $q->where('driver_id', $user->id)
+                  ->orWhereHas('trip', fn($t) => $t->where('user_id', $user->id))
+                  ->orWhereHas('vehicle', fn($v) => $v->where('user_id', $user->id));
             })
-            ->where('booking_type', 'private')
-            ->latest()
-            ->get();
+            ->whereNotIn(DB::raw('LOWER(booking_status)'), ['completed', 'cancelled']);
 
-        $passengerRequests = TravelRequest::with('user')
+        if ($request->filled('booking_type_filter')) {
+            if ($request->booking_type_filter === 'private') {
+                $myBookingsQuery->where('booking_type', 'private');
+            } elseif ($request->booking_type_filter === 'shared') {
+                $myBookingsQuery->where(function ($q) {
+                    $q->whereNull('booking_type')->orWhere('booking_type', 'shared');
+                });
+            }
+        }
+        $myBookings = $myBookingsQuery->latest()->get();
+
+        // 2.4 Passenger Requests (Open requests in marketplace)
+        $passengerRequests = TravelRequest::with(['user', 'applications' => fn($q) => $q->where('driver_id', $user->id)])
             ->where('status', 'open')
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>=', now());
+            })
             ->when($request->query('filter_date'), fn($q, $d) => $q->whereDate('travel_date', $d))
             ->when($request->query('filter_vehicle'), fn($q, $v) => $q->where('preferred_vehicle_type', $v))
             ->when($request->query('filter_route'), function ($q, $route) {
@@ -132,12 +218,15 @@ class ActivityController extends Controller
             ->latest()
             ->get();
 
+        // 2.5 My Submitted Applications
         $myApplications = DriverApplication::with(['travelRequest.user', 'vehicle'])
             ->where('driver_id', $user->id)
+            ->whereNotIn(DB::raw('LOWER(status)'), ['cancelled', 'rejected'])
             ->latest()
             ->get();
 
-        $confirmedArrangements = Conversation::with(['users', 'confirmedBooking.vehicle'])
+        // 2.6 Confirmed Arrangements
+        $confirmedArrangements = Conversation::with(['users', 'confirmedBooking.vehicle', 'confirmedBooking.user'])
             ->whereHas('participants', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             })
@@ -145,20 +234,73 @@ class ActivityController extends Controller
             ->latest()
             ->get();
 
-        $driverHistory = Trip::with(['route', 'vehicle'])
+        // 2.7 Completed Trips
+        $driverCompletedTrips = Trip::with(['route', 'vehicle', 'bookings.user'])
             ->where('user_id', $user->id)
-            ->whereIn(DB::raw('LOWER(status)'), ['completed', 'cancelled'])
+            ->where(DB::raw('LOWER(status)'), 'completed')
             ->latest('trip_date')
             ->get();
 
+        $driverCompletedBookings = Booking::with(['user', 'trip.route', 'vehicle'])
+            ->where(function ($q) use ($user) {
+                $q->where('driver_id', $user->id)
+                  ->orWhereHas('trip', fn($t) => $t->where('user_id', $user->id))
+                  ->orWhereHas('vehicle', fn($v) => $v->where('user_id', $user->id));
+            })
+            ->where(function ($q) {
+                $q->whereIn(DB::raw('LOWER(booking_status)'), ['completed'])
+                  ->orWhereIn(DB::raw('LOWER(status)'), ['completed']);
+            })
+            ->latest()
+            ->get();
+
+        $driverCompletedArrangements = Conversation::with(['users', 'confirmedBooking.vehicle', 'confirmedBooking.user'])
+            ->whereHas('participants', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })
+            ->where('arrangement_status', 'completed')
+            ->latest()
+            ->get();
+
+        // 2.8 Cancelled and Expired Records
+        $driverCancelledTrips = Trip::with(['route', 'vehicle'])
+            ->where('user_id', $user->id)
+            ->where(DB::raw('LOWER(status)'), 'cancelled')
+            ->latest('trip_date')
+            ->get();
+
+        $driverCancelledBookings = Booking::with(['user', 'trip.route', 'vehicle'])
+            ->where(function ($q) use ($user) {
+                $q->where('driver_id', $user->id)
+                  ->orWhereHas('trip', fn($t) => $t->where('user_id', $user->id))
+                  ->orWhereHas('vehicle', fn($v) => $v->where('user_id', $user->id));
+            })
+            ->where(function ($q) {
+                $q->whereIn(DB::raw('LOWER(booking_status)'), ['cancelled', 'rejected'])
+                  ->orWhereIn(DB::raw('LOWER(status)'), ['cancelled', 'rejected']);
+            })
+            ->latest()
+            ->get();
+
+        $driverCancelledApplications = DriverApplication::with(['travelRequest.user', 'vehicle'])
+            ->where('driver_id', $user->id)
+            ->whereIn(DB::raw('LOWER(status)'), ['cancelled', 'rejected'])
+            ->latest()
+            ->get();
+
         $counts = [
-            'my_vehicles'        => $myVehicles->count(),
-            'shared_rides'       => $sharedRideListings->where('status', 'scheduled')->count(),
-            'private_bookings'   => $receivedPrivateBookings->where('booking_status', 'confirmed')->count(),
-            'passenger_requests' => $passengerRequests->count(),
-            'my_applications'    => $myApplications->count(),
-            'arrangements'       => $confirmedArrangements->count(),
-            'history'            => $driverHistory->count(),
+            'shared_rides'           => $sharedRideListings->count(),
+            'my_vehicles'            => $myVehicles->count(),
+            'my_bookings'            => $myBookings->count(),
+            'passenger_requests'     => $passengerRequests->count(),
+            'my_applications'        => $myApplications->count(),
+            'confirmed_arrangements' => $confirmedArrangements->count(),
+            'completed_trips'        => $driverCompletedTrips->count() + $driverCompletedBookings->count() + $driverCompletedArrangements->count(),
+            'cancelled_expired'      => $driverCancelledTrips->count() + $driverCancelledBookings->count() + $driverCancelledApplications->count(),
+            // Backwards compat keys
+            'private_bookings'       => $myBookings->where('booking_type', 'private')->count(),
+            'arrangements'           => $confirmedArrangements->count(),
+            'history'                => $driverCompletedTrips->count() + $driverCompletedBookings->count(),
         ];
 
         return view('frontend.activity.index', compact(
@@ -166,13 +308,18 @@ class ActivityController extends Controller
             'isDriver',
             'activeTab',
             'counts',
-            'myVehicles',
             'sharedRideListings',
-            'receivedPrivateBookings',
+            'myVehicles',
+            'myBookings',
             'passengerRequests',
             'myApplications',
             'confirmedArrangements',
-            'driverHistory'
+            'driverCompletedTrips',
+            'driverCompletedBookings',
+            'driverCompletedArrangements',
+            'driverCancelledTrips',
+            'driverCancelledBookings',
+            'driverCancelledApplications'
         ));
     }
 
@@ -240,6 +387,56 @@ class ActivityController extends Controller
     }
 
     /**
+     * Update an open passenger travel request.
+     */
+    public function updateRequest(Request $request, TravelRequest $travelRequest)
+    {
+        $user = auth()->user();
+
+        if ($travelRequest->user_id !== $user->id && !$user->isAdmin()) {
+            abort(403, 'Unauthorized. You can only edit your own travel requests.');
+        }
+
+        if (!$travelRequest->isOpen()) {
+            return redirect()->back()->with('error', 'Only open travel requests can be edited.');
+        }
+
+        $validated = $request->validate([
+            'pickup_location'        => ['required', 'string', 'max:255'],
+            'destination_location'   => ['required', 'string', 'max:255'],
+            'travel_date'            => ['required', 'date', 'after_or_equal:today'],
+            'travel_time'            => ['nullable', 'string', 'max:50'],
+            'seats_needed'           => ['required', 'integer', 'min:1', 'max:50'],
+            'preferred_vehicle_type' => ['nullable', 'string', 'max:50'],
+            'intermediate_stops'     => ['nullable'],
+            'budget'                 => ['nullable', 'numeric', 'min:0'],
+            'notes'                  => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $stops = null;
+        if (!empty($validated['intermediate_stops'])) {
+            $stops = is_array($validated['intermediate_stops']) 
+                ? $validated['intermediate_stops'] 
+                : array_filter(array_map('trim', explode(',', (string) $validated['intermediate_stops'])));
+        }
+
+        $travelRequest->update([
+            'pickup_location'        => trim($validated['pickup_location']),
+            'destination_location'   => trim($validated['destination_location']),
+            'intermediate_stops'     => $stops,
+            'travel_date'            => $validated['travel_date'],
+            'travel_time'            => $validated['travel_time'] ?? null,
+            'seats_needed'           => (int) $validated['seats_needed'],
+            'preferred_vehicle_type' => $validated['preferred_vehicle_type'] ?? null,
+            'budget'                 => $validated['budget'] ?? null,
+            'notes'                  => $validated['notes'] ? trim($validated['notes']) : null,
+        ]);
+
+        return redirect()->route('activity.index', ['tab' => 'travel-requests'])
+            ->with('success', 'Your travel request has been updated successfully!');
+    }
+
+    /**
      * Cancel or delete a passenger travel request.
      */
     public function destroyRequest(Request $request, TravelRequest $travelRequest)
@@ -252,7 +449,69 @@ class ActivityController extends Controller
         $travelRequest->update(['status' => 'cancelled']);
 
         return redirect()->route('activity.index', ['tab' => 'travel-requests'])
-            ->with('success', 'Travel request has been closed: ' . $reason);
+            ->with('success', 'Travel request has been marked as cancelled: ' . $reason);
+    }
+
+    /**
+     * Cancel a booking (accessible by passenger or associated driver).
+     */
+    public function cancelBooking(Request $request, Booking $booking)
+    {
+        $user = auth()->user();
+
+        $isPassenger = ($booking->user_id === $user->id);
+        $isDriver = ($booking->driver_id === $user->id)
+            || ($booking->trip && $booking->trip->user_id === $user->id)
+            || ($booking->vehicle && $booking->vehicle->user_id === $user->id);
+
+        if (!$isPassenger && !$isDriver && !$user->isAdmin()) {
+            abort(403, 'Unauthorized. You can only cancel bookings where you are the passenger or assigned driver.');
+        }
+
+        if ($booking->isCancelled()) {
+            return redirect()->back()->with('error', 'This booking has already been cancelled.');
+        }
+
+        if ($booking->isCompleted()) {
+            return redirect()->back()->with('error', 'Cannot cancel a booking that has already been completed.');
+        }
+
+        $reason = $request->input('reason', 'Cancelled from My Activity');
+
+        DB::transaction(function () use ($booking, $user, $isPassenger, $reason) {
+            // Restore seats on trip if shared booking
+            if ($booking->trip_id) {
+                $lockedTrip = Trip::with('vehicle')->where('id', $booking->trip_id)->lockForUpdate()->first();
+                if ($lockedTrip) {
+                    $seatsToRestore = max(0, (int) $booking->seats);
+                    $maxCapacity    = $lockedTrip->vehicle?->total_seats;
+                    $newAvailable   = $lockedTrip->available_seats + $seatsToRestore;
+                    if ($maxCapacity && $newAvailable > $maxCapacity) {
+                        $newAvailable = $maxCapacity;
+                    }
+                    $lockedTrip->available_seats = $newAvailable;
+                    $lockedTrip->save();
+                }
+            }
+
+            $booking->update([
+                'booking_status' => 'cancelled',
+                'status'         => 'cancelled',
+            ]);
+
+            // Notify counterpart
+            $recipientId = $isPassenger ? ($booking->driver_id ?? $booking->trip?->user_id ?? $booking->vehicle?->user_id) : $booking->user_id;
+            if ($recipientId) {
+                Notification::create([
+                    'user_id' => $recipientId,
+                    'message' => "Booking #{$booking->booking_reference} was cancelled by {$user->name}. Reason: {$reason}",
+                    'is_read' => false,
+                ]);
+            }
+        });
+
+        return redirect()->route('activity.index', ['tab' => 'cancelled-expired'])
+            ->with('success', "Booking #{$booking->booking_reference} has been cancelled successfully.");
     }
 
     /**
@@ -417,4 +676,3 @@ class ActivityController extends Controller
             ->with('success', 'Driver offer selected successfully!');
     }
 }
-
