@@ -415,3 +415,4 @@ class RoleBasedMyActivityTest extends TestCase
         $this->assertDatabaseHas('bookings', ['id' => $cancelledBooking->id, 'booking_status' => 'cancelled']);
     }
 }
+
