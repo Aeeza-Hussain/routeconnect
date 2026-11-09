@@ -23,6 +23,7 @@ use App\Http\Controllers\Frontend\BookingController;
 use App\Http\Controllers\Frontend\VehicleBookingController;
 use App\Http\Controllers\Frontend\ActivityController;
 use App\Http\Controllers\Frontend\MessageController;
+use App\Http\Controllers\Frontend\ProfileController;
 use App\Http\Controllers\NotificationController;
 
 /*
@@ -72,6 +73,17 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/messages/{conversation}/cancel', [MessageController::class, 'cancelArrangement'])->name('messages.cancel')->whereNumber('conversation');
     Route::post('/messages/{conversation}/block', [MessageController::class, 'toggleBlock'])->name('messages.block')->whereNumber('conversation');
     Route::post('/messages/{conversation}/report', [MessageController::class, 'report'])->name('messages.report')->whereNumber('conversation');
+
+    /*
+    |--------------------------------------------------------------------------
+    | User Profile & Account Settings
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/settings', [ProfileController::class, 'settings'])->name('profile.settings');
+    Route::put('/settings/password', [ProfileController::class, 'updatePassword'])->name('profile.settings.password');
 });
 
 /*

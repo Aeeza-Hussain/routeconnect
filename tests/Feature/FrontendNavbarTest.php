@@ -159,4 +159,141 @@ class FrontendNavbarTest extends TestCase
         $this->assertStringContainsString('Messages', $html);
         $this->assertStringContainsString('2', $html);
     }
+
+    // ─── Separate Role Navigation Structure Tests ─────────────────────────────
+
+    public function test_guest_navbar_has_exact_required_structure(): void
+    {
+        $response = $this->get('/');
+        $response->assertOk();
+
+        $html = $response->getContent();
+
+        // Logo
+        $this->assertStringContainsString('RouteConnect', $html);
+
+        // Required links
+        $this->assertStringContainsString('Home', $html);
+        $this->assertStringContainsString('Find a Ride', $html);
+        $this->assertStringContainsString('About', $html);
+        $this->assertStringContainsString('Login', $html);
+        $this->assertStringContainsString('Register', $html);
+
+        // Guest exclusions in navbar
+        preg_match('/<header id="siteNavbar".*?<\/header>/s', $html, $matches);
+        $navbarHtml = $matches[0] ?? $html;
+
+        $this->assertStringNotContainsString('My Activity', $navbarHtml);
+        $this->assertStringNotContainsString('Dashboard', $navbarHtml);
+        $this->assertStringNotContainsString('Passenger Requests', $navbarHtml);
+        $this->assertStringNotContainsString('messagesInboxToggleBtn', $navbarHtml);
+        $this->assertStringNotContainsString('notificationsDropdownBtn', $navbarHtml);
+    }
+
+    public function test_passenger_navbar_has_exact_required_structure(): void
+    {
+        $passenger = User::factory()->create([
+            'name'      => 'Aleeza Passenger',
+            'email'     => 'passenger@routeconnect.test',
+            'user_type' => 0, // Passenger
+        ]);
+
+        $response = $this->actingAs($passenger)->get('/');
+        $response->assertOk();
+
+        $html = $response->getContent();
+
+        // Logo & Common
+        $this->assertStringContainsString('RouteConnect', $html);
+        $this->assertStringContainsString('Home', $html);
+        $this->assertStringContainsString('Find a Ride', $html);
+        $this->assertStringContainsString('My Activity', $html);
+
+        // Message and Notification Icons
+        $this->assertStringContainsString('messagesInboxToggleBtn', $html);
+        $this->assertStringContainsString('notificationsDropdownBtn', $html);
+
+        // Profile dropdown items
+        $this->assertStringContainsString('profileDropdownBtn', $html);
+        $this->assertStringContainsString('My Profile', $html);
+        $this->assertStringContainsString('Edit Profile', $html);
+        $this->assertStringContainsString('Settings', $html);
+        $this->assertStringContainsString('Logout', $html);
+
+        // Passenger should NOT see driver specific main nav items
+        $this->assertStringNotContainsString('>Passenger Requests</a>', $html);
+    }
+
+    public function test_driver_navbar_has_exact_required_structure(): void
+    {
+        $driver = User::factory()->create([
+            'name'          => 'Ahmad Driver',
+            'email'         => 'driver@routeconnect.test',
+            'user_type'     => 2, // Driver
+            'driver_status' => 'approved',
+        ]);
+
+        $response = $this->actingAs($driver)->get('/');
+        $response->assertOk();
+
+        $html = $response->getContent();
+
+        // Logo
+        $this->assertStringContainsString('RouteConnect', $html);
+
+        // Driver required main nav
+        $this->assertStringContainsString('Home', $html);
+        $this->assertStringContainsString('Dashboard', $html);
+        $this->assertStringContainsString('Passenger Requests', $html);
+
+        // Message and Notification Icons
+        $this->assertStringContainsString('messagesInboxToggleBtn', $html);
+        $this->assertStringContainsString('notificationsDropdownBtn', $html);
+
+        // Profile dropdown items
+        $this->assertStringContainsString('profileDropdownBtn', $html);
+        $this->assertStringContainsString('My Profile', $html);
+        $this->assertStringContainsString('Edit Profile', $html);
+        $this->assertStringContainsString('Settings', $html);
+        $this->assertStringContainsString('Logout', $html);
+
+        // Individual dashboard sub-features must NOT clutter the main navbar
+        $this->assertStringNotContainsString('>Offer a Shared Ride</a>', $html);
+        $this->assertStringNotContainsString('>Offer a Private Vehicle</a>', $html);
+        $this->assertStringNotContainsString('>My Listings</a>', $html);
+    }
+
+    public function test_admin_navigation_separation(): void
+    {
+        $admin = User::factory()->create([
+            'name'      => 'System Admin',
+            'email'     => 'admin@routeconnect.test',
+            'user_type' => 1, // Admin
+        ]);
+
+        // Front-end page
+        $response = $this->actingAs($admin)->get('/');
+        $response->assertOk();
+
+        $html = $response->getContent();
+
+        // Shows Admin Portal shortcut, but does NOT put admin CRUD into public nav
+        $this->assertStringContainsString('Admin Portal', $html);
+        $this->assertStringNotContainsString('>Manage Users</a>', $html);
+        $this->assertStringNotContainsString('>Manage Routes</a>', $html);
+        $this->assertStringNotContainsString('>Manage Vehicles</a>', $html);
+
+        // Admin dashboard is accessible with its separate portal
+        $adminDash = $this->actingAs($admin)->get('/admin/dashboard');
+        $adminDash->assertOk();
+    }
+
+    public function test_passenger_profile_edit_and_settings_pages(): void
+    {
+        $passenger = User::factory()->create(['user_type' => 0]);
+
+        $this->actingAs($passenger)->get('/profile')->assertOk()->assertSee('My Profile');
+        $this->actingAs($passenger)->get('/profile/edit')->assertOk()->assertSee('Edit Profile');
+        $this->actingAs($passenger)->get('/settings')->assertOk()->assertSee('Account Settings');
+    }
 }
