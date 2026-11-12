@@ -24,8 +24,10 @@
                 <ul class="space-y-2 text-xs">
                     <li><a href="{{ url('/') }}" class="text-slate-400 hover:text-white transition-colors">Home</a></li>
                     <li><a href="{{ url('/trips') }}" class="text-slate-400 hover:text-white transition-colors">Find a Ride</a></li>
+                    <li><a href="{{ route('services') }}" class="text-slate-400 hover:text-white transition-colors">Services</a></li>
+                    <li><a href="{{ route('about') }}" class="text-slate-400 hover:text-white transition-colors">About Us</a></li>
+                    <li><a href="{{ route('contact') }}" class="text-slate-400 hover:text-white transition-colors">Contact</a></li>
                     <li><a href="{{ route('activity.index') }}" class="text-slate-400 hover:text-white transition-colors"><span>My Activity</span></a></li>
-                    <li><a href="{{ url('/#about') }}" class="text-slate-400 hover:text-white transition-colors">About</a></li>
                 </ul>
             </div>
 
@@ -66,9 +68,16 @@
 
         </div>
 
-        <!-- Bottom Copyright -->
-        <div class="mt-12 pt-6 border-t border-slate-800/80 text-center text-[11px] text-slate-500">
-            © 2026 RouteConnect. All rights reserved.
+        <!-- Bottom Copyright & Legal Links -->
+        <div class="mt-12 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
+            <div>
+                © 2026 RouteConnect. All rights reserved.
+            </div>
+            <div class="flex items-center gap-5">
+                <a href="{{ route('privacy') }}" class="hover:text-slate-300 transition-colors">Privacy Policy</a>
+                <a href="{{ route('terms') }}" class="hover:text-slate-300 transition-colors">Terms & Conditions</a>
+                <a href="{{ route('contact') }}" class="hover:text-slate-300 transition-colors">Support</a>
+            </div>
         </div>
     </div>
 </footer>

@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\AuthController;
+use App\Http\Controllers\Frontend\ServicesController;
+use App\Http\Controllers\Frontend\ContactController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminDriverController;
 use App\Http\Controllers\Admin\AdminUserController;
@@ -12,6 +14,7 @@ use App\Http\Controllers\Admin\AdminStopController;
 use App\Http\Controllers\Admin\AdminTripController;
 use App\Http\Controllers\Admin\AdminTripStopController;
 use App\Http\Controllers\Admin\AdminBookingController;
+use App\Http\Controllers\Admin\AdminContactMessageController;
 use App\Http\Controllers\Driver\DriverDashboardController;
 use App\Http\Controllers\Driver\DriverVehicleController;
 use App\Http\Controllers\Driver\DriverTripController;
@@ -35,6 +38,12 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/trips', [HomeController::class, 'trips'])->name('trips.index');
 Route::get('/find-a-ride', [HomeController::class, 'trips'])->name('find-a-ride');
 Route::get('/trips/{trip}', [HomeController::class, 'showTrip'])->name('trips.show')->whereNumber('trip');
+
+// Services & Contact Pages
+Route::get('/services', [ServicesController::class, 'index'])->name('services');
+Route::get('/contact', [ContactController::class, 'index'])->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store')->middleware('throttle:15,1');
+Route::view('/about', 'frontend.about')->name('about');
 
 // Dedicated Book a Vehicle Routes (Shared Trips & Private Vehicle Rentals)
 Route::get('/book-vehicle', [VehicleBookingController::class, 'index'])->name('vehicles.book');
@@ -221,6 +230,12 @@ Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::get('/bookings', [AdminBookingController::class, 'index'])->name('admin.bookings.index');
     Route::get('/bookings/{id}', [AdminBookingController::class, 'show'])->name('admin.bookings.show');
     Route::post('/bookings/{id}/cancel', [AdminBookingController::class, 'cancel'])->name('admin.bookings.cancel');
+
+    // Contact Messages Management
+    Route::get('/contact-messages', [AdminContactMessageController::class, 'index'])->name('admin.contact-messages.index');
+    Route::get('/contact-messages/{id}', [AdminContactMessageController::class, 'show'])->name('admin.contact-messages.show')->whereNumber('id');
+    Route::patch('/contact-messages/{id}/toggle-read', [AdminContactMessageController::class, 'toggleRead'])->name('admin.contact-messages.toggle-read')->whereNumber('id');
+    Route::delete('/contact-messages/{id}', [AdminContactMessageController::class, 'destroy'])->name('admin.contact-messages.destroy')->whereNumber('id');
 
     // Platform Modules
     Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('admin.settings.index');

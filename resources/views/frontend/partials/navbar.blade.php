@@ -9,6 +9,9 @@
     $isDriverDashboard   = ($currentRoute === 'driver.dashboard' || str_starts_with($currentPath, 'driver/dashboard'));
     $isPassengerRequests = ($currentRoute === 'driver.passenger-requests' || str_starts_with($currentPath, 'driver/passenger-requests'));
     $isMessages          = ($currentRoute === 'messages.index' || $currentRoute === 'messages.show' || str_starts_with($currentPath, 'messages'));
+    $isServices          = ($currentRoute === 'services' || str_starts_with($currentPath, 'services'));
+    $isAbout             = ($currentRoute === 'about' || $currentPath === 'about' || str_contains($currentPath, 'about'));
+    $isContact           = ($currentRoute === 'contact' || str_starts_with($currentPath, 'contact'));
 
     $user = auth()->user();
     $unreadMessageCount = 0;
@@ -70,8 +73,32 @@
                         @endif
                     </a>
 
+                    {{-- Offer a Ride --}}
+                    <a href="{{ route('driver.register') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Offer a Ride</a>
+
+                    {{-- Services --}}
+                    <a href="{{ route('services') }}" class="relative py-2 {{ $isServices ? 'text-emerald-600 dark:text-emerald-400' : 'hover:text-emerald-600 dark:hover:text-emerald-400' }} transition-colors">
+                        Services
+                        @if($isServices)
+                            <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                        @endif
+                    </a>
+
                     {{-- About --}}
-                    <a href="{{ url('/#about') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">About</a>
+                    <a href="{{ route('about') }}" class="relative py-2 {{ $isAbout ? 'text-emerald-600 dark:text-emerald-400' : 'hover:text-emerald-600 dark:hover:text-emerald-400' }} transition-colors">
+                        About
+                        @if($isAbout)
+                            <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                        @endif
+                    </a>
+
+                    {{-- Contact --}}
+                    <a href="{{ route('contact') }}" class="relative py-2 {{ $isContact ? 'text-emerald-600 dark:text-emerald-400' : 'hover:text-emerald-600 dark:hover:text-emerald-400' }} transition-colors">
+                        Contact
+                        @if($isContact)
+                            <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                        @endif
+                    </a>
                 @endguest
 
                 {{-- 2. PASSENGER NAVBAR --}}
@@ -97,6 +124,30 @@
                         <a href="{{ route('activity.index') }}" class="relative py-2 {{ $isActivity ? 'text-emerald-600 dark:text-emerald-400' : 'hover:text-emerald-600 dark:hover:text-emerald-400' }} transition-colors inline-flex items-center gap-1.5">
                             My Activity
                             @if($isActivity)
+                                <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                            @endif
+                        </a>
+
+                        {{-- Services --}}
+                        <a href="{{ route('services') }}" class="relative py-2 {{ $isServices ? 'text-emerald-600 dark:text-emerald-400' : 'hover:text-emerald-600 dark:hover:text-emerald-400' }} transition-colors">
+                            Services
+                            @if($isServices)
+                                <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                            @endif
+                        </a>
+
+                        {{-- About --}}
+                        <a href="{{ route('about') }}" class="relative py-2 {{ $isAbout ? 'text-emerald-600 dark:text-emerald-400' : 'hover:text-emerald-600 dark:hover:text-emerald-400' }} transition-colors">
+                            About
+                            @if($isAbout)
+                                <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                            @endif
+                        </a>
+
+                        {{-- Contact --}}
+                        <a href="{{ route('contact') }}" class="relative py-2 {{ $isContact ? 'text-emerald-600 dark:text-emerald-400' : 'hover:text-emerald-600 dark:hover:text-emerald-400' }} transition-colors">
+                            Contact
+                            @if($isContact)
                                 <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
                             @endif
                         </a>
@@ -127,11 +178,38 @@
                                 <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
                             @endif
                         </a>
+
+                        {{-- Services --}}
+                        <a href="{{ route('services') }}" class="relative py-2 {{ $isServices ? 'text-emerald-600 dark:text-emerald-400' : 'hover:text-emerald-600 dark:hover:text-emerald-400' }} transition-colors">
+                            Services
+                            @if($isServices)
+                                <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                            @endif
+                        </a>
+
+                        {{-- About --}}
+                        <a href="{{ route('about') }}" class="relative py-2 {{ $isAbout ? 'text-emerald-600 dark:text-emerald-400' : 'hover:text-emerald-600 dark:hover:text-emerald-400' }} transition-colors">
+                            About
+                            @if($isAbout)
+                                <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                            @endif
+                        </a>
+
+                        {{-- Contact --}}
+                        <a href="{{ route('contact') }}" class="relative py-2 {{ $isContact ? 'text-emerald-600 dark:text-emerald-400' : 'hover:text-emerald-600 dark:hover:text-emerald-400' }} transition-colors">
+                            Contact
+                            @if($isContact)
+                                <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                            @endif
+                        </a>
                     @endif
 
                     {{-- 4. ADMIN USER (Clean shortcut to Admin Console, no clutter in main nav) --}}
                     @if($user->user_type == 1)
                         <a href="{{ url('/') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Home</a>
+                        <a href="{{ route('services') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Services</a>
+                        <a href="{{ route('about') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">About</a>
+                        <a href="{{ route('contact') }}" class="py-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Contact</a>
                         <a href="{{ route('admin.dashboard') }}" class="py-2 text-amber-500 hover:text-amber-400 font-extrabold flex items-center gap-1.5 transition-colors">
                             <i class="fa-solid fa-shield-halved text-xs"></i>
                             <span>Admin Portal</span>
@@ -429,7 +507,10 @@
 
         @guest
             <a href="{{ url('/trips') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isFindRide ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' }}">Find a Ride</a>
-            <a href="{{ url('/#about') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">About</a>
+            <a href="{{ route('driver.register') }}" class="block px-3 py-2 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Offer a Ride</a>
+            <a href="{{ route('services') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isServices ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' }}">Services</a>
+            <a href="{{ route('about') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isAbout ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' }}">About</a>
+            <a href="{{ route('contact') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isContact ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' }}">Contact</a>
         @endguest
 
         @auth
@@ -437,10 +518,16 @@
                 {{-- Passenger Links --}}
                 <a href="{{ url('/trips') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isFindRide ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' }}">Find a Ride</a>
                 <a href="{{ route('activity.index') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isActivity ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' }}">My Activity</a>
+                <a href="{{ route('services') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isServices ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' }}">Services</a>
+                <a href="{{ route('about') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isAbout ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' }}">About</a>
+                <a href="{{ route('contact') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isContact ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' }}">Contact</a>
             @elseif($user->user_type == 2)
                 {{-- Driver Links --}}
                 <a href="{{ route('driver.dashboard') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isDriverDashboard ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' }}">Dashboard</a>
                 <a href="{{ route('driver.passenger-requests') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isPassengerRequests ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' }}">Passenger Requests</a>
+                <a href="{{ route('services') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isServices ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' }}">Services</a>
+                <a href="{{ route('about') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isAbout ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' }}">About</a>
+                <a href="{{ route('contact') }}" class="block px-3 py-2 rounded-lg text-sm font-bold {{ $isContact ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' }}">Contact</a>
             @endif
         @endauth
 

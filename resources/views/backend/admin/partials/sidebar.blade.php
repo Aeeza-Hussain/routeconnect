@@ -119,17 +119,46 @@
             <span>Bookings</span>
         </a>
 
+        {{-- 10. Contact Messages --}}
+        <a href="{{ route('admin.contact-messages.index') }}"
+           class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all
+                  {{ request()->routeIs('admin.contact-messages.*') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-envelope-open-text text-sm w-4 text-center"></i>
+                <span>Contact Messages</span>
+            </div>
+            @php
+                $unreadContactMessagesCount = \App\Models\ContactMessage::where('is_read', false)->count();
+            @endphp
+            @if ($unreadContactMessagesCount > 0)
+                <span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-extrabold border border-blue-500/30">
+                    {{ $unreadContactMessagesCount }}
+                </span>
+            @endif
+        </a>
+
         {{-- Section label: System --}}
         <div class="px-3 pt-3.5 pb-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
             System
         </div>
 
-        {{-- 10. Settings --}}
+        {{-- 11. Settings --}}
         <a href="{{ route('admin.settings.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all
                   {{ request()->routeIs('admin.settings.*') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-xs' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
             <i class="fa-solid fa-gear text-sm w-4 text-center"></i>
             <span>Settings</span>
+        </a>
+
+        {{-- 12. View Website (External Link) --}}
+        <a href="{{ url('/') }}"
+           target="_blank"
+           class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800/60 hover:text-white transition-all">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-arrow-up-right-from-square text-sm w-4 text-center text-emerald-400"></i>
+                <span>View Website</span>
+            </div>
+            <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-500"></i>
         </a>
 
     </nav>
