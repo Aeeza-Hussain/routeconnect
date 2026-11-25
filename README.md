@@ -35,6 +35,11 @@
 - **Laravel Sanctum Auth:** Stateless Bearer token authentication for cross-platform mobile apps (Android & iOS).
 - **Comprehensive API Suite:** 10 RESTful controllers providing full parity with web features under `/api/*`.
 
+### 7. 📬 Services, About & Contact Support
+- **Dedicated Pages:** Publicly accessible `/services`, `/about`, and `/contact` pages integrated across Guest, Passenger, and Driver navigation.
+- **Contact Inquiry Persistence:** Rate-limited and validated contact form submissions stored in the `contact_messages` table.
+- **Admin Message Inbox:** Dedicated `/admin/contact-messages` management panel with unread counters, status filtering, and read/unread toggles.
+
 ---
 
 ## 🛠️ Technology Stack
